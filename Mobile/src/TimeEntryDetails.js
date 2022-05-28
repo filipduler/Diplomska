@@ -1,40 +1,103 @@
-import React, { useState } from 'react';
-import { Button, Text, SafeAreaView, View, StyleSheet } from 'react-native';
+import React, { useState, useLayoutEffect } from 'react';
+import { Button, Text, SafeAreaView, View, StyleSheet, TextInput } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DateHelper from '../helpers/date';
+import * as Request from '../services/requests'
 
-export const TimeEntryDetails = ({ route }) => {
-    const { entry } = route.params;
-    const [date, setDate] = useState(new Date(1598051730000));
-    const [show, setShow] = useState(false);
-  
+export const TimeEntryDetails = ({ route, navigation }) => {
+    const timeEntryId = route.params.timeEntryId;
+    const entry = global.monthlyEntries.find(x => x.id === timeEntryId);
+
+    const loadTime = (timeSelector) => {
+        if(entry) {
+            const timeUTC = new Date(timeSelector(entry));
+            const time = DateHelper.convertUTCDateToLocal(timeUTC);
+
+            return {
+                time: time,
+                text: DateHelper.getTime(time)
+            };
+        }
+
+        return {
+            time: null,
+            text: 'Set Time'
+        };
+    }
+
+    const [ time, setTime ] = useState({ start: loadTime(x => x.startTimeUtc), end: loadTime(x => x.endTimeUtc)});
+    const [ note, setNote ] = useState(entry?.note);
+
+    const [ date, setDate] = useState(new Date(1598051730000));
+    const [ picker, setPicker] = useState({ open: false });
+
 
     const onChange = (event, selectedDate) => {
         try{
-            console.log(selectedDate)
-            setDate(currentDate);
+            if(picker.type === 'start') {
+                time.start.time = selectedDate;
+                time.start.text = DateHelper.getTime(selectedDate);
+            } else {
+                time.end.time = selectedDate;
+                time.end.text = DateHelper.getTime(selectedDate);
+            }
+
+            setTime(time)
         }
         finally {
-            setShow(false);
+            setPicker({ open: false });
         }
     };
 
-    const showTimePicker = (time) => {
-        setDate(time)
-        setShow(true);
+    const showTimePicker = (type) => {
+        setDate(type === 'start' ? time.start.time : time.end.time);
+        setPicker({ open: true, type: type});
     };
+
+    const save = async () => {
+        const body = {
+            startTimeUtc: time.start.time,
+            endTimeUtc: time.end.time,
+            note: note
+        }
+console.log(body);
+        if(timeEntryId > 0) {
+            const res = await Request.putUpdateEntry(timeEntryId, body);
+            console.log(res);
+        } else {
+            const res = await Request.postNewEntry(body);
+            console.log(res);
+        }
+    }
 
     return (
         <SafeAreaView style={styles.container}>
             <View>
                 <Text>Start</Text>
-                <Button title={DateHelper.getTime(entry.end)} onPress={(() => showTimePicker(entry.start))} />
+                <Button title={time.start.text} onPress={(() => showTimePicker('start'))} />
             </View>
             <View>
                 <Text>End</Text>
-                <Button title={DateHelper.getTime(entry.end)} onPress={() => showTimePicker(entry.end)} />
+                <Button title={time.end.text} onPress={() => showTimePicker('end')} />
             </View>
-            {show && (
+            <View>
+                <Text>Note</Text>
+                <TextInput 
+                    multiline={true}
+                    numberOfLines={11}
+                    value={note}
+                    onChangeText={(text) => setNote(text)}
+                    style={styles.textInput}
+                    maxLength={512}
+                    textAlignVertical='top'
+                />
+            </View>
+
+            <View>
+            <Button title='Save' onPress={save} />
+            </View>
+
+            {picker.open && (
                 <DateTimePicker
                     value={date}
                     mode='time'
@@ -50,5 +113,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    textInput: {
+        borderColor: '#000000',
+        borderWidth: 1
+    }
 });
 

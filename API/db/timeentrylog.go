@@ -8,7 +8,7 @@ type TimeEntryLog struct {
 	StartTimeUtc  time.Time  `db:"StartTimeUtc"`
 	EndTimeUtc    *time.Time `db:"EndTimeUtc"`
 	DailyHours    float64    `db:"DailyHours"`
-	Node          string     `db:"Node"`
+	Note          string     `db:"Note"`
 	ChangeReason  string     `db:"ChangeReason"`
 	UserId        int64      `db:"UserId"`
 	TimeEntryId   int64      `db:"TimeEntryId"`
@@ -16,11 +16,13 @@ type TimeEntryLog struct {
 }
 
 func (store *DBStore) InsertTimeEntryLog(tel TimeEntryLog) error {
-	_, err := store.Exec("INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, DailyHours, Note, ChangeReason, UserId, TimeEntryId, InsertedOnUtc) VALUES (?, ?, ?, ?, ?, ?)",
+	tel.InsertedOnUtc = time.Now()
+
+	_, err := store.Exec("INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, DailyHours, Note, ChangeReason, UserId, TimeEntryId, InsertedOnUtc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		tel.StartTimeUtc,
 		tel.EndTimeUtc,
 		tel.DailyHours,
-		tel.Node,
+		tel.Note,
 		tel.ChangeReason,
 		tel.UserId,
 		tel.TimeEntryId,

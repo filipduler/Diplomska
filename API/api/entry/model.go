@@ -15,9 +15,9 @@ type updateEntryRequest struct {
 }
 
 type entriesResponse struct {
-	Year  int                  `json:"year"`
-	Month int                  `json:"month"`
-	Days  map[int][]entryModel `json:"days"`
+	Year    int          `json:"year"`
+	Month   int          `json:"month"`
+	Entries []entryModel `json:"entries"`
 }
 
 type entryModel struct {
@@ -26,6 +26,7 @@ type entryModel struct {
 	EndTimeUtc    time.Time `json:"endTimeUtc"`
 	TimeDiffHours float64   `json:"timeDiffHours"`
 	Note          string    `json:"note"`
+	Day           int       `json:"day"`
 }
 
 type timerModel struct {

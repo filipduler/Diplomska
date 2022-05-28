@@ -21,20 +21,21 @@ func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 	}
 
 	res := entriesResponse{
-		Year:  year,
-		Month: month,
-		Days:  make(map[int][]entryModel),
+		Year:    year,
+		Month:   month,
+		Entries: []entryModel{},
 	}
 
 	for _, element := range entries {
 		if element.EndTimeUtc != nil {
 			day := element.StartTimeUtc.Day()
-			res.Days[day] = append(res.Days[day], entryModel{
+			res.Entries = append(res.Entries, entryModel{
 				Id:            element.Id,
 				StartTimeUtc:  element.StartTimeUtc,
 				EndTimeUtc:    *element.EndTimeUtc,
 				TimeDiffHours: utils.ToFixed(element.EndTimeUtc.Sub(element.StartTimeUtc).Hours(), 2),
 				Note:          element.Note,
+				Day:           day,
 			})
 		}
 

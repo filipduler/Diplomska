@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as StringHelpers from '../../helpers/strings';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
@@ -121,9 +122,9 @@ export const CheckInOut = (props) => {
         let seconds = Math.ceil(divisor_for_seconds);
 
         return {
-            h: ('' + hours).padStart(2, '0'),
-            m: ('' + minutes).padStart(2, '0'),
-            s: ('' + seconds).padStart(2, '0'),
+            h: StringHelpers.padStringLeft(hours, 2, '0'),
+            m: StringHelpers.padStringLeft(minutes, 2, '0'),
+            s: StringHelpers.padStringLeft(seconds, 2, '0'),
         };
     }
 

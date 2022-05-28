@@ -7,18 +7,18 @@ import {
     SafeAreaView,
     Text,
     SectionList,
-    StyleSheet,
+    StyleSheet
 } from 'react-native';
 import { CheckInOut } from './CheckInOut'
 
 
-const getDaysList = (month, year, values) => {
+const getDaysList = (month, year, entries) => {
     let arr = [];
     const days = DateHelper.getDaysInMonth(month, year);
     for (const day of days) {
         arr.push({
             day: `${DateHelper.getDayOfWeek(day)}, ${day.getDate()}`,
-            data: (values[day.getDate()] || []).map(x => toTimeEntry(x))
+            data: entries.filter(x => x.day === day.getDate()).map(x => toTimeEntry(x))
         })
     }
     return arr;
@@ -30,15 +30,13 @@ const toTimeEntry = (entry) => {
 
     return {
         id: entry.id,
-        start: start,
-        end: end,
         title: `${DateHelper.getTime(start)} - ${DateHelper.getTime(end)}`,
         notePreview: entry.note,
     };
 }
 
 export const MonthList = ({ navigation }) => {
-    const [days, setDays] = useState(getDaysList(5, 2022, {}));
+    const [days, setDays] = useState(getDaysList(5, 2022, []));
     const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
@@ -57,7 +55,8 @@ export const MonthList = ({ navigation }) => {
     const refreshMonthlyEntries = async () => {
         const res = await Request.getTimeEntries(5, 2022);
         if (res && res.ok) {
-            setDays(getDaysList(5, 2022, res.payload.days));
+            global.monthlyEntries = res.payload.entries;
+            setDays(getDaysList(5, 2022, res.payload.entries));
         }
         setRefreshing(false);
     }
@@ -89,7 +88,7 @@ export const MonthList = ({ navigation }) => {
                     return <TimeItem 
                         data={item} 
                         handleDelete={() => deleteItem(item.id)} 
-                        handleDetails={() => navigation.push('Details', { entry: item })}
+                        handleDetails={() => navigation.push('Details', { timeEntryId: item.id })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
