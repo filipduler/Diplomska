@@ -28,20 +28,11 @@ const toTimeEntry = (entry) => {
     const start = new Date(entry.startTimeUtc);
     const end = new Date(entry.endTimeUtc);
 
-    const startText = DateHelper.getTime(start);
-    const endText = DateHelper.getTime(end);
-
     return {
         id: entry.id,
-        start: {
-            time: start,
-            text: startText
-        },
-        end: {
-            time: end,
-            text: endText
-        },
-        title: `${startText} - ${endText}`,
+        start: start,
+        end: end,
+        title: `${DateHelper.getTime(start)} - ${DateHelper.getTime(end)}`,
         notePreview: entry.note,
     };
 }

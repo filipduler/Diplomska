@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Text, SafeAreaView, View, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as DateHelper from '../helpers/date';
 
 export const TimeEntryDetails = ({ route }) => {
     const { entry } = route.params;
@@ -27,11 +28,11 @@ export const TimeEntryDetails = ({ route }) => {
         <SafeAreaView style={styles.container}>
             <View>
                 <Text>Start</Text>
-                <Button title={entry.start.text} onPress={(() => showTimePicker(entry.start.time))} />
+                <Button title={DateHelper.getTime(entry.end)} onPress={(() => showTimePicker(entry.start))} />
             </View>
             <View>
                 <Text>End</Text>
-                <Button title={entry.end.text} onPress={() => showTimePicker(entry.end.time)} />
+                <Button title={DateHelper.getTime(entry.end)} onPress={() => showTimePicker(entry.end)} />
             </View>
             {show && (
                 <DateTimePicker
