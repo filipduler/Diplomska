@@ -25,7 +25,7 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator>
+      <Tab.Navigator screenOptions={{headerShown: false}}>
         <Tab.Screen name="Dashboard" component={Dashboard} />
         <Tab.Screen name="Time Tracker" component={Tracker} />
       </Tab.Navigator>

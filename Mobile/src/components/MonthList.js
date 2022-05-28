@@ -27,9 +27,21 @@ const getDaysList = (month, year, values) => {
 const toTimeEntry = (entry) => {
     const start = new Date(entry.startTimeUtc);
     const end = new Date(entry.endTimeUtc);
+
+    const startText = DateHelper.getTime(start);
+    const endText = DateHelper.getTime(end);
+
     return {
         id: entry.id,
-        title: `${DateHelper.getTime(start)} - ${DateHelper.getTime(end)}`,
+        start: {
+            time: start,
+            text: startText
+        },
+        end: {
+            time: end,
+            text: endText
+        },
+        title: `${startText} - ${endText}`,
         notePreview: entry.note,
     };
 }
@@ -86,7 +98,7 @@ export const MonthList = ({ navigation }) => {
                     return <TimeItem 
                         data={item} 
                         handleDelete={() => deleteItem(item.id)} 
-                        handleDetails={() => navigation.push('Details')}
+                        handleDetails={() => navigation.push('Details', { entry: item })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
