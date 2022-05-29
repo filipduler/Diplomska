@@ -3,40 +3,46 @@ import { useFocusEffect } from '@react-navigation/native';
 import { TimeItem } from './TimeItem';
 import * as Request from '../../services/requests';
 import * as DateHelper from '../../helpers/date';
+import { Store } from '../../services/store';
 import {
+    View,
     SafeAreaView,
     Text,
     SectionList,
-    StyleSheet
+    StyleSheet,
+    Button
 } from 'react-native';
 import { CheckInOut } from './CheckInOut'
+import { MonthSelector } from './MonthSelector'
 
 
-const getDaysList = (month, year, entries) => {
+const getDaysList = (entries) => {
     let arr = [];
-    const days = DateHelper.getDaysInMonth(month, year);
+    const days = DateHelper.getDaysInMonth(Store.currentDate.month + 1, Store.currentDate.year);
     for (const day of days) {
         arr.push({
-            day: `${DateHelper.getDayOfWeek(day)}, ${day.getDate()}`,
-            data: entries.filter(x => x.day === day.getDate()).map(x => toTimeEntry(x))
+            day: day.getDate(),
+            text: `${DateHelper.getDayOfWeek(day)}, ${day.getDate()}`,
+            data: entries.filter(x => x.day === day.getDate()).map(x => toTimeEntry(x, day.getDate()))
         })
     }
     return arr;
 }
 
-const toTimeEntry = (entry) => {
+const toTimeEntry = (entry, day) => {
     const start = new Date(entry.startTimeUtc);
     const end = new Date(entry.endTimeUtc);
 
     return {
         id: entry.id,
+        day: day,
         title: `${DateHelper.getTime(start)} - ${DateHelper.getTime(end)}`,
         notePreview: entry.note,
     };
 }
 
 export const MonthList = ({ navigation }) => {
-    const [days, setDays] = useState(getDaysList(5, 2022, []));
+    const [days, setDays] = useState(getDaysList([]));
     const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
@@ -53,10 +59,10 @@ export const MonthList = ({ navigation }) => {
     )
 
     const refreshMonthlyEntries = async () => {
-        const res = await Request.getTimeEntries(5, 2022);
+        const res = await Request.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
         if (res && res.ok) {
             global.monthlyEntries = res.payload.entries;
-            setDays(getDaysList(5, 2022, res.payload.entries));
+            setDays(getDaysList(res.payload.entries));
         }
         setRefreshing(false);
     }
@@ -80,6 +86,7 @@ export const MonthList = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <MonthSelector onUpdate={refreshMonthlyEntries}/>
             <SectionList
                 sections={days}
                 refreshing={refreshing} onRefresh={refreshMonthlyEntries}
@@ -88,11 +95,18 @@ export const MonthList = ({ navigation }) => {
                     return <TimeItem 
                         data={item} 
                         handleDelete={() => deleteItem(item.id)} 
-                        handleDetails={() => navigation.push('Details', { timeEntryId: item.id })}
+                        handleDetails={() => navigation.push('Details', { timeEntryId: item.id, day: item.day, onRefresh: refreshMonthlyEntries })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
-                    <Text style={styles.header}>{section.day}</Text>
+                    <View style={{ padding: 10, flexDirection: 'row', alignContent: "space-between" }}>
+                        <View style={[styles.row, {flexDirection: 'column', backgroundColor: '#00FF00' } ]}> 
+                            <Text style={styles.header}>{section.text}</Text>
+                        </View>
+                        <View style={[styles.row, {flexDirection: 'column', alignContent: 'flex-end', backgroundColor: '#FF0000' } ]}>
+                            <Button title='New' onPress={() => navigation.push('Details', { timeEntryId: 0, day: section.day, onRefresh: refreshMonthlyEntries })} />
+                        </View>
+                    </View>
                 )}
             />
             <CheckInOut onNewEntry={refreshMonthlyEntries} />
@@ -109,5 +123,12 @@ const styles = StyleSheet.create({
         fontSize: 22,
         backgroundColor: "#fff"
     },
+    row: {
+        flex: 1,
+        flexDirection: "row",
+        flexWrap: "wrap",
+        alignItems: "center",
+        marginBottom: 10,
+      }
 });
 

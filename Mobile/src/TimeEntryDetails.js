@@ -2,10 +2,14 @@ import React, { useState, useLayoutEffect } from 'react';
 import { Button, Text, SafeAreaView, View, StyleSheet, TextInput } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DateHelper from '../helpers/date';
+import { Store } from '../services/store';
 import * as Request from '../services/requests'
 
 export const TimeEntryDetails = ({ route, navigation }) => {
+    const day = route.params.day;
+    console.log(day);
     const timeEntryId = route.params.timeEntryId;
+    const onRefresh = route.params.onRefresh;
     const entry = global.monthlyEntries.find(x => x.id === timeEntryId);
 
     const loadTime = (timeSelector) => {
@@ -18,9 +22,10 @@ export const TimeEntryDetails = ({ route, navigation }) => {
                 text: DateHelper.getTime(time)
             };
         }
+        const localDate = new Date();
 
         return {
-            time: null,
+            time: new Date(Store.currentDate.year, Store.currentDate.month, day, localDate.getHours(), localDate.getMinutes()),
             text: 'Set Time'
         };
     }
@@ -51,6 +56,7 @@ export const TimeEntryDetails = ({ route, navigation }) => {
 
     const showTimePicker = (type) => {
         setDate(type === 'start' ? time.start.time : time.end.time);
+        console.log(date);
         setPicker({ open: true, type: type});
     };
 
@@ -60,13 +66,19 @@ export const TimeEntryDetails = ({ route, navigation }) => {
             endTimeUtc: time.end.time,
             note: note
         }
-console.log(body);
+
         if(timeEntryId > 0) {
             const res = await Request.putUpdateEntry(timeEntryId, body);
+            if(res && res.ok) {
+                onRefresh();
+            }
             console.log(res);
         } else {
             const res = await Request.postNewEntry(body);
             console.log(res);
+            if(res && res.ok) {
+                onRefresh();
+            }
         }
     }
 
