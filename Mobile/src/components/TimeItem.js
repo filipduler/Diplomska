@@ -6,6 +6,7 @@ import {
     Dimensions,
     Button,
     TouchableOpacity,
+    Pressable
 } from 'react-native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 
@@ -15,6 +16,8 @@ let rowDict = {};
 let prevOpenedRow;
 
 export const TimeItem = (props) => {
+    const hasDescription = !!props.data.notePreview;
+    const rowHeight = hasDescription ? 60 : 60;
 
     const closeRow = (id) => {
         if (prevOpenedRow && prevOpenedRow !== rowDict[id]) {
@@ -25,42 +28,63 @@ export const TimeItem = (props) => {
 
     const leftSwipe = () => {
         return (
-            <TouchableOpacity onPress={props.handleDelete} activeOpacity={0.6}>
+            <Pressable onPress={props.handleDelete} activeOpacity={0.6}>
                 <View style={styles.deleteBox}>
-                    <Text>Delete</Text>
+                    <Text style={styles.deleteButton}>Delete</Text>
                 </View>
-            </TouchableOpacity>
+            </Pressable>
         );
     };
     return (
         <GestureHandlerRootView>
-            <Swipeable renderRightActions={leftSwipe}  
+            <Swipeable renderRightActions={leftSwipe} 
                 ref={ref => rowDict[props.data.id] = ref} 
                 key={props.data.id}
                 onBegan={() => closeRow(props.data.id)}>
-                <View style={styles.container} >
-                    <TouchableOpacity onPress={props.handleDetails}>
-                        <Text>{props.data.title} {props.data.notePreview}</Text>
-                    </TouchableOpacity>
-                </View>
+                <Pressable onPress={props.handleDetails} style={styles.itemContainer}>
+                    <View style={styles.itemRow}>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{props.data.startText}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{props.data.endText}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'right', paddingRight: 10 }]}>{props.data.timeText}</Text>
+                    </View>
+                    {props.data.notePreview ? (
+                        <View style={styles.itemRow}>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' } ]}>{props.data.notePreview}</Text>
+                        </View>
+                    ) : null}
+                    
+                </Pressable>
             </Swipeable>
         </GestureHandlerRootView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        height: 80,
-        width: SCREEN_WIDTH,
-        backgroundColor: 'white',
-        justifyContent: 'center',
-        padding: 16,
+    deleteButton: { 
+        color: '#FFFFFF', 
+        fontSize: 17 
     },
     deleteBox: {
-        backgroundColor: 'red',
+        backgroundColor: '#FF0000',
         justifyContent: 'center',
         alignItems: 'center',
-        width: 100,
-        height: 80,
+        width: 85,
+        height: 65
     },
+    itemContainer: {
+        height: 65
+    },
+    itemRow: { 
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    itemColumn: {
+        flex: 1,
+        flexDirection: 'row',
+        flexWrap: "wrap",
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
 });

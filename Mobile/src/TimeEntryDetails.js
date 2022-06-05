@@ -9,7 +9,6 @@ export const TimeEntryDetails = ({ route, navigation }) => {
     const day = route.params.day;
     console.log(day);
     const timeEntryId = route.params.timeEntryId;
-    const onRefresh = route.params.onRefresh;
     const entry = global.monthlyEntries.find(x => x.id === timeEntryId);
 
     const loadTime = (timeSelector) => {
@@ -70,14 +69,12 @@ export const TimeEntryDetails = ({ route, navigation }) => {
         if(timeEntryId > 0) {
             const res = await Request.putUpdateEntry(timeEntryId, body);
             if(res && res.ok) {
-                onRefresh();
             }
             console.log(res);
         } else {
             const res = await Request.postNewEntry(body);
             console.log(res);
             if(res && res.ok) {
-                onRefresh();
             }
         }
     }
@@ -107,6 +104,7 @@ export const TimeEntryDetails = ({ route, navigation }) => {
 
             <View>
             <Button title='Save' onPress={save} />
+            <Button title='Delete' />
             </View>
 
             {picker.open && (

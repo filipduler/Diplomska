@@ -21,12 +21,12 @@ type entriesResponse struct {
 }
 
 type entryModel struct {
-	Id            int64     `json:"id"`
-	StartTimeUtc  time.Time `json:"startTimeUtc"`
-	EndTimeUtc    time.Time `json:"endTimeUtc"`
-	TimeDiffHours float64   `json:"timeDiffHours"`
-	Note          string    `json:"note"`
-	Day           int       `json:"day"`
+	Id              int64     `json:"id"`
+	StartTimeUtc    time.Time `json:"startTimeUtc"`
+	EndTimeUtc      time.Time `json:"endTimeUtc"`
+	TimeDiffSeconds int       `json:"timeDiffSeconds"`
+	Note            string    `json:"note"`
+	Day             int       `json:"day"`
 }
 
 type timerModel struct {

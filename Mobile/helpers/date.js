@@ -18,4 +18,24 @@ export const getMonth = (month) =>  monthNames[month];
 export const convertDateToUTC = (date) => new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds())
 export const convertUTCDateToLocal = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds())
 
+export const secondsToTimeDisplay = (secs) => {
+  const time = secondsToTime(secs);
+  return `${time.h}:${time.m}:${time.s}`;
+}
+
+export const secondsToTime = (secs) => {
+  let hours = Math.floor(secs / (60 * 60));
+
+  let divisor_for_minutes = secs % (60 * 60);
+  let minutes = Math.floor(divisor_for_minutes / 60);
+
+  let divisor_for_seconds = divisor_for_minutes % 60;
+  let seconds = Math.ceil(divisor_for_seconds);
+
+  return {
+      h: StringHelpers.padStringLeft(hours, 2, '0'),
+      m: StringHelpers.padStringLeft(minutes, 2, '0'),
+      s: StringHelpers.padStringLeft(seconds, 2, '0'),
+  };
+}
 

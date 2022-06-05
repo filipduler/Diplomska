@@ -2,7 +2,6 @@ package entry
 
 import (
 	"api/db"
-	"api/utils"
 	"errors"
 	"time"
 )
@@ -30,12 +29,12 @@ func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 		if element.EndTimeUtc != nil {
 			day := element.StartTimeUtc.Day()
 			res.Entries = append(res.Entries, entryModel{
-				Id:            element.Id,
-				StartTimeUtc:  element.StartTimeUtc,
-				EndTimeUtc:    *element.EndTimeUtc,
-				TimeDiffHours: utils.ToFixed(element.EndTimeUtc.Sub(element.StartTimeUtc).Hours(), 2),
-				Note:          element.Note,
-				Day:           day,
+				Id:              element.Id,
+				StartTimeUtc:    element.StartTimeUtc,
+				EndTimeUtc:      *element.EndTimeUtc,
+				TimeDiffSeconds: int(element.EndTimeUtc.Sub(element.StartTimeUtc).Seconds()),
+				Note:            element.Note,
+				Day:             day,
 			})
 		}
 

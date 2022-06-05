@@ -4,6 +4,7 @@ import { TimeItem } from './TimeItem';
 import * as Request from '../../services/requests';
 import * as DateHelper from '../../helpers/date';
 import { Store } from '../../services/store';
+import * as Style from '../../services/styles';
 import {
     View,
     SafeAreaView,
@@ -14,16 +15,22 @@ import {
 } from 'react-native';
 import { CheckInOut } from './CheckInOut'
 import { MonthSelector } from './MonthSelector'
-
+import ActionSheet from '@alessiocancian/react-native-actionsheet'
+ 
 
 const getDaysList = (entries) => {
     let arr = [];
     const days = DateHelper.getDaysInMonth(Store.currentDate.month + 1, Store.currentDate.year);
     for (const day of days) {
+        const dayOfMonth = day.getDate();
+        const dailyEntries = entries.filter(x => x.day === dayOfMonth);
+        const totalSeconds = dailyEntries.map(x=>x.timeDiffSeconds).reduce((acc, a) => acc + a, 0);
+
         arr.push({
-            day: day.getDate(),
-            text: `${DateHelper.getDayOfWeek(day)}, ${day.getDate()}`,
-            data: entries.filter(x => x.day === day.getDate()).map(x => toTimeEntry(x, day.getDate()))
+            day: dayOfMonth,
+            text: `${DateHelper.getDayOfWeek(day)}, ${dayOfMonth}`,
+            data: dailyEntries.map(x => toTimeEntry(x, dayOfMonth)),
+            dailyTotal: DateHelper.secondsToTimeDisplay(totalSeconds)
         })
     }
     return arr;
@@ -36,24 +43,27 @@ const toTimeEntry = (entry, day) => {
     return {
         id: entry.id,
         day: day,
-        title: `${DateHelper.getTime(start)} - ${DateHelper.getTime(end)}`,
+        startText: DateHelper.getTime(start),
+        endText: DateHelper.getTime(end),
+        timeText: DateHelper.secondsToTimeDisplay(entry.timeDiffSeconds),
         notePreview: entry.note,
     };
 }
 
 export const MonthList = ({ navigation }) => {
+    let dayClickActionSheet;
     const [days, setDays] = useState(getDaysList([]));
     const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
             //on focus
-            console.log('focus');
+            console.log('focus MonthList');
             refreshMonthlyEntries();
 
             return () => {
                 //on unfocus
-                console.log('unfocus');
+                console.log('unfocus MonthList');
             };
         }, [])
     )
@@ -95,21 +105,25 @@ export const MonthList = ({ navigation }) => {
                     return <TimeItem 
                         data={item} 
                         handleDelete={() => deleteItem(item.id)} 
-                        handleDetails={() => navigation.push('Details', { timeEntryId: item.id, day: item.day, onRefresh: refreshMonthlyEntries })}
+                        handleDetails={() => navigation.navigate('Details', { timeEntryId: item.id, day: item.day })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
-                    <View style={{ padding: 10, flexDirection: 'row', alignContent: "space-between" }}>
-                        <View style={[styles.row, {flexDirection: 'column', backgroundColor: '#00FF00' } ]}> 
-                            <Text style={styles.header}>{section.text}</Text>
-                        </View>
-                        <View style={[styles.row, {flexDirection: 'column', alignContent: 'flex-end', backgroundColor: '#FF0000' } ]}>
-                            <Button title='New' onPress={() => navigation.push('Details', { timeEntryId: 0, day: section.day, onRefresh: refreshMonthlyEntries })} />
-                        </View>
+                    <View style={styles.headerRow}>
+                        <Text style={[styles.headerColumn ]} onPress={() => dayClickActionSheet.show()}>{section.text}</Text>
+                        <Text style={[styles.headerColumn, { textAlign: 'right' } ]}>Total: {section.dailyTotal}</Text>
                     </View>
                 )}
             />
             <CheckInOut onNewEntry={refreshMonthlyEntries} />
+
+            <ActionSheet
+                ref={o => dayClickActionSheet = o}
+                title={'Select action'}
+                options={['New Entry', 'History', 'Cancel']}
+                cancelButtonIndex={2}
+                onPress={(index) => console.log(index)}
+                />
         </SafeAreaView>
     );
 };
@@ -118,17 +132,21 @@ export const MonthList = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: Style.ColorPalette.c2
     },
     header: {
-        fontSize: 22,
+        fontSize: 20,
         backgroundColor: "#fff"
     },
-    row: {
+    headerRow: { 
         flex: 1,
-        flexDirection: "row",
+        flexDirection: 'row',
+        padding: 10,
+    },
+    headerColumn: {
+        flex: 1,
+        flexDirection: 'row',
         flexWrap: "wrap",
-        alignItems: "center",
-        marginBottom: 10,
-      }
+    }
 });
 
