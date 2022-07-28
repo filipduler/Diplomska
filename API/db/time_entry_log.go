@@ -4,7 +4,9 @@ import (
 	"time"
 )
 
-type TimeEntryLog struct {
+type TimeEntryLogTable struct{ *store }
+
+type TimeEntryLogModel struct {
 	StartTimeUtc  time.Time  `db:"StartTimeUtc"`
 	EndTimeUtc    *time.Time `db:"EndTimeUtc"`
 	DailyHours    float64    `db:"DailyHours"`
@@ -15,7 +17,7 @@ type TimeEntryLog struct {
 	InsertedOnUtc time.Time  `db:"InsertedOnUtc"`
 }
 
-func (store *DBStore) InsertTimeEntryLog(tel TimeEntryLog) error {
+func (store *TimeEntryLogTable) Insert(tel *TimeEntryLogModel) error {
 	tel.InsertedOnUtc = time.Now()
 
 	_, err := store.Exec("INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, DailyHours, Note, ChangeReason, UserId, TimeEntryId, InsertedOnUtc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

@@ -14,7 +14,7 @@ var (
 func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 	dbStore := db.New()
 
-	entries, err := dbStore.GetTimeEntries(userId, month, year)
+	entries, err := dbStore.TimeEntry.GetByMonth(userId, month, year)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 func newEntry(start time.Time, end time.Time, note string, userId int64) error {
 	dbStore := db.New()
 
-	_, err := dbStore.InsertTimeEntry(db.TimeEntry{
+	_, err := dbStore.TimeEntry.Insert(&db.TimeEntryModel{
 		StartTimeUtc: start,
 		EndTimeUtc:   &end,
 		Note:         note,
@@ -58,7 +58,7 @@ func newEntry(start time.Time, end time.Time, note string, userId int64) error {
 func updateEntry(timeEntryId int64, start time.Time, end time.Time, note string, userId int64) error {
 	dbStore := db.New()
 
-	te, err := dbStore.GetTimeEntry(timeEntryId)
+	te, err := dbStore.TimeEntry.GetById(timeEntryId)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func updateEntry(timeEntryId int64, start time.Time, end time.Time, note string,
 		return err
 	}
 
-	err = dbStore.UpdateTimeEntry(db.TimeEntry{
+	err = dbStore.TimeEntry.Update(&db.TimeEntryModel{
 		BaseModel:    te.BaseModel,
 		StartTimeUtc: start,
 		EndTimeUtc:   &end,
@@ -83,7 +83,7 @@ func updateEntry(timeEntryId int64, start time.Time, end time.Time, note string,
 		return err
 	}
 
-	err = dbStore.InsertTimeEntryLog(db.TimeEntryLog{
+	err = dbStore.TimeEntryLog.Insert(&db.TimeEntryLogModel{
 		StartTimeUtc: te.StartTimeUtc,
 		EndTimeUtc:   te.EndTimeUtc,
 		ChangeReason: "",
@@ -102,7 +102,7 @@ func updateEntry(timeEntryId int64, start time.Time, end time.Time, note string,
 func deleteEntry(timeEntryId int64, userId int64) error {
 	dbStore := db.New()
 
-	te, err := dbStore.GetTimeEntry(timeEntryId)
+	te, err := dbStore.TimeEntry.GetById(timeEntryId)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func deleteEntry(timeEntryId int64, userId int64) error {
 	}
 
 	te.IsDeleted = true
-	err = dbStore.UpdateTimeEntry(*te)
+	err = dbStore.TimeEntry.Update(te)
 
 	return err
 }
@@ -121,7 +121,7 @@ func startTimerEntry(userId int64) (*timerModel, error) {
 	dbStore := db.New()
 	now := time.Now()
 
-	timeEntryId, err := dbStore.InsertTimeEntry(db.TimeEntry{
+	timeEntryId, err := dbStore.TimeEntry.Insert(&db.TimeEntryModel{
 		StartTimeUtc: now,
 		EndTimeUtc:   nil,
 		Note:         "",
@@ -131,7 +131,7 @@ func startTimerEntry(userId int64) (*timerModel, error) {
 	})
 
 	if err == nil {
-		te, err := dbStore.GetTimeEntry(timeEntryId)
+		te, err := dbStore.TimeEntry.GetById(timeEntryId)
 		if err == nil {
 			return &timerModel{
 				Id:           te.Id,
@@ -147,7 +147,7 @@ func startTimerEntry(userId int64) (*timerModel, error) {
 
 func checkTimerEntry(userId int64) (*timerModel, error) {
 	dbStore := db.New()
-	te, err := dbStore.GetUnfinishedDailyTimeEntry(userId)
+	te, err := dbStore.TimeEntry.GetUnfinishedDaily(userId)
 
 	if err == nil {
 		return &timerModel{
@@ -161,7 +161,7 @@ func checkTimerEntry(userId int64) (*timerModel, error) {
 func stopTimerEntry(timeEntryId int64, userId int64) error {
 	dbStore := db.New()
 
-	te, err := dbStore.GetTimeEntry(timeEntryId)
+	te, err := dbStore.TimeEntry.GetById(timeEntryId)
 
 	if err == nil {
 		now := time.Now()
@@ -176,7 +176,7 @@ func stopTimerEntry(timeEntryId int64, userId int64) error {
 		}
 
 		te.EndTimeUtc = &now
-		err = dbStore.UpdateTimeEntry(*te)
+		err = dbStore.TimeEntry.Update(te)
 		return err
 	}
 
@@ -185,10 +185,10 @@ func stopTimerEntry(timeEntryId int64, userId int64) error {
 
 func cancelTimerEntry(userId int64) error {
 	dbStore := db.New()
-	return dbStore.DeleteUnfinishedTimeEntries(userId)
+	return dbStore.TimeEntry.DeleteUnfinished(userId)
 }
 
-func hasAccess(ta *db.TimeEntry, userId int64) bool {
+func hasAccess(ta *db.TimeEntryModel, userId int64) bool {
 	//TODO if user IsAdmin give access
 	return ta.UserId == userId
 }

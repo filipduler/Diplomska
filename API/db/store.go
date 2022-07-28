@@ -22,24 +22,38 @@ func init() {
 }
 
 type DBStore struct {
+	*store
+	User         UserTable
+	TimeEntry    TimeEntryTable
+	TimeEntryLog TimeEntryLogTable
+}
+
+type store struct {
 	DB *sqlx.DB
 	tx *sql.Tx
 }
 
 func New() DBStore {
-	return DBStore{
+	store := store{
 		DB: db,
 		tx: nil,
 	}
+
+	return DBStore{
+		store:        &store,
+		User:         UserTable{&store},
+		TimeEntry:    TimeEntryTable{&store},
+		TimeEntryLog: TimeEntryLogTable{&store},
+	}
 }
 
-func (store *DBStore) StartTransaction() error {
+func (store *store) StartTransaction() error {
 	var err error
 	store.tx, err = store.DB.Begin()
 	return err
 }
 
-func (store *DBStore) Commit() error {
+func (store *store) Commit() error {
 	if store.tx != nil {
 		err := store.tx.Commit()
 		store.tx = nil
@@ -48,7 +62,7 @@ func (store *DBStore) Commit() error {
 	return ErrNoActiveTransaction
 }
 
-func (store *DBStore) Rollback() error {
+func (store *store) Rollback() error {
 	if store.tx != nil {
 		err := store.tx.Rollback()
 		store.tx = nil
@@ -57,7 +71,7 @@ func (store *DBStore) Rollback() error {
 	return ErrNoActiveTransaction
 }
 
-func (store *DBStore) Exec(query string, args ...any) (sql.Result, error) {
+func (store *store) Exec(query string, args ...any) (sql.Result, error) {
 	if store.tx != nil {
 		return store.tx.Exec(query, args...)
 	}

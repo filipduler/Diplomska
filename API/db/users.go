@@ -1,5 +1,7 @@
 package db
 
+type UserTable struct{ *store }
+
 type UserModel struct {
 	BaseModel
 	DisplayName  string `db:"DisplayName"`
@@ -8,7 +10,7 @@ type UserModel struct {
 	Active       bool   `db:"Active"`
 }
 
-func (store *DBStore) LoadUserByEmail(email string) (*UserModel, error) {
+func (store *UserTable) GetByEmail(email string) (*UserModel, error) {
 	user := UserModel{}
 	err := store.DB.Get(&user, "SELECT * FROM User WHERE Email = ?", email)
 	return &user, err

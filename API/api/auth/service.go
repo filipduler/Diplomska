@@ -14,7 +14,7 @@ func loginUser(email string, password string) (string, error) {
 
 	normalizedEmail := utils.NormalizeDown(email)
 
-	user, err := dbStore.LoadUserByEmail(normalizedEmail)
+	user, err := dbStore.User.GetByEmail(normalizedEmail)
 	if err != nil {
 		return "", err
 	}
