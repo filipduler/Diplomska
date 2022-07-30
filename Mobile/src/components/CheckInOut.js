@@ -10,7 +10,7 @@ import {
     Animated,
     TouchableOpacity,
 } from 'react-native';
-import { postStartTimer, postStopTimer, getCheckTimer, postCancelTimer } from '../../services/requests'
+import Requests from 'mobile/services/requests';
 
 let activeTimer = null;
 

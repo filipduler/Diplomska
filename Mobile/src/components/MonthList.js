@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { TimeItem } from './TimeItem';
-import * as Request from '../../services/requests';
+import Requests from 'mobile/services/requests';
 import DateHelper from 'mobile/helpers/date';
 import { Store } from '../../services/store';
 import StyleService from 'mobile/services/styles';
@@ -69,7 +69,7 @@ export const MonthList = ({ navigation }) => {
     )
 
     const refreshMonthlyEntries = async () => {
-        const res = await Request.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
+        const res = await Requests.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
         if (res && res.ok) {
             global.monthlyEntries = res.payload.entries;
             setDays(getDaysList(res.payload.entries));
@@ -78,7 +78,7 @@ export const MonthList = ({ navigation }) => {
     }
 
     const deleteItem = async (timeEntryId) => {
-        const res = await Request.deleteTimeEntry(timeEntryId);
+        const res = await Requests.deleteTimeEntry(timeEntryId);
         console.log(res);
         if (res && res.ok) {
             const arr = [...days];

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button, Text, SafeAreaView, StyleSheet, View, TextInput } from 'react-native';
-import * as Request from 'mobile/services/requests'
+import { Button, Text, SafeAreaView, StyleSheet, View, TextInput, ScrollView } from 'react-native';
+import Requests from 'mobile/services/requests';
 import DateHelper from 'mobile/helpers/date';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,6 +19,8 @@ const prepareDate = (date) => {
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
+
+    const [readonlyMode, setReadonlyMode] = useState(false)
 
     const [typeList, setTypeList] = useState([])
     const [startTime, setStartTime] = useState(prepareDate());
@@ -47,7 +49,9 @@ const DetailsView = ({ route, navigation }) => {
     )
 
     const loadEntry = async () => {
-        const response = await Request.getTimeOffEntry(id);
+        setReadonlyMode(false);
+
+        const response = await Requests.getTimeOffEntry(id);
         console.log(response);
         if (response && response.ok) {
             const item = response.payload;
@@ -61,15 +65,20 @@ const DetailsView = ({ route, navigation }) => {
             setType(item.type.id);
             setNote(item.note);
             setStatus({
+                isFinished: item.isFinished,
                 isCancellable: item.isCancellable,
                 label: item.status.name,
                 color: StyleService.getColorFromStatus(item.status.id)
             })
+
+            if(item.isFinished) {
+                setReadonlyMode(true);
+            }
         }
     }
 
     const loadTypes = async () => {
-        const response = await Request.getTimeOffTypes();
+        const response = await Requests.getTimeOffTypes();
         console.log(response);
         if (response && response.ok) {
             setTypeList(response.payload.map(x => {
@@ -91,9 +100,9 @@ const DetailsView = ({ route, navigation }) => {
     };
 
     const closeRequest = async () => {
-        const response = await Request.putTimeOffCloseRequest(id);
+        const response = await Requests.putTimeOffCloseRequest(id);
         console.log(response);
-        if(response && response.ok){
+        if (response && response.ok) {
             //refresh entry data
             await loadEntry();
         }
@@ -101,83 +110,92 @@ const DetailsView = ({ route, navigation }) => {
 
     const save = async () => {
         const body = {
-            startTimeUtc: time.start.time,
-            endTimeUtc: time.end.time,
-            note: note
-        }
+            id: id || null,
+            startTime: startTime.raw.toDate(),
+            endTime: endTime.raw.toDate(),
+            note: note,
+            typeId: type
+        };
 
-        if (timeEntryId > 0) {
-            const res = await Request.putUpdateEntry(timeEntryId, body);
-            if (res && res.ok) {
-            }
-            console.log(res);
-        } else {
-            const res = await Request.postNewEntry(body);
-            console.log(res);
-            if (res && res.ok) {
-            }
+        const response = await Requests.postTimeOffSave(body);
+        console.log(response);
+        if (response && response.ok) {
+            navigation.goBack();
         }
     }
 
     return (
         <SafeAreaView style={styles.container}>
-            <View>
-                <Text>Start</Text>
-                <Button title={startTime.date + '\n' + startTime.time} onPress={(() => showTimePicker(startTime, setStartTime))} />
-            </View>
-            <View>
-                <Text>End</Text>
-                <Button title={endTime.date + '\n' + endTime.time} onPress={() => showTimePicker(endTime, setEndTime)} />
-            </View>
-            <View>
-                <Text>Type</Text>
-                <RNPickerSelect
-                    value={type}
-                    onValueChange={(value) => setType(value)}
-                    items={typeList}
-                />
-            </View>
-            <View>
-                <Text>Note</Text>
-                <TextInput
-                    multiline={true}
-                    numberOfLines={11}
-                    value={note}
-                    onChangeText={(text) => setNote(text)}
-                    style={styles.textInput}
-                    maxLength={512}
-                    textAlignVertical='top'
-                />
-            </View>
-
-            {status !== null && (
+            <ScrollView
+                scrollEnabled={false}
+                keyboardShouldPersistTaps='handled'>
                 <View>
-                    <View style={[styles.circle, { backgroundColor: status.color }]}></View>
-                    <Text>{status.label}</Text>
-                    {status.isCancellable && (
-                        <Button title='Close' onPress={closeRequest} />
-                    )}
+                    <Text>Start</Text>
+                    <Button disabled={readonlyMode} 
+                        title={startTime.date + '\n' + startTime.time}
+                        onPress={(() => showTimePicker(startTime, setStartTime))} />
                 </View>
-            )}
-
-            {id > 0 && (
                 <View>
-                    <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
+                    <Text>End</Text>
+                    <Button disabled={readonlyMode}
+                        title={endTime.date + '\n' + endTime.time}
+                        onPress={() => showTimePicker(endTime, setEndTime)} />
                 </View>
-            )}
+                <View>
+                    <Text>Type</Text>
+                    <RNPickerSelect disabled={readonlyMode}
+                        value={type}
+                        onValueChange={(value) => setType(value)}
+                        items={typeList}
+                    />
+                </View>
+                <View>
+                    <Text>Note</Text>
+                    {!readonlyMode ? (
+                        <TextInput
+                        multiline={true}
+                        numberOfLines={11}
+                        value={note}
+                        onChangeText={(text) => setNote(text)}
+                        style={styles.textInput}
+                        maxLength={512}
+                        textAlignVertical='top'
+                    />
+                    ) : (<Text>{note}</Text>)}
+                    
+                </View>
 
-            <View>
-                <Button title='Save' />
-            </View>
+                {status !== null && (
+                    <View>
+                        <View style={[styles.circle, { backgroundColor: status.color }]}></View>
+                        <Text>{status.label}</Text>
+                        {status.isCancellable && (
+                            <Button title='Close' onPress={closeRequest} />
+                        )}
+                    </View>
+                )}
 
-            {picker.open && (
-                <DateTimePicker
-                    value={date}
-                    mode='time'
-                    is24Hour={true}
-                    onChange={onChange}
-                />
-            )}
+                {id > 0 && (
+                    <View>
+                        <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
+                    </View>
+                )}
+
+                {(id === 0 || (status !== null && !status.isFinished)) && (
+                    <View>
+                        <Button title='Save' onPress={save} />
+                    </View>
+                )}
+
+                {picker.open && (
+                    <DateTimePicker
+                        value={date}
+                        mode='time'
+                        is24Hour={true}
+                        onChange={onChange}
+                    />
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 };

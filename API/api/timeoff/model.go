@@ -27,4 +27,5 @@ type typeModel struct {
 type timeOffDetailsModel struct {
 	timeOffModel
 	IsCancellable bool `json:"isCancellable"`
+	IsFinished    bool `json:"isFinished"`
 }

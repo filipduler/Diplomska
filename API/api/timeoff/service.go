@@ -83,6 +83,7 @@ func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error)
 		return &timeOffDetailsModel{
 			timeOffModel:  *resEntry,
 			IsCancellable: entry.TimeOffStatusTypeId == int64(Pending),
+			IsFinished:    entry.TimeOffStatusTypeId != int64(Pending),
 		}, nil
 	}
 
@@ -129,7 +130,7 @@ func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 		}
 		model.Id = timeOffId
 	} else {
-		model, err := dbStore.TimeOff.GetById(id)
+		model, err = dbStore.TimeOff.GetById(id)
 		if err != nil {
 			return 0, err
 		}

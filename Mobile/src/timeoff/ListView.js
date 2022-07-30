@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Request from 'mobile/services/requests';
+import Requests from 'mobile/services/requests';
 import DateHelper from 'mobile/helpers/date';
 import StyleService from 'mobile/services/styles';
 import {
@@ -30,7 +30,7 @@ const ListView = ({ navigation }) => {
 
     const getEntries = async () => {
         let arr = [];
-        const response = await Request.getTimeOffEntries();
+        const response = await Requests.getTimeOffEntries();
         if(response && response.ok) {
             for(const entry of response.payload) {
                 arr.push({
