@@ -13,3 +13,7 @@ func DateEqual(date1, date2 time.Time) bool {
 	y2, m2, d2 := date2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
 }
+
+func FormatHistoryDate(time time.Time) string {
+	return time.Format("02, Jan 2006, 15:04")
+}

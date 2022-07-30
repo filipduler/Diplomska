@@ -16,14 +16,14 @@ type TimeOffLogModel struct {
 	InsertedOnUtc       time.Time `db:"InsertedOnUtc"`
 }
 
-/*func (store *timeOffTable) GetByUserId(userId int64) ([]TimeOffModel, error) {
-	tf := []TimeOffModel{}
-	err := store.DB.Select(&tf, "SELECT * FROM TimeOff WHERE UserId = ?", userId)
+func (store *timeOffLogTable) GetByTimeOffId(timeOffId int64) ([]TimeOffLogModel, error) {
+	tf := []TimeOffLogModel{}
+	err := store.DB.Select(&tf, "SELECT * FROM TimeOffLog WHERE TimeOffId = ?", timeOffId)
 	if err != nil {
 		return nil, err
 	}
 	return tf, nil
-}*/
+}
 
 func (store *timeOffLogTable) Insert(tf *TimeOffLogModel) error {
 	tf.InsertedOnUtc = time.Now().UTC()

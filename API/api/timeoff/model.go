@@ -29,3 +29,20 @@ type timeOffDetailsModel struct {
 	IsCancellable bool `json:"isCancellable"`
 	IsFinished    bool `json:"isFinished"`
 }
+
+type historyAction int
+
+const (
+	RequestOpen historyAction = iota
+	RequestClosed
+	TimeChange
+	TypeChange
+)
+
+type historyModel struct {
+	Action       historyAction `json:"action"`
+	StartTimeUtc *time.Time    `json:"startTimeUtc,omitempty"`
+	EndTimeUtc   *time.Time    `json:"endTimeUtc,omitempty"`
+	Type         *string       `json:"type,omitempty"`
+	Status       *string       `json:"status,omitempty"`
+}

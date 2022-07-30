@@ -71,7 +71,7 @@ const DetailsView = ({ route, navigation }) => {
                 color: StyleService.getColorFromStatus(item.status.id)
             })
 
-            if(item.isFinished) {
+            if (item.isFinished) {
                 setReadonlyMode(true);
             }
         }
@@ -131,7 +131,7 @@ const DetailsView = ({ route, navigation }) => {
                 keyboardShouldPersistTaps='handled'>
                 <View>
                     <Text>Start</Text>
-                    <Button disabled={readonlyMode} 
+                    <Button disabled={readonlyMode}
                         title={startTime.date + '\n' + startTime.time}
                         onPress={(() => showTimePicker(startTime, setStartTime))} />
                 </View>
@@ -153,16 +153,16 @@ const DetailsView = ({ route, navigation }) => {
                     <Text>Note</Text>
                     {!readonlyMode ? (
                         <TextInput
-                        multiline={true}
-                        numberOfLines={11}
-                        value={note}
-                        onChangeText={(text) => setNote(text)}
-                        style={styles.textInput}
-                        maxLength={512}
-                        textAlignVertical='top'
-                    />
+                            multiline={true}
+                            numberOfLines={11}
+                            value={note}
+                            onChangeText={(text) => setNote(text)}
+                            style={styles.textInput}
+                            maxLength={512}
+                            textAlignVertical='top'
+                        />
                     ) : (<Text>{note}</Text>)}
-                    
+
                 </View>
 
                 {status !== null && (

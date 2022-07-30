@@ -3,25 +3,26 @@ package timeoff
 import (
 	"api/db"
 	"errors"
+	"time"
 
 	"github.com/samber/lo"
 )
 
-type Status int64
+type timeOffStatus int64
 
 const (
-	Pending  Status = 1
-	Accepted Status = 2
-	Rejected Status = 3
-	Canceled Status = 4
+	Pending  timeOffStatus = 1
+	Accepted timeOffStatus = 2
+	Rejected timeOffStatus = 3
+	Canceled timeOffStatus = 4
 )
 
-type Type int64
+type timeOffType int64
 
 const (
-	Vacation Type = 1
-	Medical  Type = 2
-	Other    Type = 3
+	Vacation timeOffType = 1
+	Medical  timeOffType = 2
+	Other    timeOffType = 3
 )
 
 var (
@@ -193,6 +194,81 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 	}
 
 	return dbStore.Commit()
+}
+
+func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyModel, error) {
+	dbStore := db.New()
+
+	to, err := dbStore.TimeOff.GetById(timeOffId)
+	if err != nil {
+		return nil, err
+	}
+
+	if to.UserId != user.Id {
+		return nil, ErrIncorrectPermissions
+	}
+
+	logs, err := dbStore.TimeOffLog.GetByTimeOffId(timeOffId)
+	if err != nil {
+		return nil, err
+	}
+
+	statusMap, err := getTimeOffStatusTypeMap(&dbStore)
+	if err != nil {
+		return nil, err
+	}
+
+	typeMap, err := getTimeOffTypeMap(&dbStore)
+	if err != nil {
+		return nil, err
+	}
+
+	historyMap := lo.SliceToMap(logs, func(log db.TimeOffLogModel) (time.Time, []historyModel) {
+		return log.InsertedOnUtc, []historyModel{}
+	})
+
+	for i, log := range logs {
+		logMessages := []historyModel{}
+
+		if i == 0 {
+			logMessages = append(logMessages, historyModel{
+				Action:       RequestOpen,
+				StartTimeUtc: &log.StartTimeUtc,
+				EndTimeUtc:   &log.EndTimeUtc,
+			})
+		} else {
+			prevLog := logs[i-1]
+			if prevLog.StartTimeUtc != log.StartTimeUtc || prevLog.EndTimeUtc != log.EndTimeUtc {
+				logMessages = append(logMessages, historyModel{
+					Action:       TimeChange,
+					StartTimeUtc: &log.StartTimeUtc,
+					EndTimeUtc:   &log.EndTimeUtc,
+				})
+			}
+
+			if prevLog.TimeOffTypeId != log.TimeOffTypeId {
+				name := typeMap[log.TimeOffTypeId].Name
+				logMessages = append(logMessages, historyModel{
+					Action: TypeChange,
+					Type:   &name,
+				})
+			}
+
+			if prevLog.TimeOffStatusTypeId != log.TimeOffStatusTypeId &&
+				(log.TimeOffStatusTypeId == int64(Accepted) ||
+					log.TimeOffStatusTypeId == int64(Rejected) ||
+					log.TimeOffStatusTypeId == int64(Canceled)) {
+				name := statusMap[log.TimeOffTypeId].Name
+				logMessages = append(logMessages, historyModel{
+					Action: RequestClosed,
+					Status: &name,
+				})
+			}
+		}
+		historyMap[log.InsertedOnUtc] = logMessages
+	}
+
+	return historyMap, nil
 }
 
 func getTimeOffStatusTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffStatusTypeModel, error) {
