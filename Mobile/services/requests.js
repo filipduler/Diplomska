@@ -32,6 +32,23 @@ export const putUpdateEntry = async (timeEntryId, body) => {
     return await _innerFetch('PUT', `/entry/${timeEntryId}`, JSON.stringify(body));
 }
 
+export const getTimeOffEntries = async () => {
+    return await _innerFetch('GET', '/time-off');
+}
+
+export const getTimeOffEntry = async (id) => {
+    return await _innerFetch('GET', `/time-off/${id}`);
+}
+
+export const getTimeOffTypes = async () => {
+    return await _innerFetch('GET', '/time-off/types');
+}
+
+export const putTimeOffCloseRequest = async (id) => {
+    return await _innerFetch('PUT', `/time-off/${id}/close-request`);
+}
+
+
 async function _innerFetch(method, url, body) {
     let res = null;
     try {
@@ -40,7 +57,8 @@ async function _innerFetch(method, url, body) {
             body: body,
             headers: {
                 Accept: 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'token': Config.API_JWT
             }
         });
         if (response.ok) {

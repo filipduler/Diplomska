@@ -2,15 +2,19 @@ package timeoff
 
 import (
 	"api/api"
+	"api/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 func NewHTTP(r *echo.Group) {
-	group := r.Group("/timeoff")
+	group := r.Group("/time-off")
 
 	group.GET("", httpEntries)
+	group.GET("/:id", httpEntry)
+	group.PUT("/:id/close-request", httpCloseRequest)
+	group.GET("/types", httpTypes)
 }
 
 func httpEntries(c echo.Context) error {
@@ -27,13 +31,46 @@ func httpEntries(c echo.Context) error {
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }
 
-/*func httpNewEntry(c echo.Context) error {
-	request := newEntryRequest{}
-	if err := c.Bind(&request); err != nil {
+func httpEntry(c echo.Context) error {
+	timeOffId, err := utils.ParseStrToInt64(c.Param("id"))
+	if err != nil {
 		return err
 	}
 
-	err := newEntry(request.StartTimeUtc, request.EndTimeUtc, request.Note, 1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	res, err := getEntry(timeOffId, user)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
+}
+
+func httpTypes(c echo.Context) error {
+	res, err := getTypes()
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
+}
+
+func httpCloseRequest(c echo.Context) error {
+	timeOffId, err := utils.ParseStrToInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	err = closeEntryStatus(timeOffId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -41,7 +78,7 @@ func httpEntries(c echo.Context) error {
 	return c.JSON(http.StatusOK, api.NewEmptyResponse(err == nil))
 }
 
-func httpUpdateEntry(c echo.Context) error {
+/*func httpUpdateEntry(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err

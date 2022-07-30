@@ -23,7 +23,7 @@ CREATE TABLE `user` (
 );
 
 INSERT INTO `user` (DisplayName, Email, PasswordHash, Active, InsertedOnUtc, UpdatedOnUtc)
-VALUES ('Admin', 'test@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 1, NOW(), NOW());
+VALUES ('Admin', 'test@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
 /*password: test123*/
 
 CREATE TABLE `timeentry` (
@@ -54,30 +54,29 @@ CREATE TABLE `timeentrylog` (
   FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 );
 
-
-
 CREATE TABLE `timeoffstatustype` (
-  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `Id` bigint NOT NULL,
   `Name` varchar(256) NOT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `Name_UNIQUE` (`Name`)
 );
 
-INSERT INTO `timeoffstatustype` (Name) VALUES ('Pending'), ('Accepted'),('Rejected'),('Canceled');
+INSERT INTO `timeoffstatustype` (Id, Name) VALUES (1, 'Pending'), (2, 'Accepted'),(3, 'Rejected'),(4, 'Canceled');
 
 CREATE TABLE `timeofftype` (
-  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `Id` bigint NOT NULL,
   `Name` varchar(256) NOT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `Name_UNIQUE` (`Name`)
 );
 
-INSERT INTO `timeofftype` (Name) VALUES ('Vacation'), ('Medical'), ('Other');
+INSERT INTO `timeofftype` (Id, Name) VALUES (1, 'Vacation'), (2, 'Medical'), (3, 'Other');
 
 CREATE TABLE `timeoff` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
   `StartTimeUtc` datetime NOT NULL,
   `EndTimeUtc` datetime NOT NULL,
+  `Note` varchar(512) NOT NULL,
   `TimeOffTypeId` bigint NOT NULL,
   `TimeOffStatusTypeId` bigint NOT NULL,
   `UserId` bigint NOT NULL,
@@ -89,10 +88,10 @@ CREATE TABLE `timeoff` (
   FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 ) ;
 
-INSERT INTO `timeoff` (StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
-(NOW(), NOW(), 1, 1, 1, NOW(), NOW()),
-(NOW(), NOW(), 2, 2, 1, NOW(), NOW()),
-(NOW(), NOW(), 3, 3, 1, NOW(), NOW());
+INSERT INTO `timeoff` (StartTimeUtc, EndTimeUtc, Note, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
+(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test1', 1, 1, 1, UTC_TIMESTAMP, UTC_TIMESTAMP),
+(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test2', 2, 2, 1, UTC_TIMESTAMP, UTC_TIMESTAMP),
+(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test3', 3, 3, 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
 
 CREATE TABLE `timeofflog` (
   `StartTimeUtc` datetime NOT NULL,

@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { Button, Text, SafeAreaView, View, StyleSheet, TextInput } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as DateHelper from '../helpers/date';
+import DateHelper from 'mobile/helpers/date';
 import { Store } from '../services/store';
 import * as Request from '../services/requests'
 
@@ -14,7 +14,7 @@ export const TimeEntryDetails = ({ route, navigation }) => {
     const loadTime = (timeSelector) => {
         if(entry) {
             const timeUTC = new Date(timeSelector(entry));
-            const time = DateHelper.convertUTCDateToLocal(timeUTC);
+            const time = DateHelper.convertUTCToLocal(timeUTC);
 
             return {
                 time: time,

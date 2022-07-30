@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { TimeItem } from './TimeItem';
 import * as Request from '../../services/requests';
-import * as DateHelper from '../../helpers/date';
+import DateHelper from 'mobile/helpers/date';
 import { Store } from '../../services/store';
-import * as Style from '../../services/styles';
+import StyleService from 'mobile/services/styles';
 import {
     View,
     SafeAreaView,
@@ -43,8 +43,8 @@ const toTimeEntry = (entry, day) => {
     return {
         id: entry.id,
         day: day,
-        startText: DateHelper.getTime(start),
-        endText: DateHelper.getTime(end),
+        startText: DateHelper.formatTime(start),
+        endText: DateHelper.formatTime(end),
         timeText: DateHelper.secondsToTimeDisplay(entry.timeDiffSeconds),
         notePreview: entry.note,
     };
@@ -132,7 +132,7 @@ export const MonthList = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Style.ColorPalette.c2
+        backgroundColor: StyleService.colorPalette.c2
     },
     header: {
         fontSize: 20,

@@ -10,6 +10,7 @@ type TimeOffModel struct {
 	BaseModel
 	StartTimeUtc        time.Time `db:"StartTimeUtc"`
 	EndTimeUtc          time.Time `db:"EndTimeUtc"`
+	Note                string    `db:"Note"`
 	TimeOffTypeId       int64     `db:"TimeOffTypeId"`
 	TimeOffStatusTypeId int64     `db:"TimeOffStatusTypeId"`
 	UserId              int64     `db:"UserId"`
@@ -36,10 +37,11 @@ func (store *timeOffTable) GetById(id int64) (*TimeOffModel, error) {
 func (store *timeOffTable) Insert(tf *TimeOffModel) (int64, error) {
 	tf.BeforeInsert()
 
-	res, err := store.DB.Exec("INSERT INTO TimeOff (StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) "+
+	res, err := store.DB.Exec("INSERT INTO TimeOff (StartTimeUtc, EndTimeUtc, Note, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) "+
 		"VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		tf.StartTimeUtc,
 		tf.EndTimeUtc,
+		tf.Note,
 		tf.TimeOffTypeId,
 		tf.TimeOffStatusTypeId,
 		tf.UserId,
@@ -54,9 +56,10 @@ func (store *timeOffTable) Insert(tf *TimeOffModel) (int64, error) {
 func (store *timeOffTable) Update(tf *TimeOffModel) error {
 	tf.BeforeUpdate()
 
-	_, err := store.DB.Exec("UPDATE TimeOff SET StartTimeUtc = ?, EndTimeUtc = ?, TimeOffTypeId = ?, TimeOffStatusTypeId = ?, UpdatedOnUtc = ? WHERE Id = ?",
+	_, err := store.DB.Exec("UPDATE TimeOff SET StartTimeUtc = ?, EndTimeUtc = ?, Note = ?, TimeOffTypeId = ?, TimeOffStatusTypeId = ?, UpdatedOnUtc = ? WHERE Id = ?",
 		tf.StartTimeUtc,
 		tf.EndTimeUtc,
+		tf.Note,
 		tf.TimeOffTypeId,
 		tf.TimeOffStatusTypeId,
 		tf.UpdatedOnUtc,

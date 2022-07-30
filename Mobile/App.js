@@ -15,6 +15,7 @@ import { Tracker } from './src/Tracker';
 import {
   useColorScheme,
 } from 'react-native';
+import TimeOffStack from './src/timeoff/TimeOffStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,9 +25,10 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator screenOptions={{headerShown: false}}>
+      <Tab.Navigator>
         <Tab.Screen name="Dashboard" component={Dashboard} />
         <Tab.Screen name="Time Tracker" component={Tracker} />
+        <Tab.Screen name="Time Off" component={TimeOffStack} options={{headerShown: false}} />
       </Tab.Navigator>
     </NavigationContainer>
   );

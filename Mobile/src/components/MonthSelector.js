@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Store } from '../../services/store';
-import * as DateHelper from '../../helpers/date';
-
+import DateHelper from 'mobile/helpers/date';
 import {
     View,
     Text,

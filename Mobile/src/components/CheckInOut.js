@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import * as DateHelpers from '../../helpers/date';
+import DateHelper from 'mobile/helpers/date';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
@@ -53,7 +53,7 @@ export const CheckInOut = (props) => {
                 const secs = counter.seconds + 1;
                 setCounter({
                     seconds: secs,
-                    time: DateHelpers.secondsToTime(secs)
+                    time: DateHelper.secondsToTime(secs)
                 });
             }, 1000);
             return () => clearInterval(timer);
@@ -102,7 +102,7 @@ export const CheckInOut = (props) => {
 
             let secs = Math.trunc(ms / 1000);
             if (!isNaN(secs)) {
-                setCounter({ seconds: secs, time: DateHelpers.secondsToTime(secs) });
+                setCounter({ seconds: secs, time: DateHelper.secondsToTime(secs) });
             }
         }
     }
