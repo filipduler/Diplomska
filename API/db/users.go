@@ -1,6 +1,6 @@
 package db
 
-type UserTable struct{ *store }
+type userTable struct{ *store }
 
 type UserModel struct {
 	BaseModel
@@ -10,8 +10,14 @@ type UserModel struct {
 	Active       bool   `db:"Active"`
 }
 
-func (store *UserTable) GetByEmail(email string) (*UserModel, error) {
+func (store *userTable) GetByEmail(email string) (*UserModel, error) {
 	user := UserModel{}
 	err := store.DB.Get(&user, "SELECT * FROM User WHERE Email = ?", email)
+	return &user, err
+}
+
+func (store *userTable) GetById(userId int64) (*UserModel, error) {
+	user := UserModel{}
+	err := store.DB.Get(&user, "SELECT * FROM User WHERE Id = ?", userId)
 	return &user, err
 }

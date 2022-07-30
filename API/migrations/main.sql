@@ -1,10 +1,30 @@
 DROP TABLE IF EXISTS `timeentrylog`;
 DROP TABLE IF EXISTS `timeentry`;
 
-DROP TABLE IF EXISTS `timeoffentrylog`;
-DROP TABLE IF EXISTS `timeoffentry`;
+DROP TABLE IF EXISTS `timeofflog`;
+DROP TABLE IF EXISTS `timeoff`;
 DROP TABLE IF EXISTS `timeoffstatustype`;
 DROP TABLE IF EXISTS `timeofftype`;
+
+
+DROP TABLE IF EXISTS `user`;
+
+CREATE TABLE `user` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `DisplayName` varchar(255) NOT NULL,
+  `Email` varchar(320) NOT NULL,
+  `PasswordHash` binary(60) NOT NULL,
+  `Active` tinyint NOT NULL,
+  `InsertedOnUtc` datetime NOT NULL,
+  `UpdatedOnUtc` datetime NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `User_DisplayName_uindex` (`DisplayName`),
+  UNIQUE KEY `User_Email_uindex` (`Email`)
+);
+
+INSERT INTO `user` (DisplayName, Email, PasswordHash, Active, InsertedOnUtc, UpdatedOnUtc)
+VALUES ('Admin', 'test@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 1, NOW(), NOW());
+/*password: test123*/
 
 CREATE TABLE `timeentry` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
@@ -12,11 +32,12 @@ CREATE TABLE `timeentry` (
   `EndTimeUtc` datetime DEFAULT NULL,
   `Note` varchar(512) NOT NULL,
   `DailyHours` decimal(4,2) NOT NULL,
-  `IsDeleted` tinyint(1) NOT NULL,
-  `UserId` int NOT NULL,
+  `IsDeleted` tinyint NOT NULL,
+  `UserId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,
   `UpdatedOnUtc` datetime NOT NULL,
-  PRIMARY KEY (`Id`)
+  PRIMARY KEY (`Id`),
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 );
 
 CREATE TABLE `timeentrylog` (
@@ -29,8 +50,8 @@ CREATE TABLE `timeentrylog` (
   `TimeEntryId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,
   PRIMARY KEY (`TimeEntryId`,`InsertedOnUtc`),
-  KEY `TimeEntryId_idx` (`TimeEntryId`),
-  CONSTRAINT `TimeEntryId` FOREIGN KEY (`TimeEntryId`) REFERENCES `timeentry` (`Id`)
+  FOREIGN KEY (`TimeEntryId`) REFERENCES `timeentry` (`Id`),
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 );
 
 
@@ -53,7 +74,7 @@ CREATE TABLE `timeofftype` (
 
 INSERT INTO `timeofftype` (Name) VALUES ('Vacation'), ('Medical'), ('Other');
 
-CREATE TABLE `timeoffentry` (
+CREATE TABLE `timeoff` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
   `StartTimeUtc` datetime NOT NULL,
   `EndTimeUtc` datetime NOT NULL,
@@ -63,27 +84,29 @@ CREATE TABLE `timeoffentry` (
   `InsertedOnUtc` datetime NOT NULL,
   `UpdatedOnUtc` datetime NOT NULL,
   PRIMARY KEY (`Id`),
-  KEY `TimeOffTypeId_idx` (`TimeOffTypeId`),
-  KEY `TimeOffStatusTypeId_idx` (`TimeOffStatusTypeId`),
-  CONSTRAINT `TimeOffStatusTypeId` FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
-  CONSTRAINT `TimeOffTypeId` FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`)
+  FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
+  FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`),
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 ) ;
 
-CREATE TABLE `timeoffentrylog` (
+INSERT INTO `timeoff` (StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
+(NOW(), NOW(), 1, 1, 1, NOW(), NOW()),
+(NOW(), NOW(), 2, 2, 1, NOW(), NOW()),
+(NOW(), NOW(), 3, 3, 1, NOW(), NOW());
+
+CREATE TABLE `timeofflog` (
   `StartTimeUtc` datetime NOT NULL,
   `EndTimeUtc` datetime NOT NULL,
   `TimeOffTypeId` bigint NOT NULL,
   `TimeOffStatusTypeId` bigint NOT NULL,
-  `TimeOffEntryId` bigint NOT NULL,
+  `TimeOffId` bigint NOT NULL,
   `UserId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,
-  PRIMARY KEY (`TimeOffEntryId`,`InsertedOnUtc`),
-  KEY `TimeOffTypeId_idx` (`TimeOffTypeId`),
-  KEY `TimeOffStatusTypeId_idx` (`TimeOffStatusTypeId`),
-  KEY `TimeOffEntryId_1` (`TimeOffEntryId`),
-  CONSTRAINT `TimeOffEntryId_1` FOREIGN KEY (`TimeOffEntryId`) REFERENCES `timeoffentry` (`Id`),
-  CONSTRAINT `TimeOffStatusTypeId_1` FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
-  CONSTRAINT `TimeOffTypeId_1` FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`)
+  PRIMARY KEY (`TimeOffId`,`InsertedOnUtc`),
+  FOREIGN KEY (`TimeOffId`) REFERENCES `timeoff` (`Id`),
+  FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
+  FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`),
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 );
 
 
