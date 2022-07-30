@@ -29,6 +29,7 @@ type DBStore struct {
 	TimeOff           timeOffTable
 	TimeOffStatusType timeOffStatusTypeTable
 	TimeOffType       timeOffTypeTable
+	TimeOffLog        timeOffLogTable
 }
 
 type store struct {
@@ -50,6 +51,7 @@ func New() DBStore {
 		TimeOff:           timeOffTable{&store},
 		TimeOffStatusType: timeOffStatusTypeTable{&store},
 		TimeOffType:       timeOffTypeTable{&store},
+		TimeOffLog:        timeOffLogTable{&store},
 	}
 }
 

@@ -2,6 +2,14 @@ package timeoff
 
 import "time"
 
+type saveRequest struct {
+	Id        *int64    `json:"id"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	Note      string    `json:"note"`
+	TypeId    int64     `json:"typeId"`
+}
+
 type timeOffModel struct {
 	Id           int64     `json:"id"`
 	StartTimeUtc time.Time `json:"startTimeUtc"`

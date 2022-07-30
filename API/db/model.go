@@ -9,11 +9,11 @@ type BaseModel struct {
 }
 
 func (b *BaseModel) BeforeInsert() {
-	now := time.Now()
+	now := time.Now().UTC()
 	b.InsertedOnUtc = now
 	b.UpdatedOnUtc = now
 }
 
 func (b *BaseModel) BeforeUpdate() {
-	b.UpdatedOnUtc = time.Now()
+	b.UpdatedOnUtc = time.Now().UTC()
 }

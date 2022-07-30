@@ -104,18 +104,56 @@ func getTypes() ([]typeModel, error) {
 	}), nil
 }
 
-/*func newEntry(start time.Time, end time.Time, note string, userId int64) error {
+func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 	dbStore := db.New()
+	var model *db.TimeOffModel = nil
 
-	_, err := dbStore.TimeEntry.Insert(&db.TimeEntryModel{
-		StartTimeUtc: start,
-		EndTimeUtc:   &end,
-		Note:         note,
-		IsDeleted:    false,
-		UserId:       userId,
-	})
-	return err
-}*/
+	err := dbStore.StartTransaction()
+	if err != nil {
+		return 0, err
+	}
+
+	id := lo.FromPtrOr(request.Id, 0)
+	if id == 0 {
+		model = &db.TimeOffModel{
+			StartTimeUtc:        request.StartTime.UTC(),
+			EndTimeUtc:          request.EndTime.UTC(),
+			Note:                request.Note,
+			TimeOffTypeId:       request.TypeId,
+			TimeOffStatusTypeId: int64(Pending),
+			UserId:              user.Id,
+		}
+		timeOffId, err := dbStore.TimeOff.Insert(model)
+		if err != nil {
+			return 0, err
+		}
+		model.Id = timeOffId
+	} else {
+		model, err := dbStore.TimeOff.GetById(id)
+		if err != nil {
+			return 0, err
+		}
+		model.StartTimeUtc = request.StartTime.UTC()
+		model.EndTimeUtc = request.EndTime.UTC()
+		model.Note = request.Note
+		model.TimeOffTypeId = int64(request.TypeId)
+
+		err = dbStore.TimeOff.Update(model)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	log := mapToEntryLog(user.Id, model)
+	err = dbStore.TimeOffLog.Insert(&log)
+
+	if err != nil {
+		_ = dbStore.Rollback()
+		return 0, err
+	}
+
+	return model.Id, dbStore.Commit()
+}
 
 func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 	dbStore := db.New()
@@ -134,34 +172,27 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 		return ErrIncorrectPermissions
 	}
 
-	/*err = dbStore.StartTransaction()
+	err = dbStore.StartTransaction()
 	if err != nil {
-		return err
-	}*/
-
-	to.TimeOffStatusTypeId = int64(Canceled)
-	return dbStore.TimeOff.Update(to)
-
-	/*err = dbStore.TimeEntryLog.Insert(&db.TimeEntryLogModel{
-		StartTimeUtc: te.StartTimeUtc,
-		EndTimeUtc:   te.EndTimeUtc,
-		ChangeReason: "",
-		UserId:       userId,
-		TimeEntryId:  te.Id,
-	})
-
-	if err != nil {
-		dbStore.Rollback()
 		return err
 	}
 
-	return dbStore.Commit()*/
-}
+	to.TimeOffStatusTypeId = int64(Canceled)
+	err = dbStore.TimeOff.Update(to)
+	if err != nil {
+		return err
+	}
 
-/*func hasAccess(ta *db.TimeEntryModel, userId int64) bool {
-	//TODO if user IsAdmin give access
-	return ta.UserId == userId
-}*/
+	log := mapToEntryLog(user.Id, to)
+	err = dbStore.TimeOffLog.Insert(&log)
+
+	if err != nil {
+		_ = dbStore.Rollback()
+		return err
+	}
+
+	return dbStore.Commit()
+}
 
 func getTimeOffStatusTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffStatusTypeModel, error) {
 	statusEntries, err := dbStore.TimeOffStatusType.Get()
@@ -203,4 +234,15 @@ func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel,
 		}, true
 	}
 	return nil, false
+}
+
+func mapToEntryLog(userId int64, entry *db.TimeOffModel) db.TimeOffLogModel {
+	return db.TimeOffLogModel{
+		StartTimeUtc:        entry.StartTimeUtc,
+		EndTimeUtc:          entry.EndTimeUtc,
+		TimeOffTypeId:       entry.TimeOffTypeId,
+		TimeOffStatusTypeId: entry.TimeOffStatusTypeId,
+		TimeOffId:           entry.Id,
+		UserId:              userId,
+	}
 }
