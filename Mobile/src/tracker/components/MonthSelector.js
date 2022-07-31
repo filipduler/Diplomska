@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store } from '../../services/store';
+import Store from 'mobile/services/store';
 import DateHelper from 'mobile/helpers/date';
 import {
     View,
@@ -7,7 +7,7 @@ import {
     Button
 } from 'react-native';
 
-export const MonthSelector = ({ onUpdate }) => {
+const MonthSelector = ({ onUpdate }) => {
     const [ cursor, setCursor ] = useState({ 
         year: Store.currentDate.year, 
         month: Store.currentDate.month,
@@ -34,3 +34,5 @@ export const MonthSelector = ({ onUpdate }) => {
         </View>
     );
 };
+
+export default MonthSelector;

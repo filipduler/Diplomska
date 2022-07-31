@@ -15,7 +15,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 let rowDict = {};
 let prevOpenedRow;
 
-export const TimeItem = (props) => {
+const TimeItem = (props) => {
     const hasDescription = !!props.data.notePreview;
     const rowHeight = hasDescription ? 60 : 60;
 
@@ -88,3 +88,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }
 });
+
+export default TimeItem;

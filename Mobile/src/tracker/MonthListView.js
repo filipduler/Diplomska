@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { TimeItem } from './TimeItem';
+import TimeItem from './components/TimeItem';
 import Requests from 'mobile/services/requests';
 import DateHelper from 'mobile/helpers/date';
-import { Store } from '../../services/store';
+import Store from 'mobile/services/store';
 import StyleService from 'mobile/services/styles';
 import {
     View,
@@ -11,34 +11,40 @@ import {
     Text,
     SectionList,
     StyleSheet,
+    Switch,
     Button
 } from 'react-native';
-import { CheckInOut } from './CheckInOut'
-import { MonthSelector } from './MonthSelector'
+import CheckInOut from './components/CheckInOut'
+import MonthSelector from './components/MonthSelector'
 import ActionSheet from '@alessiocancian/react-native-actionsheet'
- 
+import _ from 'lodash';
+
 
 const getDaysList = (entries) => {
     let arr = [];
-    const days = DateHelper.getDaysInMonth(Store.currentDate.month + 1, Store.currentDate.year);
-    for (const day of days) {
-        const dayOfMonth = day.getDate();
-        const dailyEntries = entries.filter(x => x.day === dayOfMonth);
-        const totalSeconds = dailyEntries.map(x=>x.timeDiffSeconds).reduce((acc, a) => acc + a, 0);
+
+    const entriesByDay = _.groupBy(entries, x => x.day);
+    _.forEach(entriesByDay, (entries, day) => {
+        const date = DateHelper.convertUTCToLocal(entries[0].startTimeUtc);
+
+        const totalSeconds = entries
+            .map(x => x.timeDiffSeconds)
+            .reduce((acc, a) => acc + a, 0);
 
         arr.push({
-            day: dayOfMonth,
-            text: `${DateHelper.getDayOfWeek(day)}, ${dayOfMonth}`,
-            data: dailyEntries.map(x => toTimeEntry(x, dayOfMonth)),
+            day: day,
+            text: `${DateHelper.getDayOfWeek(date.day())}, ${day}`,
+            data: entries.map(x => toTimeEntry(x, day)),
             dailyTotal: DateHelper.secondsToTimeDisplay(totalSeconds)
         })
-    }
+    });
+
     return arr;
 }
 
 const toTimeEntry = (entry, day) => {
-    const start = new Date(entry.startTimeUtc);
-    const end = new Date(entry.endTimeUtc);
+    const start = DateHelper.convertUTCToLocal(entry.startTimeUtc);
+    const end = DateHelper.convertUTCToLocal(entry.endTimeUtc);
 
     return {
         id: entry.id,
@@ -50,9 +56,11 @@ const toTimeEntry = (entry, day) => {
     };
 }
 
-export const MonthList = ({ navigation }) => {
+const MonthListView = ({ navigation }) => {
     let dayClickActionSheet;
-    const [days, setDays] = useState(getDaysList([]));
+
+    const [isManualEnabled, setIsManualEnabled] = useState(false);
+    const [days, setDays] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
@@ -69,10 +77,10 @@ export const MonthList = ({ navigation }) => {
     )
 
     const refreshMonthlyEntries = async () => {
-        const res = await Requests.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
-        if (res && res.ok) {
-            global.monthlyEntries = res.payload.entries;
-            setDays(getDaysList(res.payload.entries));
+        const response = await Requests.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
+        console.log(response)
+        if (response && response.ok) {
+            setDays(getDaysList(response.payload.entries));
         }
         setRefreshing(false);
     }
@@ -96,26 +104,43 @@ export const MonthList = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <MonthSelector onUpdate={refreshMonthlyEntries}/>
+            <MonthSelector onUpdate={refreshMonthlyEntries} />
             <SectionList
                 sections={days}
                 refreshing={refreshing} onRefresh={refreshMonthlyEntries}
                 keyExtractor={(item, index) => item + index}
                 renderItem={({ item }) => {
-                    return <TimeItem 
-                        data={item} 
-                        handleDelete={() => deleteItem(item.id)} 
+                    return <TimeItem
+                        data={item}
+                        handleDelete={() => deleteItem(item.id)}
                         handleDetails={() => navigation.navigate('Details', { timeEntryId: item.id, day: item.day })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
                     <View style={styles.headerRow}>
-                        <Text style={[styles.headerColumn ]} onPress={() => dayClickActionSheet.show()}>{section.text}</Text>
-                        <Text style={[styles.headerColumn, { textAlign: 'right' } ]}>Total: {section.dailyTotal}</Text>
+                        <Text style={[styles.headerColumn]} onPress={() => dayClickActionSheet.show()}>{section.text}</Text>
+                        <Text style={[styles.headerColumn, { textAlign: 'right' }]}>Total: {section.dailyTotal}</Text>
                     </View>
                 )}
             />
-            <CheckInOut onNewEntry={refreshMonthlyEntries} />
+            <View>
+                <Text>Manual</Text>
+                <Switch
+                    trackColor={{ false: "#767577", true: "#81b0ff" }}
+                    thumbColor={isManualEnabled ? "#f5dd4b" : "#f4f3f4"}
+                    ios_backgroundColor="#3e3e3e"
+                    onValueChange={state => setIsManualEnabled(state)}
+                    value={isManualEnabled}
+                />
+            </View>
+            <View>
+                {isManualEnabled 
+                    ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { timeEntryId: 0, day: null })}/> 
+                    : <CheckInOut onNewEntry={refreshMonthlyEntries} />}
+            </View>
+
+
+            
 
             <ActionSheet
                 ref={o => dayClickActionSheet = o}
@@ -123,7 +148,7 @@ export const MonthList = ({ navigation }) => {
                 options={['New Entry', 'History', 'Cancel']}
                 cancelButtonIndex={2}
                 onPress={(index) => console.log(index)}
-                />
+            />
         </SafeAreaView>
     );
 };
@@ -138,7 +163,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         backgroundColor: "#fff"
     },
-    headerRow: { 
+    headerRow: {
         flex: 1,
         flexDirection: 'row',
         padding: 10,
@@ -150,3 +175,4 @@ const styles = StyleSheet.create({
     }
 });
 
+export default MonthListView;

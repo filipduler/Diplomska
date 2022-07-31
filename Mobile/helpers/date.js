@@ -14,15 +14,11 @@ const DateHelper =
 			.map((v, i) => new Date(year, month - 1, i + 1))
 			.filter(v => v.getMonth() === month - 1);
 	},
-	getDayOfWeek: (date) => weekday[date.getDay()],
+	getDayOfWeek: (day) => weekday[day],
 	getMonth: (month) => monthNames[month],
 	convertUTCToLocal: (date) => {
 		var stillUtc = moment.utc(date).toDate();
 		return moment(stillUtc).local();
-	},
-	secondsToTimeDisplay: (secs) => {
-		const time = secondsToTime(secs);
-		return `${time.h}:${time.m}:${time.s}`;
 	},
 	secondsToTime: (secs) => {
 		let hours = Math.floor(secs / (60 * 60));
@@ -38,6 +34,10 @@ const DateHelper =
 			m: StringHelpers.padStringLeft(minutes, 2, '0'),
 			s: StringHelpers.padStringLeft(seconds, 2, '0'),
 		};
+	},
+	secondsToTimeDisplay: (secs) => {
+		const time = DateHelper.secondsToTime(secs);
+		return `${time.h}:${time.m}:${time.s}`;
 	},
 	formatDate: (date) => moment(date).format('DD, MMM YYYY'),
 	formatTime: (date, includeSeconds = false) => moment(date).format('HH:mm' + (includeSeconds ? 'ss' : '')),

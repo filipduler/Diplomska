@@ -1,6 +1,4 @@
-console.info('prvic initial store');
-
-export const Store = {
+const Store = {
     currentDate: {
         cursor: new Date(),
         get month() {
@@ -14,3 +12,5 @@ export const Store = {
         }
     }
 }
+
+export default Store;

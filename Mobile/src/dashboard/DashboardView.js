@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Text } from 'react-native';
 
-export const Dashboard = ({ navigation }) => {
+const DashboardView = ({ navigation }) => {
     return (
         <Button
             title="Go to Jane's profile"
@@ -12,3 +12,5 @@ export const Dashboard = ({ navigation }) => {
         />
     );
 };
+
+export default DashboardView;

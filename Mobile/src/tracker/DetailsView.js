@@ -2,10 +2,10 @@ import React, { useState, useLayoutEffect } from 'react';
 import { Button, Text, SafeAreaView, View, StyleSheet, TextInput, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateHelper from 'mobile/helpers/date';
-import { Store } from '../services/store';
+import Store from 'mobile/services/store';
 import Requests from 'mobile/services/requests';
 
-export const TimeEntryDetails = ({ route, navigation }) => {
+const DetailsView = ({ route, navigation }) => {
     const day = route.params.day;
     console.log(day);
     const timeEntryId = route.params.timeEntryId;
@@ -132,4 +132,6 @@ const styles = StyleSheet.create({
         borderWidth: 1
     }
 });
+
+export default DetailsView;
 

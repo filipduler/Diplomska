@@ -14,7 +14,7 @@ import Requests from 'mobile/services/requests';
 
 let activeTimer = null;
 
-export const CheckInOut = (props) => {
+const CheckInOut = (props) => {
     const [checkIn, setCheckIn] = useState(true);
     const [counter, setCounter] = useState(null);
 
@@ -79,7 +79,7 @@ export const CheckInOut = (props) => {
             setCheckIn(false);
             startTimer(activeTimer);
         } else {
-            const res = await getCheckTimer();
+            const res = await Requests.getCheckTimer();
             if (res) {
                 setCheckIn(!res.ok);
                 if (res.ok) {
@@ -128,3 +128,5 @@ export const CheckInOut = (props) => {
         )
     );
 };
+
+export default CheckInOut;
