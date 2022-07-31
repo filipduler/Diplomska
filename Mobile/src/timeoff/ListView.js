@@ -31,7 +31,7 @@ const ListView = ({ navigation }) => {
     const getEntries = async () => {
         let arr = [];
         const response = await Requests.getTimeOffEntries();
-        if(response && response.ok) {
+        if(response && response.ok && response.payload) {
             for(const entry of response.payload) {
                 arr.push({
                     id: entry.id,

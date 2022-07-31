@@ -223,6 +223,13 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 		return nil, err
 	}
 
+	userIds := lo.Map(logs, func(log db.TimeOffLogModel, _ int) int64 { return log.UserId })
+	uniqueUserIds := lo.Uniq(userIds)
+	userMap, err := getUserMap(uniqueUserIds, &dbStore)
+	if err != nil {
+		return nil, err
+	}
+
 	historyMap := lo.SliceToMap(logs, func(log db.TimeOffLogModel) (time.Time, []historyModel) {
 		return log.InsertedOnUtc, []historyModel{}
 	})
@@ -230,27 +237,36 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 	for i, log := range logs {
 		logMessages := []historyModel{}
 
+		//load modifier user
+		curUser := userMap[log.UserId]
+
 		if i == 0 {
 			logMessages = append(logMessages, historyModel{
-				Action:       RequestOpen,
-				StartTimeUtc: &log.StartTimeUtc,
-				EndTimeUtc:   &log.EndTimeUtc,
+				Action:          RequestOpen,
+				ModifiedByOwner: log.UserId == to.UserId,
+				ModifierName:    curUser.DisplayName,
+				StartTimeUtc:    &log.StartTimeUtc,
+				EndTimeUtc:      &log.EndTimeUtc,
 			})
 		} else {
 			prevLog := logs[i-1]
 			if prevLog.StartTimeUtc != log.StartTimeUtc || prevLog.EndTimeUtc != log.EndTimeUtc {
 				logMessages = append(logMessages, historyModel{
-					Action:       TimeChange,
-					StartTimeUtc: &log.StartTimeUtc,
-					EndTimeUtc:   &log.EndTimeUtc,
+					Action:          TimeChange,
+					ModifiedByOwner: log.UserId == to.UserId,
+					ModifierName:    curUser.DisplayName,
+					StartTimeUtc:    &log.StartTimeUtc,
+					EndTimeUtc:      &log.EndTimeUtc,
 				})
 			}
 
 			if prevLog.TimeOffTypeId != log.TimeOffTypeId {
 				name := typeMap[log.TimeOffTypeId].Name
 				logMessages = append(logMessages, historyModel{
-					Action: TypeChange,
-					Type:   &name,
+					Action:          TypeChange,
+					ModifiedByOwner: log.UserId == to.UserId,
+					ModifierName:    curUser.DisplayName,
+					Type:            &name,
 				})
 			}
 
@@ -258,10 +274,12 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 				(log.TimeOffStatusTypeId == int64(Accepted) ||
 					log.TimeOffStatusTypeId == int64(Rejected) ||
 					log.TimeOffStatusTypeId == int64(Canceled)) {
-				name := statusMap[log.TimeOffTypeId].Name
+				name := statusMap[log.TimeOffStatusTypeId].Name
 				logMessages = append(logMessages, historyModel{
-					Action: RequestClosed,
-					Status: &name,
+					Action:          RequestClosed,
+					ModifiedByOwner: log.UserId == to.UserId,
+					ModifierName:    curUser.DisplayName,
+					Status:          &name,
 				})
 			}
 		}
@@ -287,6 +305,15 @@ func getTimeOffTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffTypeModel, erro
 	}
 
 	return lo.KeyBy(entries, func(entry db.TimeOffTypeModel) int64 { return entry.Id }), nil
+}
+
+func getUserMap(userIds []int64, dbStore *db.DBStore) (map[int64]db.UserModel, error) {
+	users, err := dbStore.User.GetByIds(userIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.KeyBy(users, func(user db.UserModel) int64 { return user.Id }), nil
 }
 
 func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel,

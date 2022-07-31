@@ -1,6 +1,6 @@
 import Config from 'react-native-config'
 
-const Requests = 
+const Requests =
 {
     getTimeEntries: async (month, year) => await _innerFetch('GET', `/entry/${year}/${month}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),

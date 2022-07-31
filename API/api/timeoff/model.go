@@ -30,19 +30,21 @@ type timeOffDetailsModel struct {
 	IsFinished    bool `json:"isFinished"`
 }
 
-type historyAction int
+type historyAction string
 
 const (
-	RequestOpen historyAction = iota
-	RequestClosed
-	TimeChange
-	TypeChange
+	RequestOpen   historyAction = "RequestOpen"
+	RequestClosed historyAction = "RequestClosed"
+	TimeChange    historyAction = "TimeChange"
+	TypeChange    historyAction = "TypeChange"
 )
 
 type historyModel struct {
-	Action       historyAction `json:"action"`
-	StartTimeUtc *time.Time    `json:"startTimeUtc,omitempty"`
-	EndTimeUtc   *time.Time    `json:"endTimeUtc,omitempty"`
-	Type         *string       `json:"type,omitempty"`
-	Status       *string       `json:"status,omitempty"`
+	Action          historyAction `json:"action"`
+	ModifiedByOwner bool          `json:"modifiedByOwner"`
+	ModifierName    string        `json:"modifierName"`
+	StartTimeUtc    *time.Time    `json:"startTimeUtc,omitempty"`
+	EndTimeUtc      *time.Time    `json:"endTimeUtc,omitempty"`
+	Type            *string       `json:"type,omitempty"`
+	Status          *string       `json:"status,omitempty"`
 }

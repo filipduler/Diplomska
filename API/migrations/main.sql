@@ -86,12 +86,7 @@ CREATE TABLE `timeoff` (
   FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
   FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`),
   FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
-) ;
-
-INSERT INTO `timeoff` (StartTimeUtc, EndTimeUtc, Note, TimeOffTypeId, TimeOffStatusTypeId, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
-(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test1', 1, 1, 1, UTC_TIMESTAMP, UTC_TIMESTAMP),
-(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test2', 2, 2, 1, UTC_TIMESTAMP, UTC_TIMESTAMP),
-(UTC_TIMESTAMP, UTC_TIMESTAMP, 'test3', 3, 3, 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
+);
 
 CREATE TABLE `timeofflog` (
   `StartTimeUtc` datetime NOT NULL,
