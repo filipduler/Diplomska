@@ -230,62 +230,65 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 		return nil, err
 	}
 
-	historyMap := lo.SliceToMap(logs, func(log db.TimeOffLogModel) (time.Time, []historyModel) {
-		return log.InsertedOnUtc, []historyModel{}
-	})
+	historyMap := map[time.Time][]historyModel{}
 
-	for i, log := range logs {
+	for i, logEntry := range logs {
 		logMessages := []historyModel{}
 
 		//load modifier user
-		curUser := userMap[log.UserId]
+		curUser := userMap[logEntry.UserId]
+
+		//copy time objects
+		start := logEntry.StartTimeUtc
+		end := logEntry.EndTimeUtc
 
 		if i == 0 {
+			name := typeMap[logEntry.TimeOffTypeId].Name
 			logMessages = append(logMessages, historyModel{
 				Action:          RequestOpen,
-				ModifiedByOwner: log.UserId == to.UserId,
+				ModifiedByOwner: logEntry.UserId == to.UserId,
 				ModifierName:    curUser.DisplayName,
-				StartTimeUtc:    &log.StartTimeUtc,
-				EndTimeUtc:      &log.EndTimeUtc,
+				StartTimeUtc:    &start,
+				EndTimeUtc:      &end,
+				Type:            &name,
 			})
 		} else {
 			prevLog := logs[i-1]
-			if prevLog.StartTimeUtc != log.StartTimeUtc || prevLog.EndTimeUtc != log.EndTimeUtc {
+			if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
 				logMessages = append(logMessages, historyModel{
 					Action:          TimeChange,
-					ModifiedByOwner: log.UserId == to.UserId,
+					ModifiedByOwner: logEntry.UserId == to.UserId,
 					ModifierName:    curUser.DisplayName,
-					StartTimeUtc:    &log.StartTimeUtc,
-					EndTimeUtc:      &log.EndTimeUtc,
+					StartTimeUtc:    &start,
+					EndTimeUtc:      &end,
 				})
 			}
 
-			if prevLog.TimeOffTypeId != log.TimeOffTypeId {
-				name := typeMap[log.TimeOffTypeId].Name
+			if prevLog.TimeOffTypeId != logEntry.TimeOffTypeId {
+				name := typeMap[logEntry.TimeOffTypeId].Name
 				logMessages = append(logMessages, historyModel{
 					Action:          TypeChange,
-					ModifiedByOwner: log.UserId == to.UserId,
+					ModifiedByOwner: logEntry.UserId == to.UserId,
 					ModifierName:    curUser.DisplayName,
 					Type:            &name,
 				})
 			}
 
-			if prevLog.TimeOffStatusTypeId != log.TimeOffStatusTypeId &&
-				(log.TimeOffStatusTypeId == int64(Accepted) ||
-					log.TimeOffStatusTypeId == int64(Rejected) ||
-					log.TimeOffStatusTypeId == int64(Canceled)) {
-				name := statusMap[log.TimeOffStatusTypeId].Name
+			if prevLog.TimeOffStatusTypeId != logEntry.TimeOffStatusTypeId &&
+				(logEntry.TimeOffStatusTypeId == int64(Accepted) ||
+					logEntry.TimeOffStatusTypeId == int64(Rejected) ||
+					logEntry.TimeOffStatusTypeId == int64(Canceled)) {
+				name := statusMap[logEntry.TimeOffStatusTypeId].Name
 				logMessages = append(logMessages, historyModel{
 					Action:          RequestClosed,
-					ModifiedByOwner: log.UserId == to.UserId,
+					ModifiedByOwner: logEntry.UserId == to.UserId,
 					ModifierName:    curUser.DisplayName,
 					Status:          &name,
 				})
 			}
 		}
-		historyMap[log.InsertedOnUtc] = logMessages
+		historyMap[logEntry.InsertedOnUtc] = logMessages
 	}
-
 	return historyMap, nil
 }
 

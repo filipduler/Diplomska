@@ -25,7 +25,7 @@ const DetailsView = ({ route, navigation }) => {
     const [typeList, setTypeList] = useState([])
     const [startTime, setStartTime] = useState(prepareDate());
     const [endTime, setEndTime] = useState(prepareDate());
-    const [type, setType] = useState(0);
+    const [type, setType] = useState(1);
     const [note, setNote] = useState('');
     const [status, setStatus] = useState(null);
 

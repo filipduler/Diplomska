@@ -14,7 +14,8 @@ const Requests =
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
     getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/types'),
     putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
-    postTimeOffSave: async (body) => await _innerFetch('POST', `/time-off/save`, JSON.stringify(body))
+    postTimeOffSave: async (body) => await _innerFetch('POST', `/time-off/save`, JSON.stringify(body)),
+    postTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`)
 }
 
 export default Requests;
