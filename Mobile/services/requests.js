@@ -3,6 +3,7 @@ import Config from 'react-native-config'
 const Requests =
 {
     getTimeEntries: async (month, year) => await _innerFetch('GET', `/entry/${year}/${month}`),
+    getTimeEntry: async (id) => await _innerFetch('GET', `/entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),
     postStartTimer: async () => await _innerFetch('POST', '/entry/start-timer'),
     postStopTimer: async (timeEntryId) => await _innerFetch('POST', `/entry/stop-timer/${timeEntryId}`),

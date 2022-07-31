@@ -12,6 +12,7 @@ import (
 func NewHTTP(r *echo.Group) {
 	group := r.Group("/entry")
 
+	group.GET("/:id", httpEntry)
 	group.GET("/:year/:month", httpMonthlyEntries)
 	group.POST("", httpNewEntry)
 	group.PUT("/:id", httpUpdateEntry)
@@ -20,6 +21,24 @@ func NewHTTP(r *echo.Group) {
 	group.POST("/start-timer", httpStartTimerEntry)
 	group.POST("/stop-timer/:id", httpStopTimerEntry)
 	group.POST("/cancel-timer", httpCancelTimerEntry)
+}
+func httpEntry(c echo.Context) error {
+	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	res, err := getEntry(timeEntryId, user)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }
 
 func httpMonthlyEntries(c echo.Context) error {

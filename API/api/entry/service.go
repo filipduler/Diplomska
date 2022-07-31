@@ -11,6 +11,29 @@ var (
 	ErrInvalidAccess = errors.New("user doesn't have access to time entry")
 )
 
+func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
+	dbStore := db.New()
+
+	entry, err := dbStore.TimeEntry.GetById(timeEntryId)
+	if err != nil {
+		return nil, err
+	}
+
+	if entry.UserId != user.Id {
+		return nil, ErrInvalidAccess
+	}
+
+	day := entry.StartTimeUtc.Day()
+	return &entryModel{
+		Id:              entry.Id,
+		StartTimeUtc:    entry.StartTimeUtc,
+		EndTimeUtc:      *entry.EndTimeUtc,
+		TimeDiffSeconds: int(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Seconds()),
+		Note:            entry.Note,
+		Day:             day,
+	}, nil
+}
+
 func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 	dbStore := db.New()
 
