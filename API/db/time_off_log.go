@@ -18,7 +18,7 @@ type TimeOffLogModel struct {
 
 func (store *timeOffLogTable) GetByTimeOffId(timeOffId int64) ([]TimeOffLogModel, error) {
 	tf := []TimeOffLogModel{}
-	err := store.DB.Select(&tf, "SELECT * FROM TimeOffLog WHERE TimeOffId = ?", timeOffId)
+	err := store.db.Select(&tf, "SELECT * FROM TimeOffLog WHERE TimeOffId = ?", timeOffId)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (store *timeOffLogTable) GetByTimeOffId(timeOffId int64) ([]TimeOffLogModel
 
 func (store *timeOffLogTable) Insert(tf *TimeOffLogModel) error {
 	tf.InsertedOnUtc = time.Now().UTC()
-	_, err := store.DB.Exec("INSERT INTO TimeOffLog (StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, InsertedOnUtc) "+
+	_, err := store.Exec("INSERT INTO TimeOffLog (StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, InsertedOnUtc) "+
 		"VALUES (?, ?, ?, ?, ?, ?, ?)",
 		tf.StartTimeUtc,
 		tf.EndTimeUtc,

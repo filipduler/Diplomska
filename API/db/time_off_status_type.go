@@ -9,7 +9,7 @@ type TimeOffStatusTypeModel struct {
 
 func (store *timeOffStatusTypeTable) Get() ([]TimeOffStatusTypeModel, error) {
 	te := []TimeOffStatusTypeModel{}
-	err := store.DB.Select(&te, "SELECT * FROM TimeOffStatusType")
+	err := store.db.Select(&te, "SELECT * FROM TimeOffStatusType")
 	if err != nil {
 		return nil, err
 	}

@@ -71,57 +71,52 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 	dbStore := db.New()
 
 	var model *db.TimeEntryModel = nil
-
-	err := dbStore.StartTransaction()
-	if err != nil {
-		return 0, err
-	}
-
 	endTime := request.EndTime.UTC()
-
 	id := lo.FromPtrOr(request.Id, 0)
-	if id == 0 {
-		model = &db.TimeEntryModel{
-			StartTimeUtc: request.StartTime.UTC(),
-			EndTimeUtc:   &endTime,
-			Note:         request.Note,
-			IsDeleted:    false,
-			UserId:       user.Id,
-		}
-		timeOffId, err := dbStore.TimeEntry.Insert(model)
-		if err != nil {
-			return 0, err
-		}
-		model.Id = timeOffId
-	} else {
-		model, err = dbStore.TimeEntry.GetById(id)
-		if err != nil {
-			return 0, err
+
+	err := dbStore.Transact(func() error {
+		if id == 0 {
+			model = &db.TimeEntryModel{
+				StartTimeUtc: request.StartTime.UTC(),
+				EndTimeUtc:   &endTime,
+				Note:         request.Note,
+				IsDeleted:    false,
+				UserId:       user.Id,
+			}
+			timeOffId, err := dbStore.TimeEntry.Insert(model)
+			if err != nil {
+				return err
+			}
+			model.Id = timeOffId
+		} else {
+			model, err := dbStore.TimeEntry.GetById(id)
+			if err != nil {
+				return err
+			}
+
+			if model.UserId != user.Id {
+				return ErrInvalidAccess
+			}
+
+			model.StartTimeUtc = request.StartTime.UTC()
+			model.EndTimeUtc = &endTime
+			model.Note = request.Note
+
+			err = dbStore.TimeEntry.Update(model)
+			if err != nil {
+				return err
+			}
 		}
 
-		if model.UserId != user.Id {
-			return 0, ErrInvalidAccess
-		}
-
-		model.StartTimeUtc = request.StartTime.UTC()
-		model.EndTimeUtc = &endTime
-		model.Note = request.Note
-
-		err = dbStore.TimeEntry.Update(model)
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	log := mapToEntryLog(user.Id, model)
-	err = dbStore.TimeEntryLog.Insert(&log)
+		log := mapToEntryLog(user.Id, model)
+		return dbStore.TimeEntryLog.Insert(&log)
+	})
 
 	if err != nil {
-		_ = dbStore.Rollback()
 		return 0, err
 	}
 
-	return model.Id, dbStore.Commit()
+	return model.Id, nil
 }
 
 func deleteEntry(timeEntryId int64, user *db.UserModel) error {
@@ -217,6 +212,7 @@ func mapToEntryLog(userId int64, entry *db.TimeEntryModel) db.TimeEntryLogModel 
 	return db.TimeEntryLogModel{
 		StartTimeUtc: entry.StartTimeUtc,
 		EndTimeUtc:   entry.EndTimeUtc,
+		IsDeleted:    entry.IsDeleted,
 		TimeEntryId:  entry.Id,
 		UserId:       userId,
 	}

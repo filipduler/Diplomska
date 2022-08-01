@@ -109,52 +109,48 @@ func getTypes() ([]typeModel, error) {
 func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 	dbStore := db.New()
 	var model *db.TimeOffModel = nil
-
-	err := dbStore.StartTransaction()
-	if err != nil {
-		return 0, err
-	}
-
 	id := lo.FromPtrOr(request.Id, 0)
-	if id == 0 {
-		model = &db.TimeOffModel{
-			StartTimeUtc:        request.StartTime.UTC(),
-			EndTimeUtc:          request.EndTime.UTC(),
-			Note:                request.Note,
-			TimeOffTypeId:       request.TypeId,
-			TimeOffStatusTypeId: int64(Pending),
-			UserId:              user.Id,
-		}
-		timeOffId, err := dbStore.TimeOff.Insert(model)
-		if err != nil {
-			return 0, err
-		}
-		model.Id = timeOffId
-	} else {
-		model, err = dbStore.TimeOff.GetById(id)
-		if err != nil {
-			return 0, err
-		}
-		model.StartTimeUtc = request.StartTime.UTC()
-		model.EndTimeUtc = request.EndTime.UTC()
-		model.Note = request.Note
-		model.TimeOffTypeId = int64(request.TypeId)
 
-		err = dbStore.TimeOff.Update(model)
-		if err != nil {
-			return 0, err
-		}
-	}
+	err := dbStore.Transact(func() error {
+		if id == 0 {
+			model = &db.TimeOffModel{
+				StartTimeUtc:        request.StartTime.UTC(),
+				EndTimeUtc:          request.EndTime.UTC(),
+				Note:                request.Note,
+				TimeOffTypeId:       request.TypeId,
+				TimeOffStatusTypeId: int64(Pending),
+				UserId:              user.Id,
+			}
+			timeOffId, err := dbStore.TimeOff.Insert(model)
+			if err != nil {
+				return err
+			}
+			model.Id = timeOffId
+		} else {
+			model, err := dbStore.TimeOff.GetById(id)
+			if err != nil {
+				return err
+			}
+			model.StartTimeUtc = request.StartTime.UTC()
+			model.EndTimeUtc = request.EndTime.UTC()
+			model.Note = request.Note
+			model.TimeOffTypeId = int64(request.TypeId)
 
-	log := mapToEntryLog(user.Id, model)
-	err = dbStore.TimeOffLog.Insert(&log)
+			err = dbStore.TimeOff.Update(model)
+			if err != nil {
+				return err
+			}
+		}
+
+		log := mapToEntryLog(user.Id, model)
+		return dbStore.TimeOffLog.Insert(&log)
+	})
 
 	if err != nil {
-		_ = dbStore.Rollback()
 		return 0, err
 	}
 
-	return model.Id, dbStore.Commit()
+	return model.Id, nil
 }
 
 func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
@@ -174,26 +170,16 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 		return ErrIncorrectPermissions
 	}
 
-	err = dbStore.StartTransaction()
-	if err != nil {
-		return err
-	}
+	return dbStore.Transact(func() error {
+		to.TimeOffStatusTypeId = int64(Canceled)
+		err = dbStore.TimeOff.Update(to)
+		if err != nil {
+			return err
+		}
 
-	to.TimeOffStatusTypeId = int64(Canceled)
-	err = dbStore.TimeOff.Update(to)
-	if err != nil {
-		return err
-	}
-
-	log := mapToEntryLog(user.Id, to)
-	err = dbStore.TimeOffLog.Insert(&log)
-
-	if err != nil {
-		_ = dbStore.Rollback()
-		return err
-	}
-
-	return dbStore.Commit()
+		log := mapToEntryLog(user.Id, to)
+		return dbStore.TimeOffLog.Insert(&log)
+	})
 }
 
 func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyModel, error) {
