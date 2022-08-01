@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { SectionList, Text, SafeAreaView, View, StyleSheet } from 'react-native';
+import React from 'react';
 import MonthListView from './MonthListView'
 import DetailsView from './DetailsView'
+import HistoryView from './HistoryView'
+import HistoryListView from './HistoryListView'
 import { createStackNavigator } from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
@@ -11,6 +12,8 @@ const TrackerStack = () => {
         <Stack.Navigator  initialRouteName='Tracker' screenOptions={{ headerMode: 'screen' }}>
             <Stack.Screen name="Tracker" component={MonthListView} />
             <Stack.Screen name="Details" component={DetailsView} />
+            <Stack.Screen name="History" component={HistoryView} />
+            <Stack.Screen name="History List" component={HistoryListView} />
         </Stack.Navigator>
     );
 };

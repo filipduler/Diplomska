@@ -59,7 +59,7 @@ const toTimeEntry = (entry, day) => {
 const MonthListView = ({ navigation }) => {
     let dayClickActionSheet;
 
-    const [isManualEnabled, setIsManualEnabled] = useState(false);
+    const [isManualEnabled, setIsManualEnabled] = useState(true);
     const [days, setDays] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 

@@ -19,7 +19,7 @@ const CheckInOut = (props) => {
     const [counter, setCounter] = useState(null);
 
     const onCheckIn = async () => {
-        const res = await postStartTimer();
+        const res = await Requests.postStartTimer();
         console.log(res);
         if(res && res.ok) {
             setCheckIn(!checkIn);
@@ -32,7 +32,7 @@ const CheckInOut = (props) => {
         setCheckIn(!checkIn);
         stopTimer();
 
-        const res = await postStopTimer(timeEntryId);
+        const res = await Requests.postStopTimer(timeEntryId);
         console.log(res);
 
         //refresh list of entries
@@ -43,7 +43,7 @@ const CheckInOut = (props) => {
         setCheckIn(!checkIn);
         stopTimer();
         
-        const res = await postCancelTimer();
+        const res = await Requests.postCancelTimer();
         console.log(res);
     }
 
