@@ -40,12 +40,12 @@ CREATE TABLE `timeentry` (
   FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
 );
 
+INSERT INTO `timeentry` (StartTimeUtc, EndTimeUtc, Note, DailyHours, IsDeleted, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
+(UTC_TIMESTAMP, UTC_TIMESTAMP, 'asd', 13.3, false, 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
+
 CREATE TABLE `timeentrylog` (
   `StartTimeUtc` datetime NOT NULL,
   `EndTimeUtc` datetime DEFAULT NULL,
-  `Note` varchar(512) NOT NULL,
-  `DailyHours` decimal(4,2) NOT NULL,
-  `ChangeReason` varchar(512) NOT NULL,
   `UserId` bigint NOT NULL,
   `TimeEntryId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,

@@ -2,16 +2,11 @@ package entry
 
 import "time"
 
-type newEntryRequest struct {
-	StartTimeUtc time.Time `json:"startTimeUtc"`
-	EndTimeUtc   time.Time `json:"endTimeUtc"`
-	Note         string    `json:"note"`
-}
-
-type updateEntryRequest struct {
-	StartTimeUtc time.Time `json:"startTimeUtc"`
-	EndTimeUtc   time.Time `json:"endTimeUtc"`
-	Note         string    `json:"note"`
+type saveEntryRequest struct {
+	Id        *int64    `json:"id"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	Note      string    `json:"note"`
 }
 
 type entriesResponse struct {

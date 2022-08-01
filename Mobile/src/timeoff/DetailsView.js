@@ -7,30 +7,19 @@ import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
 import StyleService from 'mobile/services/styles';
-
-const prepareDate = (date) => {
-    const mDate = moment(date || moment());
-    return {
-        date: DateHelper.formatDate(mDate),
-        time: DateHelper.formatTime(mDate),
-        raw: mDate
-    };
-}
+import BaseDateTime from 'mobile/src/components/BaseDateTime'
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
 
-    const [readonlyMode, setReadonlyMode] = useState(false)
+    const [ readonlyMode, setReadonlyMode ] = useState(false)
 
-    const [typeList, setTypeList] = useState([])
-    const [startTime, setStartTime] = useState(prepareDate());
-    const [endTime, setEndTime] = useState(prepareDate());
-    const [type, setType] = useState(1);
-    const [note, setNote] = useState('');
-    const [status, setStatus] = useState(null);
-
-    const [date, setDate] = useState(new Date(1598051730000));
-    const [picker, setPicker] = useState({ open: false, setter: null });
+    const [ typeList, setTypeList ] = useState([])
+    const [ startTime, setStartTime ] = useState(new Date());
+    const [ endTime, setEndTime ] = useState(new Date());
+    const [ type, setType ] = useState(1);
+    const [ note, setNote ] = useState('');
+    const [ status, setStatus ] = useState(null);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -57,10 +46,10 @@ const DetailsView = ({ route, navigation }) => {
             const item = response.payload;
 
             const startTime = DateHelper.convertUTCToLocal(item.startTimeUtc);
-            setStartTime(prepareDate(startTime));
+            setStartTime(startTime);
 
             const endTime = DateHelper.convertUTCToLocal(item.endTimeUtc);
-            setEndTime(prepareDate(endTime));
+            setEndTime(endTime);
 
             setType(item.type.id);
             setNote(item.note);
@@ -87,18 +76,6 @@ const DetailsView = ({ route, navigation }) => {
         }
     }
 
-    const showTimePicker = (value, setValue) => {
-        setDate(value.raw.toDate());
-        setPicker({ open: true, setter: setValue });
-    };
-
-    const onChange = (event, selectedDate) => {
-        if (picker.setter) {
-            picker.setter(prepareDate(selectedDate));
-        }
-        setPicker({ open: false, setter: null });
-    };
-
     const closeRequest = async () => {
         const response = await Requests.putTimeOffCloseRequest(id);
         console.log(response);
@@ -111,8 +88,8 @@ const DetailsView = ({ route, navigation }) => {
     const save = async () => {
         const body = {
             id: id || null,
-            startTime: startTime.raw.toDate(),
-            endTime: endTime.raw.toDate(),
+            startTime: startTime,
+            endTime: endTime,
             note: note,
             typeId: type
         };
@@ -131,15 +108,11 @@ const DetailsView = ({ route, navigation }) => {
                 keyboardShouldPersistTaps='handled'>
                 <View>
                     <Text>Start</Text>
-                    <Button disabled={readonlyMode}
-                        title={startTime.date + '\n' + startTime.time}
-                        onPress={(() => showTimePicker(startTime, setStartTime))} />
+                    <BaseDateTime value={startTime.raw} onChange={x => setStartTime(x)} />
                 </View>
                 <View>
                     <Text>End</Text>
-                    <Button disabled={readonlyMode}
-                        title={endTime.date + '\n' + endTime.time}
-                        onPress={() => showTimePicker(endTime, setEndTime)} />
+                    <BaseDateTime value={endTime.raw} onChange={x => setEndTime(x)} />
                 </View>
                 <View>
                     <Text>Type</Text>
@@ -185,15 +158,6 @@ const DetailsView = ({ route, navigation }) => {
                     <View>
                         <Button title='Save' onPress={save} />
                     </View>
-                )}
-
-                {picker.open && (
-                    <DateTimePicker
-                        value={date}
-                        mode='time'
-                        is24Hour={true}
-                        onChange={onChange}
-                    />
                 )}
             </ScrollView>
         </SafeAreaView>

@@ -14,8 +14,7 @@ func NewHTTP(r *echo.Group) {
 
 	group.GET("/:id", httpEntry)
 	group.GET("/:year/:month", httpMonthlyEntries)
-	group.POST("", httpNewEntry)
-	group.PUT("/:id", httpUpdateEntry)
+	group.POST("/save", httpSaveEntry)
 	group.DELETE("/:id", httpDeleteEntry)
 	group.GET("/check-timer", httpCheckTimerEntry)
 	group.POST("/start-timer", httpStartTimerEntry)
@@ -60,37 +59,23 @@ func httpMonthlyEntries(c echo.Context) error {
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }
 
-func httpNewEntry(c echo.Context) error {
-	request := newEntryRequest{}
+func httpSaveEntry(c echo.Context) error {
+	request := saveEntryRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
-	err := newEntry(request.StartTimeUtc, request.EndTimeUtc, request.Note, 1)
+	user, err := api.GetUser(c)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
-	return c.JSON(http.StatusOK, api.NewEmptyResponse(err == nil))
-}
-
-func httpUpdateEntry(c echo.Context) error {
-	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
-	if err != nil {
-		return err
-	}
-
-	request := updateEntryRequest{}
-	if err := c.Bind(&request); err != nil {
-		return err
-	}
-
-	err = updateEntry(timeEntryId, request.StartTimeUtc, request.EndTimeUtc, request.Note, 1)
+	id, err := saveEntry(&request, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
-	return c.JSON(http.StatusOK, api.NewEmptyResponse(err == nil))
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, id))
 }
 
 func httpDeleteEntry(c echo.Context) error {

@@ -4,6 +4,8 @@ import (
 	"api/db"
 	"errors"
 	"time"
+
+	"github.com/samber/lo"
 )
 
 var (
@@ -65,61 +67,61 @@ func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
 	return &res, nil
 }
 
-func newEntry(start time.Time, end time.Time, note string, userId int64) error {
+func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 	dbStore := db.New()
 
-	_, err := dbStore.TimeEntry.Insert(&db.TimeEntryModel{
-		StartTimeUtc: start,
-		EndTimeUtc:   &end,
-		Note:         note,
-		IsDeleted:    false,
-		UserId:       userId,
-	})
-	return err
-}
+	var model *db.TimeEntryModel = nil
 
-func updateEntry(timeEntryId int64, start time.Time, end time.Time, note string, userId int64) error {
-	dbStore := db.New()
-
-	te, err := dbStore.TimeEntry.GetById(timeEntryId)
+	err := dbStore.StartTransaction()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if !hasAccess(te, userId) {
-		return ErrInvalidAccess
+	endTime := request.EndTime.UTC()
+
+	id := lo.FromPtrOr(request.Id, 0)
+	if id == 0 {
+		model = &db.TimeEntryModel{
+			StartTimeUtc: request.StartTime.UTC(),
+			EndTimeUtc:   &endTime,
+			Note:         request.Note,
+			IsDeleted:    false,
+			UserId:       user.Id,
+		}
+		timeOffId, err := dbStore.TimeEntry.Insert(model)
+		if err != nil {
+			return 0, err
+		}
+		model.Id = timeOffId
+	} else {
+		model, err = dbStore.TimeEntry.GetById(id)
+		if err != nil {
+			return 0, err
+		}
+
+		if model.UserId != user.Id {
+			return 0, ErrInvalidAccess
+		}
+
+		model.StartTimeUtc = request.StartTime.UTC()
+		model.EndTimeUtc = &endTime
+		model.Note = request.Note
+
+		err = dbStore.TimeEntry.Update(model)
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	err = dbStore.StartTransaction()
+	log := mapToEntryLog(user.Id, model)
+	err = dbStore.TimeEntryLog.Insert(&log)
+
 	if err != nil {
-		return err
+		_ = dbStore.Rollback()
+		return 0, err
 	}
 
-	err = dbStore.TimeEntry.Update(&db.TimeEntryModel{
-		BaseModel:    te.BaseModel,
-		StartTimeUtc: start,
-		EndTimeUtc:   &end,
-		Note:         note,
-		IsDeleted:    false,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = dbStore.TimeEntryLog.Insert(&db.TimeEntryLogModel{
-		StartTimeUtc: te.StartTimeUtc,
-		EndTimeUtc:   te.EndTimeUtc,
-		ChangeReason: "",
-		UserId:       userId,
-		TimeEntryId:  te.Id,
-	})
-
-	if err != nil {
-		dbStore.Rollback()
-		return err
-	}
-
-	return dbStore.Commit()
+	return model.Id, dbStore.Commit()
 }
 
 func deleteEntry(timeEntryId int64, userId int64) error {
@@ -214,4 +216,13 @@ func cancelTimerEntry(userId int64) error {
 func hasAccess(ta *db.TimeEntryModel, userId int64) bool {
 	//TODO if user IsAdmin give access
 	return ta.UserId == userId
+}
+
+func mapToEntryLog(userId int64, entry *db.TimeEntryModel) db.TimeEntryLogModel {
+	return db.TimeEntryLogModel{
+		StartTimeUtc: entry.StartTimeUtc,
+		EndTimeUtc:   entry.EndTimeUtc,
+		TimeEntryId:  entry.Id,
+		UserId:       userId,
+	}
 }
