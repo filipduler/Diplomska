@@ -89,7 +89,8 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 			}
 			model.Id = timeOffId
 		} else {
-			model, err := dbStore.TimeEntry.GetById(id)
+			var err error
+			model, err = dbStore.TimeEntry.GetById(id)
 			if err != nil {
 				return err
 			}
