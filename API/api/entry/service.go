@@ -36,10 +36,10 @@ func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
 	}, nil
 }
 
-func getEntries(month int, year int, userId int64) (*entriesResponse, error) {
+func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, error) {
 	dbStore := db.New()
 
-	entries, err := dbStore.TimeEntry.GetByMonth(userId, month, year)
+	entries, err := dbStore.TimeEntry.GetByMonth(user.Id, month, year)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 	return model.Id, dbStore.Commit()
 }
 
-func deleteEntry(timeEntryId int64, userId int64) error {
+func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 	dbStore := db.New()
 
 	te, err := dbStore.TimeEntry.GetById(timeEntryId)
@@ -132,7 +132,7 @@ func deleteEntry(timeEntryId int64, userId int64) error {
 		return err
 	}
 
-	if !hasAccess(te, userId) {
+	if te.UserId != user.Id {
 		return ErrInvalidAccess
 	}
 
@@ -142,7 +142,7 @@ func deleteEntry(timeEntryId int64, userId int64) error {
 	return err
 }
 
-func startTimerEntry(userId int64) (*timerModel, error) {
+func startTimerEntry(user *db.UserModel) (*timerModel, error) {
 	dbStore := db.New()
 	now := time.Now()
 
@@ -152,7 +152,7 @@ func startTimerEntry(userId int64) (*timerModel, error) {
 		Note:         "",
 		DailyHours:   8, //TODO FIX
 		IsDeleted:    false,
-		UserId:       userId,
+		UserId:       user.Id,
 	})
 
 	if err == nil {
@@ -170,9 +170,9 @@ func startTimerEntry(userId int64) (*timerModel, error) {
 	return nil, err
 }
 
-func checkTimerEntry(userId int64) (*timerModel, error) {
+func checkTimerEntry(user *db.UserModel) (*timerModel, error) {
 	dbStore := db.New()
-	te, err := dbStore.TimeEntry.GetUnfinishedDaily(userId)
+	te, err := dbStore.TimeEntry.GetUnfinishedDaily(user.Id)
 
 	if err == nil {
 		return &timerModel{
@@ -183,7 +183,7 @@ func checkTimerEntry(userId int64) (*timerModel, error) {
 	return nil, err
 }
 
-func stopTimerEntry(timeEntryId int64, userId int64) error {
+func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
 	dbStore := db.New()
 
 	te, err := dbStore.TimeEntry.GetById(timeEntryId)
@@ -191,7 +191,7 @@ func stopTimerEntry(timeEntryId int64, userId int64) error {
 	if err == nil {
 		now := time.Now()
 
-		if !hasAccess(te, userId) {
+		if te.UserId != user.Id {
 			return ErrInvalidAccess
 		}
 
@@ -208,14 +208,9 @@ func stopTimerEntry(timeEntryId int64, userId int64) error {
 	return err
 }
 
-func cancelTimerEntry(userId int64) error {
+func cancelTimerEntry(user *db.UserModel) error {
 	dbStore := db.New()
-	return dbStore.TimeEntry.DeleteUnfinished(userId)
-}
-
-func hasAccess(ta *db.TimeEntryModel, userId int64) bool {
-	//TODO if user IsAdmin give access
-	return ta.UserId == userId
+	return dbStore.TimeEntry.DeleteUnfinished(user.Id)
 }
 
 func mapToEntryLog(userId int64, entry *db.TimeEntryModel) db.TimeEntryLogModel {

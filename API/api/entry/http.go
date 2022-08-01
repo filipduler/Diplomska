@@ -51,7 +51,12 @@ func httpMonthlyEntries(c echo.Context) error {
 		return err
 	}
 
-	res, err := getEntries(month, year, 1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	res, err := getEntries(month, year, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -84,7 +89,12 @@ func httpDeleteEntry(c echo.Context) error {
 		return err
 	}
 
-	err = deleteEntry(timeEntryId, 1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	err = deleteEntry(timeEntryId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -93,7 +103,12 @@ func httpDeleteEntry(c echo.Context) error {
 }
 
 func httpStartTimerEntry(c echo.Context) error {
-	timer, err := startTimerEntry(1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	timer, err := startTimerEntry(user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -107,7 +122,12 @@ func httpStopTimerEntry(c echo.Context) error {
 		return err
 	}
 
-	err = stopTimerEntry(timeEntryId, 1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	err = stopTimerEntry(timeEntryId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -116,7 +136,12 @@ func httpStopTimerEntry(c echo.Context) error {
 }
 
 func httpCancelTimerEntry(c echo.Context) error {
-	err := cancelTimerEntry(1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	err = cancelTimerEntry(user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -125,7 +150,12 @@ func httpCancelTimerEntry(c echo.Context) error {
 }
 
 func httpCheckTimerEntry(c echo.Context) error {
-	timer, err := checkTimerEntry(1)
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	timer, err := checkTimerEntry(user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
