@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	ErrNoActiveTimer = errors.New("no active timers available")
+	ErrNoActiveTimer  = errors.New("no active timers available")
+	ErrEndDateUtcNull = errors.New("end time is null")
 )
 
 func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
@@ -110,8 +111,12 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 			}
 		}
 
-		log := mapToEntryLog(user.Id, model)
-		return dbStore.TimeEntryLog.Insert(&log)
+		log, err := mapToEntryLog(user.Id, model)
+		if err != nil {
+			return err
+		}
+
+		return dbStore.TimeEntryLog.Insert(log)
 	})
 
 	if err != nil {
@@ -140,8 +145,12 @@ func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 			return err
 		}
 
-		log := mapToEntryLog(user.Id, te)
-		return dbStore.TimeEntryLog.Insert(&log)
+		log, err := mapToEntryLog(user.Id, te)
+		if err != nil {
+			return err
+		}
+
+		return dbStore.TimeEntryLog.Insert(log)
 	})
 
 	return err
@@ -206,8 +215,19 @@ func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
 		}
 
 		te.EndTimeUtc = &now
-		err = dbStore.TimeEntry.Update(te)
-		return err
+		return dbStore.Transact(func() error {
+			err := dbStore.TimeEntry.Update(te)
+			if err != nil {
+				return err
+			}
+
+			log, err := mapToEntryLog(user.Id, te)
+			if err != nil {
+				return err
+			}
+
+			return dbStore.TimeEntryLog.Insert(log)
+		})
 	}
 
 	return err
@@ -260,7 +280,7 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 				ModifiedByOwner: logEntry.UserId == to.UserId,
 				ModifierName:    curUser.DisplayName,
 				StartTimeUtc:    &start,
-				EndTimeUtc:      end,
+				EndTimeUtc:      &end,
 			})
 		} else {
 			prevLog := logs[i-1]
@@ -270,7 +290,7 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 					ModifiedByOwner: logEntry.UserId == to.UserId,
 					ModifierName:    curUser.DisplayName,
 					StartTimeUtc:    &start,
-					EndTimeUtc:      end,
+					EndTimeUtc:      &end,
 				})
 			}
 
@@ -287,12 +307,15 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 	return historyMap, nil
 }
 
-func mapToEntryLog(userId int64, entry *db.TimeEntryModel) db.TimeEntryLogModel {
-	return db.TimeEntryLogModel{
+func mapToEntryLog(userId int64, entry *db.TimeEntryModel) (*db.TimeEntryLogModel, error) {
+	if entry.EndTimeUtc == nil {
+		return nil, ErrEndDateUtcNull
+	}
+	return &db.TimeEntryLogModel{
 		StartTimeUtc: entry.StartTimeUtc,
-		EndTimeUtc:   entry.EndTimeUtc,
+		EndTimeUtc:   *entry.EndTimeUtc,
 		IsDeleted:    entry.IsDeleted,
 		TimeEntryId:  entry.Id,
 		UserId:       userId,
-	}
+	}, nil
 }

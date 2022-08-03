@@ -3,6 +3,7 @@ package main
 import (
 	"api/api/auth"
 	"api/api/entry"
+	"api/api/history"
 	"api/api/timeoff"
 
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,7 @@ func main() {
 	auth.NewHTTP(group)
 	entry.NewHTTP(group)
 	timeoff.NewHTTP(group)
+	history.NewHTTP(group)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

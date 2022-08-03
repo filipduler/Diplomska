@@ -45,7 +45,7 @@ INSERT INTO `timeentry` (StartTimeUtc, EndTimeUtc, Note, DailyHours, IsDeleted, 
 
 CREATE TABLE `timeentrylog` (
   `StartTimeUtc` datetime NOT NULL,
-  `EndTimeUtc` datetime DEFAULT NULL,
+  `EndTimeUtc` datetime NOT NULL,
   `IsDeleted` tinyint NOT NULL,
   `UserId` bigint NOT NULL,
   `TimeEntryId` bigint NOT NULL,

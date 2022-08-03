@@ -28,11 +28,12 @@ func (store *timeOffLogTable) GetByTimeOffId(timeOffId int64) ([]TimeOffLogModel
 func (store *timeOffLogTable) GetLastEntryByRange(userId int64, from *time.Time, to *time.Time) ([]TimeOffLogModel, error) {
 	tf := []TimeOffLogModel{}
 	err := store.db.Select(&tf, `WITH last_log_entries AS (
-			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeEntryId ORDER BY InsertedOnUtc DESC) AS rn
-			FROM timeentrylog AS m
+			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeOffId ORDER BY InsertedOnUtc DESC) AS rn
+			FROM timeofflog AS m
 			WHERE m.UserId = ?
 		)
-		SELECT * FROM last_log_entries WHERE rn = 1`, userId)
+		SELECT StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, InsertedOnUtc
+		FROM last_log_entries WHERE rn = 1`, userId)
 	if err != nil {
 		return nil, err
 	}
