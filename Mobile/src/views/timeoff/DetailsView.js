@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Button, Text, SafeAreaView, StyleSheet, View, TextInput, ScrollView } from 'react-native';
-import Requests from 'mobile/services/requests';
-import DateHelper from 'mobile/helpers/date';
+import Requests from 'mobile/src/services/requests';
+import DateHelper from 'mobile/src/helpers/date';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
-import StyleService from 'mobile/services/styles';
-import BaseDateTime from 'mobile/src/components/BaseDateTime'
+import StyleService from 'mobile/src/services/styles';
+import BaseDateTime from '../components/BaseDateTime'
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;

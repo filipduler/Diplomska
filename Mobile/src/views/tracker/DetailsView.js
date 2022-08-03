@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Button, Text, SafeAreaView, View, StyleSheet, TextInput, ScrollView } from 'react-native';
-import DateHelper from 'mobile/helpers/date';
-import BaseDateTime from 'mobile/src/components/BaseDateTime'
-import Requests from 'mobile/services/requests';
+import DateHelper from 'mobile/src/helpers/date';
+import BaseDateTime from '../components/BaseDateTime'
+import Requests from 'mobile/src/services/requests';
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;

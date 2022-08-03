@@ -9,13 +9,12 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import DashboardView from './src/dashboard/DashboardView';
-import TrackerStack from './src/tracker/TrackerStack';
-
+import DashboardView from './src/views/dashboard/DashboardView';
+import TrackerStack from './src/views/tracker/TrackerStack';
+import TimeOffStack from './src/views/timeoff/TimeOffStack';
 import {
   useColorScheme,
 } from 'react-native';
-import TimeOffStack from './src/timeoff/TimeOffStack';
 
 const Tab = createBottomTabNavigator();
 

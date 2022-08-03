@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Text, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import DateHelper from 'mobile/helpers/date';
+import DateHelper from 'mobile/src/helpers/date';
 import moment from 'moment';
 
 const isIOS = Platform.OS === 'ios';

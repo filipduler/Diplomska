@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import Requests from 'mobile/services/requests';
-import DateHelper from 'mobile/helpers/date';
-import StyleService from 'mobile/services/styles';
+import Requests from 'mobile/src/services/requests';
+import DateHelper from 'mobile/src/helpers/date';
+import StyleService from 'mobile/src/services/styles';
 import {
     SafeAreaView,
     Text,

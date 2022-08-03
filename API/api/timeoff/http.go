@@ -111,7 +111,6 @@ func httpEntryHistory(c echo.Context) error {
 	}
 
 	res, err := entryHistory(timeOffId, user)
-	c.Logger().Print(res)
 	if err != nil {
 		c.Logger().Error(err)
 	}

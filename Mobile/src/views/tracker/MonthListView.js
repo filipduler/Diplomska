@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import TimeItem from './components/TimeItem';
-import Requests from 'mobile/services/requests';
-import DateHelper from 'mobile/helpers/date';
-import Store from 'mobile/services/store';
-import StyleService from 'mobile/services/styles';
+import Requests from 'mobile/src/services/requests';
+import DateHelper from 'mobile/src/helpers/date';
+import Store from 'mobile/src/services/store';
+import StyleService from 'mobile/src/services/styles';
 import {
     View,
     SafeAreaView,

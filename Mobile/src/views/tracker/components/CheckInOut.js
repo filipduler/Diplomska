@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import DateHelper from 'mobile/helpers/date';
+import DateHelper from 'mobile/src/helpers/date';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
@@ -10,7 +10,7 @@ import {
     Animated,
     TouchableOpacity,
 } from 'react-native';
-import Requests from 'mobile/services/requests';
+import Requests from 'mobile/src/services/requests';
 
 let activeTimer = null;
 

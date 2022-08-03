@@ -1,12 +1,12 @@
 import React, {useRef} from 'react';
-import DateHelper from 'mobile/helpers/date';
+import DateHelper from 'mobile/src/helpers/date';
 import {
     View,
     Text,
     StyleSheet,
     Pressable
 } from 'react-native';
-import StyleService from 'mobile/services/styles';
+import StyleService from 'mobile/src/services/styles';
 
 const TimeOffItem = (props) => {
     const { data, handleEntryDetails } = props;
