@@ -16,6 +16,7 @@ func NewHTTP(r *echo.Group) {
 	group.GET("/:year/:month", httpMonthlyEntries)
 	group.POST("/save", httpSaveEntry)
 	group.DELETE("/:id", httpDeleteEntry)
+	group.GET("/:id/history", httpEntryHistory)
 	group.GET("/check-timer", httpCheckTimerEntry)
 	group.POST("/start-timer", httpStartTimerEntry)
 	group.POST("/stop-timer/:id", httpStopTimerEntry)
@@ -161,4 +162,24 @@ func httpCheckTimerEntry(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, timer))
+}
+
+func httpEntryHistory(c echo.Context) error {
+	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	user, err := api.GetUser(c)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	res, err := entryHistory(timeEntryId, user)
+	c.Logger().Print(res)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }

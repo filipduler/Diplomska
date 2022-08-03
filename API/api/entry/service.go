@@ -1,6 +1,8 @@
 package entry
 
 import (
+	"api/api"
+	apiutils "api/api/api_utils"
 	"api/db"
 	"errors"
 	"time"
@@ -10,7 +12,6 @@ import (
 
 var (
 	ErrNoActiveTimer = errors.New("no active timers available")
-	ErrInvalidAccess = errors.New("user doesn't have access to time entry")
 )
 
 func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
@@ -22,7 +23,7 @@ func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
 	}
 
 	if entry.UserId != user.Id {
-		return nil, ErrInvalidAccess
+		return nil, api.ErrIncorrectPermissions
 	}
 
 	day := entry.StartTimeUtc.Day()
@@ -96,7 +97,7 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 			}
 
 			if model.UserId != user.Id {
-				return ErrInvalidAccess
+				return api.ErrIncorrectPermissions
 			}
 
 			model.StartTimeUtc = request.StartTime.UTC()
@@ -129,7 +130,7 @@ func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 	}
 
 	if te.UserId != user.Id {
-		return ErrInvalidAccess
+		return api.ErrIncorrectPermissions
 	}
 
 	te.IsDeleted = true
@@ -188,7 +189,7 @@ func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
 		now := time.Now()
 
 		if te.UserId != user.Id {
-			return ErrInvalidAccess
+			return api.ErrIncorrectPermissions
 		}
 
 		//check if its a valid timer
@@ -207,6 +208,75 @@ func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
 func cancelTimerEntry(user *db.UserModel) error {
 	dbStore := db.New()
 	return dbStore.TimeEntry.DeleteUnfinished(user.Id)
+}
+
+func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]historyModel, error) {
+	dbStore := db.New()
+
+	to, err := dbStore.TimeEntry.GetById(timeEntryId)
+	if err != nil {
+		return nil, err
+	}
+
+	if to.UserId != user.Id {
+		return nil, api.ErrIncorrectPermissions
+	}
+
+	logs, err := dbStore.TimeEntryLog.GetByTimeEntryId(timeEntryId)
+	if err != nil {
+		return nil, err
+	}
+
+	userIds := lo.Map(logs, func(log db.TimeEntryLogModel, _ int) int64 { return log.UserId })
+	uniqueUserIds := lo.Uniq(userIds)
+	userMap, err := apiutils.GetUserMap(uniqueUserIds, &dbStore)
+	if err != nil {
+		return nil, err
+	}
+
+	historyMap := map[time.Time][]historyModel{}
+
+	for i, logEntry := range logs {
+		logMessages := []historyModel{}
+
+		//load modifier user
+		curUser := userMap[logEntry.UserId]
+
+		//copy time objects
+		start := logEntry.StartTimeUtc
+		end := logEntry.EndTimeUtc
+
+		if i == 0 {
+			logMessages = append(logMessages, historyModel{
+				Action:          EntryCreated,
+				ModifiedByOwner: logEntry.UserId == to.UserId,
+				ModifierName:    curUser.DisplayName,
+				StartTimeUtc:    &start,
+				EndTimeUtc:      end,
+			})
+		} else {
+			prevLog := logs[i-1]
+			if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
+				logMessages = append(logMessages, historyModel{
+					Action:          TimeChange,
+					ModifiedByOwner: logEntry.UserId == to.UserId,
+					ModifierName:    curUser.DisplayName,
+					StartTimeUtc:    &start,
+					EndTimeUtc:      end,
+				})
+			}
+
+			if logEntry.IsDeleted {
+				logMessages = append(logMessages, historyModel{
+					Action:          EntryDeleted,
+					ModifiedByOwner: logEntry.UserId == to.UserId,
+					ModifierName:    curUser.DisplayName,
+				})
+			}
+		}
+		historyMap[logEntry.InsertedOnUtc] = logMessages
+	}
+	return historyMap, nil
 }
 
 func mapToEntryLog(userId int64, entry *db.TimeEntryModel) db.TimeEntryLogModel {

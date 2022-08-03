@@ -15,6 +15,15 @@ type TimeEntryLogModel struct {
 	InsertedOnUtc time.Time  `db:"InsertedOnUtc"`
 }
 
+func (store *timeEntryLogTable) GetByTimeEntryId(timeEntryId int64) ([]TimeEntryLogModel, error) {
+	tf := []TimeEntryLogModel{}
+	err := store.db.Select(&tf, "SELECT * FROM TimeEntryLog WHERE TimeEntryId = ?", timeEntryId)
+	if err != nil {
+		return nil, err
+	}
+	return tf, nil
+}
+
 func (store *timeEntryLogTable) Insert(tel *TimeEntryLogModel) error {
 	tel.InsertedOnUtc = time.Now()
 

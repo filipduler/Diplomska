@@ -1,8 +1,9 @@
 package timeoff
 
 import (
+	"api/api"
+	apiutils "api/api/api_utils"
 	"api/db"
-	"errors"
 	"time"
 
 	"github.com/samber/lo"
@@ -23,11 +24,6 @@ const (
 	Vacation timeOffType = 1
 	Medical  timeOffType = 2
 	Other    timeOffType = 3
-)
-
-var (
-	ErrIncorrectPermissions = errors.New("user doesn't have permissions to entry")
-	ErrEntryNotFound        = errors.New("entry not found")
 )
 
 func getEntries(user *db.UserModel) ([]timeOffModel, error) {
@@ -67,7 +63,7 @@ func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error)
 	}
 
 	if entry.UserId != user.Id {
-		return nil, ErrIncorrectPermissions
+		return nil, api.ErrIncorrectPermissions
 	}
 
 	statusMap, err := getTimeOffStatusTypeMap(&dbStore)
@@ -88,7 +84,7 @@ func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error)
 		}, nil
 	}
 
-	return nil, ErrEntryNotFound
+	return nil, api.ErrEntryNotFound
 }
 
 func getTypes() ([]typeModel, error) {
@@ -168,7 +164,7 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 	}
 
 	if to.UserId != user.Id {
-		return ErrIncorrectPermissions
+		return api.ErrIncorrectPermissions
 	}
 
 	return dbStore.Transact(func() error {
@@ -192,7 +188,7 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 	}
 
 	if to.UserId != user.Id {
-		return nil, ErrIncorrectPermissions
+		return nil, api.ErrIncorrectPermissions
 	}
 
 	logs, err := dbStore.TimeOffLog.GetByTimeOffId(timeOffId)
@@ -212,7 +208,7 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 
 	userIds := lo.Map(logs, func(log db.TimeOffLogModel, _ int) int64 { return log.UserId })
 	uniqueUserIds := lo.Uniq(userIds)
-	userMap, err := getUserMap(uniqueUserIds, &dbStore)
+	userMap, err := apiutils.GetUserMap(uniqueUserIds, &dbStore)
 	if err != nil {
 		return nil, err
 	}
@@ -295,15 +291,6 @@ func getTimeOffTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffTypeModel, erro
 	}
 
 	return lo.KeyBy(entries, func(entry db.TimeOffTypeModel) int64 { return entry.Id }), nil
-}
-
-func getUserMap(userIds []int64, dbStore *db.DBStore) (map[int64]db.UserModel, error) {
-	users, err := dbStore.User.GetByIds(userIds)
-	if err != nil {
-		return nil, err
-	}
-
-	return lo.KeyBy(users, func(user db.UserModel) int64 { return user.Id }), nil
 }
 
 func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel,
