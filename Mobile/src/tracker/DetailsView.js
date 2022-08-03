@@ -43,6 +43,14 @@ const DetailsView = ({ route, navigation }) => {
         }
     }
 
+    const deleteEntry = async () => {
+        const response = await Requests.deleteTimeEntry(id);
+        console.log(response);
+        if(response && response.ok) {
+            throw 'todo';
+        }
+    }
+
     const save = async () => {
         const body = {
             id: id > 0 ? id : null,
@@ -86,7 +94,8 @@ const DetailsView = ({ route, navigation }) => {
 
                 <View>
                     <Button title='Save' onPress={save} />
-                    <Button title='Delete' />
+                    <Button title='Delete' onPress={deleteEntry}/>
+                    <Button title='History' onPress={() => navigation.navigate('History', { id: id })}/>
                 </View>
             </ScrollView>
         </SafeAreaView>

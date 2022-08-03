@@ -134,7 +134,15 @@ func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 	}
 
 	te.IsDeleted = true
-	err = dbStore.TimeEntry.Update(te)
+	dbStore.Transact(func() error {
+		err := dbStore.TimeEntry.Update(te)
+		if err != nil {
+			return err
+		}
+
+		log := mapToEntryLog(user.Id, te)
+		return dbStore.TimeEntryLog.Insert(&log)
+	})
 
 	return err
 }

@@ -5,6 +5,7 @@ const Requests =
     getTimeEntries: async (month, year) => await _innerFetch('GET', `/entry/${year}/${month}`),
     getTimeEntry: async (id) => await _innerFetch('GET', `/entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),
+    postTimeEntryHistory: async (id) => await _innerFetch('GET', `/entry/${id}/history`),
     postStartTimer: async () => await _innerFetch('POST', '/entry/start-timer'),
     postStopTimer: async (timeEntryId) => await _innerFetch('POST', `/entry/stop-timer/${timeEntryId}`),
     getCheckTimer: async () => await _innerFetch('GET', '/entry/check-timer'),
