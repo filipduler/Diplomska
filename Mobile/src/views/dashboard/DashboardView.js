@@ -1,9 +1,13 @@
 import React from 'react';
-import { Button, Text } from 'react-native';
+import { Button, Text, View } from 'react-native';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 const DashboardView = ({ navigation }) => {
     return (
-        <Text>Dashboard</Text>
+        <View>
+            <Text>Dashboard</Text>
+            <Icon name="left" size={30} color="#900" />
+        </View>
     );
 };
 

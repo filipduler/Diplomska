@@ -34,6 +34,8 @@ const BaseDateTime = ({ value, onChange }) => {
             res = (<DateTimePicker
                 value={date.raw.toDate()}
                 mode='datetime'
+                locale={'en_GB'}
+                display="inline"
                 is24Hour={true}
                 onChange={onDateChange}
             />);

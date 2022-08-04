@@ -17,6 +17,7 @@ import {
 import CheckInOut from './components/CheckInOut'
 import MonthSelector from './components/MonthSelector'
 import ActionSheet from '@alessiocancian/react-native-actionsheet'
+import Icon from 'react-native-vector-icons/AntDesign'
 import _ from 'lodash';
 
 
@@ -104,51 +105,40 @@ const MonthListView = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <MonthSelector onUpdate={refreshMonthlyEntries} />
-            <SectionList
-                sections={days}
-                refreshing={refreshing} onRefresh={refreshMonthlyEntries}
-                keyExtractor={(item, index) => item + index}
-                renderItem={({ item }) => {
-                    return <TimeItem
-                        data={item}
-                        handleDelete={() => deleteItem(item.id)}
-                        handleDetails={() => navigation.navigate('Details', { id: item.id })}
-                    />;
-                }}
-                renderSectionHeader={({ section }) => (
-                    <View style={styles.headerRow}>
-                        <Text style={[styles.headerColumn]} onPress={() => dayClickActionSheet.show()}>{section.text}</Text>
-                        <Text style={[styles.headerColumn, { textAlign: 'right' }]}>Total: {section.dailyTotal}</Text>
-                    </View>
-                )}
-            />
-            <View>
-                <Text>Manual</Text>
-                <Switch
-                    trackColor={{ false: "#767577", true: "#81b0ff" }}
-                    thumbColor={isManualEnabled ? "#f5dd4b" : "#f4f3f4"}
-                    ios_backgroundColor="#3e3e3e"
-                    onValueChange={state => setIsManualEnabled(state)}
-                    value={isManualEnabled}
+            <View style={{ padding: 20 }}>
+                <MonthSelector onUpdate={refreshMonthlyEntries} />
+                <SectionList
+                    sections={days}
+                    refreshing={refreshing} onRefresh={refreshMonthlyEntries}
+                    keyExtractor={(item, index) => item + index}
+                    renderItem={({ item }) => {
+                        return <TimeItem
+                            data={item}
+                            handleDelete={() => deleteItem(item.id)}
+                            handleDetails={() => navigation.navigate('Details', { id: item.id })}
+                        />;
+                    }}
+                    renderSectionHeader={({ section }) => (
+                        <View style={styles.headerRow}>
+                            <Text style={[styles.headerColumn]} onPress={() => dayClickActionSheet.show()}>{section.text}</Text>
+                            <Text style={[styles.headerColumn, { textAlign: 'right' }]}>Total: {section.dailyTotal}</Text>
+                        </View>
+                    )}
                 />
+                <View>
+                    <Text>Manual</Text>
+                    <Switch
+                        trackColor={{ false: "#767577", true: "#81b0ff" }}
+                        onValueChange={state => setIsManualEnabled(state)}
+                        value={isManualEnabled}
+                    />
+                </View>
+                <View>
+                    {isManualEnabled
+                        ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { id: 0 })} />
+                        : <CheckInOut onNewEntry={refreshMonthlyEntries} />}
+                </View>
             </View>
-            <View>
-                {isManualEnabled 
-                    ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { id: 0 })}/> 
-                    : <CheckInOut onNewEntry={refreshMonthlyEntries} />}
-            </View>
-
-
-            
-
-            <ActionSheet
-                ref={o => dayClickActionSheet = o}
-                title={'Select action'}
-                options={['New Entry', 'History', 'Cancel']}
-                cancelButtonIndex={2}
-                onPress={(index) => console.log(index)}
-            />
         </SafeAreaView>
     );
 };
@@ -157,7 +147,10 @@ const MonthListView = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: StyleService.colorPalette.c2
+    },
+    row: {
+        flex: 1,
+        flexDirection: 'row'
     },
     header: {
         fontSize: 20,

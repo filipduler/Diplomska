@@ -4,12 +4,15 @@ import DateHelper from 'mobile/src/helpers/date';
 import {
     View,
     Text,
-    Button
+    Button,
+    StyleSheet
 } from 'react-native';
+import Icon from 'react-native-vector-icons/AntDesign'
+import { reduce } from 'lodash';
 
 const MonthSelector = ({ onUpdate }) => {
-    const [ cursor, setCursor ] = useState({ 
-        year: Store.currentDate.year, 
+    const [cursor, setCursor] = useState({
+        year: Store.currentDate.year,
         month: Store.currentDate.month,
         monthText: DateHelper.getMonth(Store.currentDate.month)
     });
@@ -27,12 +30,29 @@ const MonthSelector = ({ onUpdate }) => {
     }
 
     return (
-        <View>
-            <Button title='Previous' onPress={() => moveMonth(-1)}/>
-            <Text>{cursor.monthText}, {cursor.year}</Text>
-            <Button title='Next' onPress={() => moveMonth(1)}/>
+        <View style={styles.row}>
+            <Icon name="left" size={30} color="#900"
+                onPress={() => moveMonth(-1)} />
+            <Text style={styles.text}>{cursor.monthText}, {cursor.year}</Text>
+            <Icon name="right" size={30} color="#900"
+                onPress={() => moveMonth(1)} />
         </View>
     );
 };
+
+
+const styles = StyleSheet.create({
+    row: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: 'space-around',
+    },
+    text: {
+        fontSize: 21,
+        justifyContent: 'center', 
+        alignItems: 'center',
+        fontWeight: "500"
+    }
+});
 
 export default MonthSelector;

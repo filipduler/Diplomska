@@ -112,21 +112,34 @@ const CheckInOut = (props) => {
         activeTimer = null;
     }
 
-    return (checkIn
-        ? (
-            <View>
-                <Text></Text>
-                <Button onPress={onCheckIn} title="Check-in" />
-            </View>
-        )
+    return (
+        <View style={styles.row}>
+        {checkIn
+        ? (<Button onPress={onCheckIn} title="Check-in" />)
         : (
-            <View>
-                {counter?.time ? (<Text>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>) : null}
+            <>
+                {counter?.time ? (<Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>) : null}
                 <Button onPress={onCancel} title="Cancel" />
                 <Button onPress={onCheckOut} title="Check-out" />
-            </View>
-        )
-    );
+            </>
+        )}
+        </View>
+    )
 };
+
+
+
+const styles = StyleSheet.create({
+    row: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: 'space-around',
+        alignItems: 'center'
+    },
+    text: {
+        fontSize: 21,
+        fontWeight: "500"
+    }
+});
 
 export default CheckInOut;
