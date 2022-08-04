@@ -3,13 +3,7 @@ import { Button, Text } from 'react-native';
 
 const DashboardView = ({ navigation }) => {
     return (
-        <Button
-            title="Go to Jane's profile"
-            onPress={() => {
-                    navigation.replace('Tracker', { name: 'Jane' })
-                }
-            }
-        />
+        <Text>Dashboard</Text>
     );
 };
 
