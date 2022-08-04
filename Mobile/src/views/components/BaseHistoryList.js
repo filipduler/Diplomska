@@ -5,11 +5,6 @@ import DateHelper from 'mobile/src/helpers/date';
 import { useFocusEffect } from '@react-navigation/native';
 import BaseBold from '../components/BaseBold'
 
-const formatFullDate = (date) => {
-    const local = DateHelper.convertUTCToLocal(date);
-    return `${DateHelper.formatDate(local)}, ${DateHelper.formatTime(local)}`;
-}
-
 const prepareTimeOffHistory = (log) => {
     let res = null;
     const who = log.modifiedByOwner ? 'You' : log.ModifierName;
@@ -19,8 +14,8 @@ const prepareTimeOffHistory = (log) => {
                 <View>
                     <BaseBold>New request opened</BaseBold>
                     <Text>
-                        {'\t\t'}from <BaseBold>{formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{formatFullDate(log.endTimeUtc)}</BaseBold>
+                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
+                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
                         {'\t\t'}of type <BaseBold>{log.type}</BaseBold>
                     </Text>
                 </View>
@@ -41,8 +36,8 @@ const prepareTimeOffHistory = (log) => {
                 <View>
                     <BaseBold>{who} changed the time</BaseBold>
                     <Text>
-                        {'\t\t'}from <BaseBold>{formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{formatFullDate(log.endTimeUtc)}</BaseBold>
+                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
+                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
                     </Text>
                 </View>
             )
@@ -70,8 +65,8 @@ const prepareTimeEntryHistory = (log) => {
                 <View>
                     <BaseBold>New entry created</BaseBold>
                     <Text>
-                        {'\t\t'}from <BaseBold>{formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{formatFullDate(log.endTimeUtc)}</BaseBold>
+                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
+                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
                     </Text>
                 </View>
             )
@@ -88,8 +83,8 @@ const prepareTimeEntryHistory = (log) => {
                 <View>
                     <BaseBold>{who} changed the time</BaseBold>
                     <Text>
-                        {'\t\t'}from <BaseBold>{formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{formatFullDate(log.endTimeUtc)}</BaseBold>
+                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
+                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
                     </Text>
                 </View>
             )
@@ -135,7 +130,7 @@ const BaseHistoryList = ({ id, type }) => {
     
                 for (const key of Object.keys(items)) {
                     arr.push({
-                        text: formatFullDate(key),
+                        text: DateHelper.formatFullDate(key),
                         data: items[key].map(log => prepDataFunction(log))
                     });
                 }

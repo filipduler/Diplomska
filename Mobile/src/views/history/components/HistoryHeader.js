@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Text } from 'react-native';
 
-const HistoryView = ({ navigation }) => {
+const HistoryHeader = ({ navigation }) => {
     return (
         <Button
             title="Go to Jane's profile"
@@ -13,4 +13,4 @@ const HistoryView = ({ navigation }) => {
     );
 };
 
-export default HistoryView;
+export default HistoryHeader;

@@ -113,7 +113,7 @@ const MonthListView = ({ navigation }) => {
                     return <TimeItem
                         data={item}
                         handleDelete={() => deleteItem(item.id)}
-                        handleDetails={() => navigation.navigate('Details', { id: item.id, day: item.day })}
+                        handleDetails={() => navigation.navigate('Details', { id: item.id })}
                     />;
                 }}
                 renderSectionHeader={({ section }) => (
@@ -135,7 +135,7 @@ const MonthListView = ({ navigation }) => {
             </View>
             <View>
                 {isManualEnabled 
-                    ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { id: 0, day: null })}/> 
+                    ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { id: 0 })}/> 
                     : <CheckInOut onNewEntry={refreshMonthlyEntries} />}
             </View>
 

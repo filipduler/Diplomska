@@ -10,7 +10,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import DashboardView from './src/views/dashboard/DashboardView';
-import HistoryView from './src/views/history/HistoryView';
+import HistoryStack from './src/views/history/HistoryStack';
 import TrackerStack from './src/views/tracker/TrackerStack';
 import TimeOffStack from './src/views/timeoff/TimeOffStack';
 import {
@@ -29,7 +29,7 @@ const App = () => {
         <Tab.Screen name="Dashboard" component={DashboardView} />
         <Tab.Screen name="Time Tracker" component={TrackerStack} options={{headerShown: false}} />
         <Tab.Screen name="Time Off" component={TimeOffStack} options={{headerShown: false}} />
-        <Tab.Screen name="History" component={HistoryView} options={{headerShown: false}} />
+        <Tab.Screen name="History" component={HistoryStack} options={{headerShown: false}} />
       </Tab.Navigator>
     </NavigationContainer>
   );

@@ -2,6 +2,7 @@ import Config from 'react-native-config'
 
 const Requests =
 {
+    /*********TIME ENTRY********/
     getTimeEntries: async (month, year) => await _innerFetch('GET', `/entry/${year}/${month}`),
     getTimeEntry: async (id) => await _innerFetch('GET', `/entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),
@@ -11,12 +12,17 @@ const Requests =
     getCheckTimer: async () => await _innerFetch('GET', '/entry/check-timer'),
     postCancelTimer: async () => await _innerFetch('POST', '/entry/cancel-timer'),
     postSaveEntry: async (body) => await _innerFetch('POST', '/entry/save', JSON.stringify(body)),
+
+    /*********TIME OFF********/
     getTimeOffEntries: async () => await _innerFetch('GET', '/time-off'),
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
     getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/types'),
     putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
     postTimeOffSave: async (body) => await _innerFetch('POST', `/time-off/save`, JSON.stringify(body)),
-    getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`)
+    getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
+
+    /*********HISTORY********/
+    getHistory: async () => await _innerFetch('GET', `/history`),
 }
 
 export default Requests;

@@ -1,4 +1,4 @@
-import moment from 'moment';
+import moment, { isMoment } from 'moment';
 import * as StringHelpers from './strings';
 
 const weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -41,6 +41,22 @@ const DateHelper =
 	},
 	formatDate: (date) => moment(date).format('DD, MMM YYYY'),
 	formatTime: (date, includeSeconds = false) => moment(date).format('HH:mm' + (includeSeconds ? 'ss' : '')),
+	formatFullDate: (date, fromUTC = true) => {
+		let displayTime = date;
+		if(fromUTC) {
+			displayTime = DateHelper.convertUTCToLocal(date);
+		}
+		
+		return `${DateHelper.formatDate(displayTime)}, ${DateHelper.formatTime(displayTime)}`;
+	},
+	roundToDayAsUnix: (date, fromUTC = true) => {
+		let displayTime = moment(date);
+		if(fromUTC) {
+			displayTime = DateHelper.convertUTCToLocal(date);
+		}
+
+		return displayTime.startOf('day').unix();
+	}
 }
 
 export default DateHelper;

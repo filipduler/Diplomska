@@ -9,13 +9,11 @@ import (
 func getHistory(request *historyRequest, user *db.UserModel) ([]historyEntryModel, error) {
 	dbStore := db.New()
 
-	var res []historyEntryModel
-
 	tfEntries, err := getTimeOffHistory(user.Id, &dbStore)
 	if err != nil {
 		return nil, err
 	}
-	res = tfEntries
+	res := tfEntries
 
 	teEntries, err := getTimeEntryHistory(user.Id, &dbStore)
 	if err != nil {
@@ -34,6 +32,7 @@ func getTimeOffHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel, 
 
 	return lo.Map(entires, func(log db.TimeOffLogModel, _ int) historyEntryModel {
 		return historyEntryModel{
+			Id:              log.TimeOffId,
 			Type:            TimeOff,
 			StartTimeUtc:    log.StartTimeUtc,
 			EndTimeUtc:      log.EndTimeUtc,
@@ -50,6 +49,7 @@ func getTimeEntryHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel
 
 	return lo.Map(entires, func(log db.TimeEntryLogModel, _ int) historyEntryModel {
 		return historyEntryModel{
+			Id:              log.TimeEntryId,
 			Type:            TimeEntry,
 			StartTimeUtc:    log.StartTimeUtc,
 			EndTimeUtc:      log.EndTimeUtc,

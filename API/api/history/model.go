@@ -15,6 +15,7 @@ const (
 )
 
 type historyEntryModel struct {
+	Id              int64       `json:"id"`
 	Type            historyType `json:"type"`
 	StartTimeUtc    time.Time   `json:"startTimeUtc"`
 	EndTimeUtc      time.Time   `json:"endTimeUtc"`
