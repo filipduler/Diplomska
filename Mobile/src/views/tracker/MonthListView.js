@@ -105,7 +105,7 @@ const MonthListView = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{ padding: 20 }}>
+            <View style={{ flexDirection: 'column', padding: 20, flex: 1}}>
                 <MonthSelector onUpdate={refreshMonthlyEntries} />
                 <SectionList
                     sections={days}
@@ -126,7 +126,7 @@ const MonthListView = ({ navigation }) => {
                     )}
                 />
                 <View>
-                    <Text>Manual</Text>
+                    <Text style={{fontSize: 16}}>Manual</Text>
                     <Switch
                         trackColor={{ false: "#767577", true: "#81b0ff" }}
                         onValueChange={state => setIsManualEnabled(state)}
@@ -148,10 +148,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    row: {
-        flex: 1,
-        flexDirection: 'row'
-    },
     header: {
         fontSize: 20,
         backgroundColor: "#fff"
@@ -165,6 +161,8 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         flexWrap: "wrap",
+        fontSize: 18,
+        fontWeight: '500'
     }
 });
 

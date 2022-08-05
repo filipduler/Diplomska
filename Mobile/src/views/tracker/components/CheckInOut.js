@@ -114,15 +114,15 @@ const CheckInOut = (props) => {
 
     return (
         <View style={styles.row}>
-        {checkIn
-        ? (<Button onPress={onCheckIn} title="Check-in" />)
-        : (
-            <>
-                {counter?.time ? (<Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>) : null}
-                <Button onPress={onCancel} title="Cancel" />
-                <Button onPress={onCheckOut} title="Check-out" />
-            </>
-        )}
+            {checkIn
+            ? (<Button onPress={onCheckIn} title="Check-in" />)
+            : (
+                <>
+                    {counter?.time ? (<Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>) : null}
+                    <Button onPress={onCancel} title="Cancel" />
+                    <Button onPress={onCheckOut} title="Check-out" />
+                </>
+            )}
         </View>
     )
 };

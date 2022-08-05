@@ -4,8 +4,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import DateHelper from 'mobile/src/helpers/date';
 import moment from 'moment';
 
-const isIOS = Platform.OS === 'ios';
-
 const prepareDate = (date) => {
     const mDate = moment(date || moment());
     return {
@@ -15,41 +13,47 @@ const prepareDate = (date) => {
     };
 }
 
-const BaseDateTime = ({ value, onChange }) => {
+const BaseDateTime = ({ style, value, onChange }) => {
 
     const [date, setDate] = useState(prepareDate(value));
     const [pickerType, setPickerType] = useState(null);
 
     const onDateChange = (event, selectedDate) => {
         setDate(prepareDate(selectedDate));
-        setPickerType(null);
-        if(onChange) {
+        if(pickerType === 'date') {
+            setPickerType(null);
+        }
+        
+        if (onChange) {
             onChange(date.raw.toDate());
+        }
+    }
+
+    const toggleDateType = (type) => {
+        if(type === pickerType) {
+            setPickerType(null);
+        } else {
+            setPickerType(type);
         }
     }
 
     const prepareDateModal = (type) => {
         let res = null;
-        if (isIOS && type === 'datetime') {
+        if (type === 'date') {
             res = (<DateTimePicker
                 value={date.raw.toDate()}
-                mode='datetime'
                 locale={'en_GB'}
                 display="inline"
-                is24Hour={true}
-                onChange={onDateChange}
-            />);
-        } else if (!isIOS && type === 'date') {
-            res = (<DateTimePicker
-                value={date.raw.toDate()}
                 mode='date'
                 onChange={onDateChange}
             />);
         }
-        else if (!isIOS && type === 'time') {
+        else if (type === 'time') {
             res = (<DateTimePicker
                 value={date.raw.toDate()}
                 mode='time'
+                locale={'en_GB'}
+                display="spinner"
                 is24Hour={true}
                 onChange={onDateChange}
             />)
@@ -58,14 +62,9 @@ const BaseDateTime = ({ value, onChange }) => {
     }
 
     return (
-        <View>
-            {isIOS
-                ? <Button title={`${date.date}, ${date.time}`} onPress={() => setPickerType('datetime')}/>
-                : <>
-                    <Button title={date.date} onPress={() => setPickerType('date')}/>
-                    <Button title={date.time} onPress={() => setPickerType('time')}/>
-                </>}
-            <Text>{pickerType}</Text>
+        <View style={style}>
+            <Button title={date.date} onPress={() => toggleDateType('date')} />
+            <Button title={date.time} onPress={() => toggleDateType('time')} />
             {prepareDateModal(pickerType)}
         </View>
 

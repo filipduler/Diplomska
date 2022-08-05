@@ -8,9 +8,9 @@ import Requests from 'mobile/src/services/requests';
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
 
-    const [ startTime, setStartTime ] = useState(new Date());
-    const [ endTime, setEndTime ] = useState(new Date());
-    const [ note, setNote ] = useState('');
+    const [startTime, setStartTime] = useState(new Date());
+    const [endTime, setEndTime] = useState(new Date());
+    const [note, setNote] = useState('');
 
     useFocusEffect(
         React.useCallback(() => {
@@ -43,14 +43,6 @@ const DetailsView = ({ route, navigation }) => {
         }
     }
 
-    const deleteEntry = async () => {
-        const response = await Requests.deleteTimeEntry(id);
-        console.log(response);
-        if(response && response.ok) {
-            throw 'todo';
-        }
-    }
-
     const save = async () => {
         const body = {
             id: id > 0 ? id : null,
@@ -61,7 +53,7 @@ const DetailsView = ({ route, navigation }) => {
 
         const response = await Requests.postSaveEntry(body);
         console.log(response);
-        if(response && response.ok) {
+        if (response && response.ok) {
             navigation.goBack();
         }
     }
@@ -69,18 +61,25 @@ const DetailsView = ({ route, navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView
+                style={{  padding: 20, flex: 1 }}
                 scrollEnabled={false}
                 keyboardShouldPersistTaps='handled'>
-                <View>
-                    <Text>Start</Text>
-                    <BaseDateTime value={startTime.raw} onChange={x => setStartTime(x)} />
+                <View style={styles.row}>
+                    <Text style={styles.label}>Start</Text>
+                    <BaseDateTime style={styles.date}
+                        value={startTime.raw}
+                        onChange={x => setStartTime(x)} />
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.label}>End</Text>
+                    <BaseDateTime style={styles.date}
+                        value={endTime.raw}
+                        onChange={x => setEndTime(x)} />
+                </View>
+                <View style={styles.row}>
+                    <Text style={styles.label}>Note</Text>
                 </View>
                 <View>
-                    <Text>End</Text>
-                    <BaseDateTime value={endTime.raw} onChange={x => setEndTime(x)} />
-                </View>
-                <View>
-                    <Text>Note</Text>
                     <TextInput
                         multiline={true}
                         numberOfLines={11}
@@ -91,13 +90,12 @@ const DetailsView = ({ route, navigation }) => {
                         textAlignVertical='top'
                     />
                 </View>
-
-                <View>
-                    <Button title='Save' onPress={save} />
-                    <Button title='Delete' onPress={deleteEntry}/>
-                    <Button title='History' onPress={() => navigation.navigate('History', { id: id })}/>
-                </View>
             </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
+                    <Button title='History'
+                        onPress={() => navigation.navigate('History', { id: id })} />
+                    <Button title='Save' onPress={save} />
+                </View>
         </SafeAreaView>
     );
 };
@@ -105,6 +103,20 @@ const DetailsView = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    row: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingBottom: 30
+    },
+    label: {
+        flex: 1,
+        fontSize: 20,
+        fontWeight: '500'
+    },
+    date: {
+        flex: 6,
     },
     textInput: {
         borderColor: '#000000',
