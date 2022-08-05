@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import CheckInOut from './components/CheckInOut'
 import MonthSelector from './components/MonthSelector'
-import ActionSheet from '@alessiocancian/react-native-actionsheet'
 import Icon from 'react-native-vector-icons/AntDesign'
 import _ from 'lodash';
 
@@ -87,9 +86,9 @@ const MonthListView = ({ navigation }) => {
     }
 
     const deleteItem = async (timeEntryId) => {
-        const res = await Requests.deleteTimeEntry(timeEntryId);
-        console.log(res);
-        if (res && res.ok) {
+        const response = await Requests.deleteTimeEntry(timeEntryId);
+        console.log(response);
+        if (response && response.ok) {
             const arr = [...days];
 
             for (const day of arr) {
@@ -105,11 +104,12 @@ const MonthListView = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{ flexDirection: 'column', padding: 20, flex: 1}}>
+            <View style={{ padding: 20, flex: 1}}>
                 <MonthSelector onUpdate={refreshMonthlyEntries} />
                 <SectionList
                     sections={days}
-                    refreshing={refreshing} onRefresh={refreshMonthlyEntries}
+                    refreshing={refreshing} 
+                    onRefresh={refreshMonthlyEntries}
                     keyExtractor={(item, index) => item + index}
                     renderItem={({ item }) => {
                         return <TimeItem

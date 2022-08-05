@@ -302,7 +302,16 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 				})
 			}
 		}
-		historyMap[logEntry.InsertedOnUtc] = logMessages
+
+		inserted := logEntry.InsertedOnUtc
+		inserted = inserted.Truncate(60 * time.Second)
+
+		if messages, ok := historyMap[inserted]; ok {
+			historyMap[inserted] = append(messages, logMessages...)
+		} else {
+			historyMap[inserted] = logMessages
+		}
+
 	}
 	return historyMap, nil
 }

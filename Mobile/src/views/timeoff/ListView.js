@@ -13,36 +13,43 @@ import {
 import TimeOffItem from './components/TimeOffItem';
  
 const ListView = ({ navigation }) => {
+
     const [entries, setEntries] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
             //on focus
-            console.log('focus TimeOffList');
+            console.log('focus ListView');
             getEntries()
 
             return () => {
                 //on unfocus
-                console.log('unfocus TimeOffList');
+                console.log('unfocus ListView');
             };
         }, [])
     )
 
     const getEntries = async () => {
         let arr = [];
-        const response = await Requests.getTimeOffEntries();
-        if(response && response.ok && response.payload) {
-            for(const entry of response.payload) {
-                arr.push({
-                    id: entry.id,
-                    startTime: DateHelper.convertUTCToLocal(entry.startTimeUtc),
-                    endTime: DateHelper.convertUTCToLocal(entry.endTimeUtc),
-                    type: entry.type,
-                    status: entry.status
-                });
+        try{
+            const response = await Requests.getTimeOffEntries();
+            if(response && response.ok && response.payload) {
+                for(const entry of response.payload) {
+                    arr.push({
+                        id: entry.id,
+                        startTime: DateHelper.convertUTCToLocal(entry.startTimeUtc),
+                        endTime: DateHelper.convertUTCToLocal(entry.endTimeUtc),
+                        type: entry.type,
+                        status: entry.status
+                    });
+                }
             }
+        } finally{
+            setEntries(arr);
+            setRefreshing(false);
         }
-        setEntries(arr);
+        
     }
 
     const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
@@ -50,6 +57,8 @@ const ListView = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
+                refreshing={refreshing} 
+                onRefresh={getEntries}
                 data={entries}
                 renderItem={({item}) => <TimeOffItem data={item} handleEntryDetails={navigateToDetails}/>}
             />
@@ -62,22 +71,8 @@ const ListView = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: StyleService.colorPalette.c2
+        padding: 20
     },
-    header: {
-        fontSize: 20,
-        backgroundColor: "#fff"
-    },
-    headerRow: { 
-        flex: 1,
-        flexDirection: 'row',
-        padding: 10,
-    },
-    headerColumn: {
-        flex: 1,
-        flexDirection: 'row',
-        flexWrap: "wrap",
-    }
 });
 
 export default ListView;

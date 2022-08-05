@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React from 'react';
 import DateHelper from 'mobile/src/helpers/date';
 import {
     View,
@@ -7,20 +7,21 @@ import {
     Pressable
 } from 'react-native';
 import StyleService from 'mobile/src/services/styles';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 const TimeOffItem = (props) => {
     const { data, handleEntryDetails } = props;
-    const start = DateHelper.formatTime(data.startTime);
-    const end = DateHelper.formatTime(data.endTime);
+    const start = DateHelper.formatDate(data.startTime) + '\n' + DateHelper.formatTime(data.startTime);
+    const end = DateHelper.formatDate(data.endTime) + '\n' + DateHelper.formatTime(data.endTime);
     const color = StyleService.getColorFromStatus(data.status.id);
 
     return (
         <Pressable onPress={() => handleEntryDetails(data.id)} style={styles.itemContainer}>
             <View style={styles.itemRow}>
-                <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{start}</Text>
-                <Text style={[styles.itemColumn, { textAlign: 'center' }]}>-</Text>
-                <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{end}</Text>
-                <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.type.name}</Text>
+                <Text style={styles.itemColumn}>{start}</Text>
+                <Icon name="minus" size={15} color="#900" />
+                <Text style={styles.itemColumn}>{end}</Text>
+                <Text style={styles.itemColumn}>{data.type.name}</Text>
                 <View style={[styles.circle, { backgroundColor: color }]}></View>
             </View>
         </Pressable>
@@ -29,9 +30,9 @@ const TimeOffItem = (props) => {
 
 const styles = StyleSheet.create({
     circle: {
-        width: 18,
-        height: 18,
-        borderRadius: 18/2,
+        width: 16,
+        height: 16,
+        borderRadius: 16/2,
         borderWidth: 0.8
     },
     itemContainer: {
@@ -41,14 +42,12 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     itemColumn: {
         flex: 1,
-        flexDirection: 'row',
-        flexWrap: "wrap",
-        justifyContent: 'center',
-        alignItems: 'center',
+        textAlign: 'center',
+        fontWeight: '600'
     }
 });
 

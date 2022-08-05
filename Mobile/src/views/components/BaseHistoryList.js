@@ -12,11 +12,11 @@ const prepareTimeOffHistory = (log) => {
         case 'RequestOpen':
             res = (
                 <View>
-                    <BaseBold>New request opened</BaseBold>
-                    <Text>
-                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
-                        {'\t\t'}of type <BaseBold>{log.type}</BaseBold>
+                    <BaseBold style={styles.headerRow}>New request opened</BaseBold>
+                    <Text style={styles.bodyRow}>
+                        <BaseBold>from</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}{'\n'}
+                        <BaseBold>type</BaseBold> {log.type}
                     </Text>
                 </View>
             )
@@ -24,9 +24,9 @@ const prepareTimeOffHistory = (log) => {
         case 'RequestClosed':
             res = (
                 <View>
-                    <BaseBold>{who} closed the request</BaseBold>
-                    <Text>
-                        {'\t\t'}status <BaseBold>{log.status}</BaseBold>
+                    <BaseBold style={styles.headerRow}>{who} closed the request</BaseBold>
+                    <Text style={styles.bodyRow}>
+                        <BaseBold>status</BaseBold> {log.status}
                     </Text>
                 </View>
             )
@@ -34,10 +34,10 @@ const prepareTimeOffHistory = (log) => {
         case 'TimeChange':
             res = (
                 <View>
-                    <BaseBold>{who} changed the time</BaseBold>
-                    <Text>
-                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
+                    <BaseBold style={styles.headerRow}>{who} changed the time</BaseBold>
+                    <Text style={styles.bodyRow}>
+                        <BaseBold>from</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}
                     </Text>
                 </View>
             )
@@ -45,9 +45,9 @@ const prepareTimeOffHistory = (log) => {
         case 'TypeChange':
             res = (
                 <View>
-                    <BaseBold>{who} changed the request type</BaseBold>
+                    <BaseBold style={styles.headerRow}>{who} changed the request type</BaseBold>
                     <Text>
-                        {'\t\t'}to <BaseBold>{log.type}</BaseBold>
+                        <BaseBold>to</BaseBold> {log.type}
                     </Text>
                 </View>
             )
@@ -63,10 +63,10 @@ const prepareTimeEntryHistory = (log) => {
         case 'EntryCreated':
             res = (
                 <View>
-                    <BaseBold>New entry created</BaseBold>
-                    <Text>
-                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
+                    <BaseBold style={styles.headerRow}>New entry created</BaseBold>
+                    <Text style={styles.bodyRow}>
+                    <BaseBold>from:</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to:</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}
                     </Text>
                 </View>
             )
@@ -74,17 +74,17 @@ const prepareTimeEntryHistory = (log) => {
         case 'EntryDeleted':
             res = (
                 <View>
-                    <BaseBold>{who} removed the entry</BaseBold>
+                    <BaseBold style={styles.headerRow}>{who} removed the entry</BaseBold>
                 </View>
             )
             break;
         case 'TimeChange':
             res = (
                 <View>
-                    <BaseBold>{who} changed the time</BaseBold>
-                    <Text>
-                        {'\t\t'}from <BaseBold>{DateHelper.formatFullDate(log.startTimeUtc)}</BaseBold>
-                        {'\t\t'}to <BaseBold>{DateHelper.formatFullDate(log.endTimeUtc)}</BaseBold>
+                    <BaseBold style={styles.headerRow}>{who} changed the time</BaseBold>
+                    <Text style={styles.bodyRow}>
+                        <BaseBold>from</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}
                     </Text>
                 </View>
             )
@@ -145,10 +145,26 @@ const BaseHistoryList = ({ id, type }) => {
             sections={keys}
             keyExtractor={(item, index) => item + index}
             renderItem={({ item }) => item}
-            renderSectionHeader={({ section }) => <Text>{section.text}</Text>}
+            renderSectionHeader={({ section }) => <Text style={styles.header}>{section.text}</Text>}
         />
     );
 };
 
+const styles = StyleSheet.create({
+    header: {
+        fontSize: 19,
+        fontWeight: '500'
+    },
+    headerRow: {
+        fontSize: 17,
+        fontWeight: '400',
+        paddingLeft: 15,
+    },
+    bodyRow: {
+        fontSize: 15,
+        fontWeight: '400',
+        paddingLeft: 40,
+    },
+});
 
 export default BaseHistoryList;
