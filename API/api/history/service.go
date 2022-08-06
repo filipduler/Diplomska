@@ -36,6 +36,7 @@ func getTimeOffHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel, 
 			Type:            TimeOff,
 			StartTimeUtc:    log.StartTimeUtc,
 			EndTimeUtc:      log.EndTimeUtc,
+			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		}
 	}), nil
@@ -53,6 +54,7 @@ func getTimeEntryHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel
 			Type:            TimeEntry,
 			StartTimeUtc:    log.StartTimeUtc,
 			EndTimeUtc:      log.EndTimeUtc,
+			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		}
 	}), nil

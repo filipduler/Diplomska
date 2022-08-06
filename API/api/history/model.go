@@ -19,5 +19,6 @@ type historyEntryModel struct {
 	Type            historyType `json:"type"`
 	StartTimeUtc    time.Time   `json:"startTimeUtc"`
 	EndTimeUtc      time.Time   `json:"endTimeUtc"`
+	LogType         int64       `json:"logType"`
 	LastUpdateOnUtc time.Time   `json:"lastUpdateOnUtc"`
 }

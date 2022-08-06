@@ -19,7 +19,7 @@ const TimeOffItem = (props) => {
         <Pressable onPress={() => handleEntryDetails(data.id)} style={styles.itemContainer}>
             <View style={styles.itemRow}>
                 <Text style={styles.itemColumn}>{start}</Text>
-                <Icon name="minus" size={15} color="#900" />
+                <Icon name="minus" size={18} color="#000" />
                 <Text style={styles.itemColumn}>{end}</Text>
                 <Text style={styles.itemColumn}>{data.type.name}</Text>
                 <View style={[StyleService.style.circle, { backgroundColor: color }]}></View>
