@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -27,13 +28,29 @@ func (store *timeEntryLogTable) GetByTimeEntryId(timeEntryId int64) ([]TimeEntry
 
 func (store *timeEntryLogTable) GetLastEntryByRange(userId int64, from *time.Time, to *time.Time) ([]TimeEntryLogModel, error) {
 	tf := []TimeEntryLogModel{}
-	err := store.db.Select(&tf, `WITH last_log_entries AS (
+
+	var dateQuery string
+	var args []interface{}
+	args = append(args, userId)
+
+	if from != nil && to != nil {
+		dateQuery = "AND InsertedOnUtc > ? AND InsertedOnUtc < ?"
+		args = append(args, from, to)
+	} else if from != nil {
+		dateQuery = "AND InsertedOnUtc > ?"
+		args = append(args, from)
+	} else if to != nil {
+		dateQuery = "AND InsertedOnUtc < ?"
+		args = append(args, to)
+	}
+
+	err := store.db.Select(&tf, fmt.Sprintf(`WITH last_log_entries AS (
 			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeEntryId ORDER BY InsertedOnUtc DESC) AS rn
 			FROM timeentrylog AS m
-			WHERE m.UserId = ?
+			WHERE m.UserId = ? %s
 		)
 		SELECT StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, LogTypeId, InsertedOnUtc
-		FROM last_log_entries WHERE rn = 1`, userId)
+		FROM last_log_entries WHERE rn = 1`, dateQuery), args...)
 	if err != nil {
 		return nil, err
 	}

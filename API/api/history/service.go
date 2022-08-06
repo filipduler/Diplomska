@@ -2,6 +2,7 @@ package history
 
 import (
 	"api/db"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -9,13 +10,13 @@ import (
 func getHistory(request *historyRequest, user *db.UserModel) ([]historyEntryModel, error) {
 	dbStore := db.New()
 
-	tfEntries, err := getTimeOffHistory(user.Id, &dbStore)
+	tfEntries, err := getTimeOffHistory(user.Id, request.From, request.To, &dbStore)
 	if err != nil {
 		return nil, err
 	}
 	res := tfEntries
 
-	teEntries, err := getTimeEntryHistory(user.Id, &dbStore)
+	teEntries, err := getTimeEntryHistory(user.Id, request.From, request.To, &dbStore)
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +25,8 @@ func getHistory(request *historyRequest, user *db.UserModel) ([]historyEntryMode
 	return res, nil
 }
 
-func getTimeOffHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel, error) {
-	entires, err := dbStore.TimeOffLog.GetLastEntryByRange(userId, nil, nil)
+func getTimeOffHistory(userId int64, from *time.Time, to *time.Time, dbStore *db.DBStore) ([]historyEntryModel, error) {
+	entires, err := dbStore.TimeOffLog.GetLastEntryByRange(userId, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +43,8 @@ func getTimeOffHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel, 
 	}), nil
 }
 
-func getTimeEntryHistory(userId int64, dbStore *db.DBStore) ([]historyEntryModel, error) {
-	entires, err := dbStore.TimeEntryLog.GetLastEntryByRange(userId, nil, nil)
+func getTimeEntryHistory(userId int64, from *time.Time, to *time.Time, dbStore *db.DBStore) ([]historyEntryModel, error) {
+	entires, err := dbStore.TimeEntryLog.GetLastEntryByRange(userId, from, to)
 	if err != nil {
 		return nil, err
 	}
