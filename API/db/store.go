@@ -23,13 +23,12 @@ func init() {
 
 type DBStore struct {
 	*store
-	User              userTable
-	TimeEntry         timeEntryTable
-	TimeEntryLog      timeEntryLogTable
-	TimeOff           timeOffTable
-	TimeOffStatusType timeOffStatusTypeTable
-	TimeOffType       timeOffTypeTable
-	TimeOffLog        timeOffLogTable
+	User         userTable
+	TimeEntry    timeEntryTable
+	TimeEntryLog timeEntryLogTable
+	TimeOff      timeOffTable
+	TimeOffType  timeOffTypeTable
+	TimeOffLog   timeOffLogTable
 }
 
 type store struct {
@@ -44,14 +43,13 @@ func New() DBStore {
 	}
 
 	return DBStore{
-		store:             &store,
-		User:              userTable{&store},
-		TimeEntry:         timeEntryTable{&store},
-		TimeEntryLog:      timeEntryLogTable{&store},
-		TimeOff:           timeOffTable{&store},
-		TimeOffStatusType: timeOffStatusTypeTable{&store},
-		TimeOffType:       timeOffTypeTable{&store},
-		TimeOffLog:        timeOffLogTable{&store},
+		store:        &store,
+		User:         userTable{&store},
+		TimeEntry:    timeEntryTable{&store},
+		TimeEntryLog: timeEntryLogTable{&store},
+		TimeOff:      timeOffTable{&store},
+		TimeOffType:  timeOffTypeTable{&store},
+		TimeOffLog:   timeOffLogTable{&store},
 	}
 }
 

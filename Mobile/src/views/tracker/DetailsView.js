@@ -82,7 +82,7 @@ const DetailsView = ({ route, navigation }) => {
                 <View>
                     <TextInput
                         multiline={true}
-                        numberOfLines={11}
+                        numberOfLines={6}
                         value={note}
                         onChangeText={(text) => setNote(text)}
                         style={styles.textInput}

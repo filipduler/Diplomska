@@ -9,32 +9,10 @@ import (
 	"github.com/samber/lo"
 )
 
-type timeOffStatus int64
-
-const (
-	Pending  timeOffStatus = 1
-	Accepted timeOffStatus = 2
-	Rejected timeOffStatus = 3
-	Canceled timeOffStatus = 4
-)
-
-type timeOffType int64
-
-const (
-	Vacation timeOffType = 1
-	Medical  timeOffType = 2
-	Other    timeOffType = 3
-)
-
 func getEntries(user *db.UserModel) ([]timeOffModel, error) {
 	dbStore := db.New()
 
 	entries, err := dbStore.TimeOff.GetByUserId(user.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	statusMap, err := getTimeOffStatusTypeMap(&dbStore)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +24,7 @@ func getEntries(user *db.UserModel) ([]timeOffModel, error) {
 
 	res := []timeOffModel{}
 	for _, entry := range entries {
-		if resEntry, ok := mapEntry(&entry, typeMap, statusMap); ok {
+		if resEntry, ok := mapEntry(&entry, typeMap); ok {
 			res = append(res, *resEntry)
 		}
 	}
@@ -66,21 +44,16 @@ func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error)
 		return nil, api.ErrIncorrectPermissions
 	}
 
-	statusMap, err := getTimeOffStatusTypeMap(&dbStore)
-	if err != nil {
-		return nil, err
-	}
-
 	typeMap, err := getTimeOffTypeMap(&dbStore)
 	if err != nil {
 		return nil, err
 	}
 
-	if resEntry, ok := mapEntry(entry, typeMap, statusMap); ok {
+	if resEntry, ok := mapEntry(entry, typeMap); ok {
 		return &timeOffDetailsModel{
 			timeOffModel:  *resEntry,
-			IsCancellable: entry.TimeOffStatusTypeId == int64(Pending),
-			IsFinished:    entry.TimeOffStatusTypeId != int64(Pending),
+			IsCancellable: entry.TimeOffStatusTypeId == int64(db.PendingTimeOffStatus),
+			IsFinished:    entry.TimeOffStatusTypeId != int64(db.PendingTimeOffStatus),
 		}, nil
 	}
 
@@ -114,7 +87,7 @@ func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 				EndTimeUtc:          request.EndTime.UTC(),
 				Note:                request.Note,
 				TimeOffTypeId:       request.TypeId,
-				TimeOffStatusTypeId: int64(Pending),
+				TimeOffStatusTypeId: int64(db.PendingTimeOffStatus),
 				UserId:              user.Id,
 			}
 			timeOffId, err := dbStore.TimeOff.Insert(model)
@@ -139,7 +112,7 @@ func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 			}
 		}
 
-		log := mapToEntryLog(user.Id, model)
+		log := mapToEntryLog(user.Id, model, lo.Ternary(id > 0, db.UpdateLogType, db.InsertLogType))
 		return dbStore.TimeOffLog.Insert(&log)
 	})
 
@@ -159,7 +132,7 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 	}
 
 	//if request is not pending return success
-	if to.TimeOffStatusTypeId != int64(Pending) {
+	if to.TimeOffStatusTypeId != int64(db.PendingTimeOffStatus) {
 		return nil
 	}
 
@@ -168,13 +141,13 @@ func closeEntryStatus(timeOffId int64, user *db.UserModel) error {
 	}
 
 	return dbStore.Transact(func() error {
-		to.TimeOffStatusTypeId = int64(Canceled)
+		to.TimeOffStatusTypeId = int64(db.CanceledTimeOffStatus)
 		err = dbStore.TimeOff.Update(to)
 		if err != nil {
 			return err
 		}
 
-		log := mapToEntryLog(user.Id, to)
+		log := mapToEntryLog(user.Id, to, db.DeleteLogType)
 		return dbStore.TimeOffLog.Insert(&log)
 	})
 }
@@ -192,11 +165,6 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 	}
 
 	logs, err := dbStore.TimeOffLog.GetByTimeOffId(timeOffId)
-	if err != nil {
-		return nil, err
-	}
-
-	statusMap, err := getTimeOffStatusTypeMap(&dbStore)
 	if err != nil {
 		return nil, err
 	}
@@ -258,30 +226,21 @@ func entryHistory(timeOffId int64, user *db.UserModel) (map[time.Time][]historyM
 			}
 
 			if prevLog.TimeOffStatusTypeId != logEntry.TimeOffStatusTypeId &&
-				(logEntry.TimeOffStatusTypeId == int64(Accepted) ||
-					logEntry.TimeOffStatusTypeId == int64(Rejected) ||
-					logEntry.TimeOffStatusTypeId == int64(Canceled)) {
-				name := statusMap[logEntry.TimeOffStatusTypeId].Name
+				(logEntry.TimeOffStatusTypeId == int64(db.AcceptedTimeOffStatus) ||
+					logEntry.TimeOffStatusTypeId == int64(db.RejectedTimeOffStatus) ||
+					logEntry.TimeOffStatusTypeId == int64(db.CanceledTimeOffStatus)) {
+				status := logEntry.TimeOffStatusTypeId
 				logMessages = append(logMessages, historyModel{
 					Action:          RequestClosed,
 					ModifiedByOwner: logEntry.UserId == to.UserId,
 					ModifierName:    curUser.DisplayName,
-					Status:          &name,
+					Status:          &status,
 				})
 			}
 		}
 		historyMap[logEntry.InsertedOnUtc] = logMessages
 	}
 	return historyMap, nil
-}
-
-func getTimeOffStatusTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffStatusTypeModel, error) {
-	statusEntries, err := dbStore.TimeOffStatusType.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	return lo.KeyBy(statusEntries, func(entry db.TimeOffStatusTypeModel) int64 { return entry.Id }), nil
 }
 
 func getTimeOffTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffTypeModel, error) {
@@ -293,12 +252,9 @@ func getTimeOffTypeMap(dbStore *db.DBStore) (map[int64]db.TimeOffTypeModel, erro
 	return lo.KeyBy(entries, func(entry db.TimeOffTypeModel) int64 { return entry.Id }), nil
 }
 
-func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel,
-	statusMap map[int64]db.TimeOffStatusTypeModel) (*timeOffModel, bool) {
+func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel) (*timeOffModel, bool) {
 
-	timeOffType, okT := typeMap[entry.TimeOffTypeId]
-	status, okS := statusMap[entry.TimeOffStatusTypeId]
-	if okT && okS {
+	if timeOffType, ok := typeMap[entry.TimeOffTypeId]; ok {
 		return &timeOffModel{
 			Id:           entry.Id,
 			StartTimeUtc: entry.StartTimeUtc,
@@ -308,16 +264,13 @@ func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel,
 				Id:   timeOffType.Id,
 				Name: timeOffType.Name,
 			},
-			Status: typeModel{
-				Id:   status.Id,
-				Name: status.Name,
-			},
+			Status: entry.TimeOffStatusTypeId,
 		}, true
 	}
 	return nil, false
 }
 
-func mapToEntryLog(userId int64, entry *db.TimeOffModel) db.TimeOffLogModel {
+func mapToEntryLog(userId int64, entry *db.TimeOffModel, logType db.LogType) db.TimeOffLogModel {
 	return db.TimeOffLogModel{
 		StartTimeUtc:        entry.StartTimeUtc,
 		EndTimeUtc:          entry.EndTimeUtc,
@@ -325,5 +278,6 @@ func mapToEntryLog(userId int64, entry *db.TimeOffModel) db.TimeOffLogModel {
 		TimeOffStatusTypeId: entry.TimeOffStatusTypeId,
 		TimeOffId:           entry.Id,
 		UserId:              userId,
+		LogTypeId:           int64(logType),
 	}
 }

@@ -12,6 +12,7 @@ type TimeEntryLogModel struct {
 	IsDeleted     bool      `db:"IsDeleted"`
 	UserId        int64     `db:"UserId"`
 	TimeEntryId   int64     `db:"TimeEntryId"`
+	LogTypeId     int64     `db:"LogTypeId"`
 	InsertedOnUtc time.Time `db:"InsertedOnUtc"`
 }
 
@@ -31,7 +32,7 @@ func (store *timeEntryLogTable) GetLastEntryByRange(userId int64, from *time.Tim
 			FROM timeentrylog AS m
 			WHERE m.UserId = ?
 		)
-		SELECT StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, InsertedOnUtc
+		SELECT StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, LogTypeId, InsertedOnUtc
 		FROM last_log_entries WHERE rn = 1`, userId)
 	if err != nil {
 		return nil, err
@@ -42,12 +43,14 @@ func (store *timeEntryLogTable) GetLastEntryByRange(userId int64, from *time.Tim
 func (store *timeEntryLogTable) Insert(tel *TimeEntryLogModel) error {
 	tel.InsertedOnUtc = time.Now()
 
-	_, err := store.Exec("INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, InsertedOnUtc) VALUES (?, ?, ?, ?, ?, ?)",
+	_, err := store.Exec(`INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, LogTypeId, InsertedOnUtc) 
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		tel.StartTimeUtc,
 		tel.EndTimeUtc,
 		tel.IsDeleted,
 		tel.UserId,
 		tel.TimeEntryId,
+		tel.LogTypeId,
 		tel.InsertedOnUtc)
 	return err
 }

@@ -111,7 +111,7 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 			}
 		}
 
-		log, err := mapToEntryLog(user.Id, model)
+		log, err := mapToEntryLog(user.Id, model, lo.Ternary(id > 0, db.UpdateLogType, db.InsertLogType))
 		if err != nil {
 			return err
 		}
@@ -145,7 +145,7 @@ func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 			return err
 		}
 
-		log, err := mapToEntryLog(user.Id, te)
+		log, err := mapToEntryLog(user.Id, te, db.DeleteLogType)
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
 				return err
 			}
 
-			log, err := mapToEntryLog(user.Id, te)
+			log, err := mapToEntryLog(user.Id, te, db.InsertLogType)
 			if err != nil {
 				return err
 			}
@@ -316,7 +316,7 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 	return historyMap, nil
 }
 
-func mapToEntryLog(userId int64, entry *db.TimeEntryModel) (*db.TimeEntryLogModel, error) {
+func mapToEntryLog(userId int64, entry *db.TimeEntryModel, logType db.LogType) (*db.TimeEntryLogModel, error) {
 	if entry.EndTimeUtc == nil {
 		return nil, ErrEndDateUtcNull
 	}
@@ -326,5 +326,6 @@ func mapToEntryLog(userId int64, entry *db.TimeEntryModel) (*db.TimeEntryLogMode
 		IsDeleted:    entry.IsDeleted,
 		TimeEntryId:  entry.Id,
 		UserId:       userId,
+		LogTypeId:    int64(logType),
 	}, nil
 }

@@ -22,19 +22,13 @@ const TimeOffItem = (props) => {
                 <Icon name="minus" size={15} color="#900" />
                 <Text style={styles.itemColumn}>{end}</Text>
                 <Text style={styles.itemColumn}>{data.type.name}</Text>
-                <View style={[styles.circle, { backgroundColor: color }]}></View>
+                <View style={[StyleService.style.circle, { backgroundColor: color }]}></View>
             </View>
         </Pressable>
     );
 };
 
 const styles = StyleSheet.create({
-    circle: {
-        width: 16,
-        height: 16,
-        borderRadius: 16/2,
-        borderWidth: 0.8
-    },
     itemContainer: {
         height: 65
     },

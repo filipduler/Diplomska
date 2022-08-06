@@ -13,6 +13,7 @@ type TimeOffLogModel struct {
 	TimeOffStatusTypeId int64     `db:"TimeOffStatusTypeId"`
 	TimeOffId           int64     `db:"TimeOffId"`
 	UserId              int64     `db:"UserId"`
+	LogTypeId           int64     `db:"LogTypeId"`
 	InsertedOnUtc       time.Time `db:"InsertedOnUtc"`
 }
 
@@ -32,7 +33,7 @@ func (store *timeOffLogTable) GetLastEntryByRange(userId int64, from *time.Time,
 			FROM timeofflog AS m
 			WHERE m.UserId = ?
 		)
-		SELECT StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, InsertedOnUtc
+		SELECT StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, LogTypeId, UserId, InsertedOnUtc
 		FROM last_log_entries WHERE rn = 1`, userId)
 	if err != nil {
 		return nil, err
@@ -43,14 +44,15 @@ func (store *timeOffLogTable) GetLastEntryByRange(userId int64, from *time.Time,
 func (store *timeOffLogTable) Insert(tf *TimeOffLogModel) error {
 	tf.InsertedOnUtc = time.Now().UTC()
 	_, err := store.Exec(`INSERT INTO TimeOffLog 
-			(StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, InsertedOnUtc)
-			VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			(StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, LogTypeId, InsertedOnUtc)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		tf.StartTimeUtc,
 		tf.EndTimeUtc,
 		tf.TimeOffTypeId,
 		tf.TimeOffStatusTypeId,
 		tf.TimeOffId,
 		tf.UserId,
+		tf.LogTypeId,
 		tf.InsertedOnUtc)
 	return err
 }

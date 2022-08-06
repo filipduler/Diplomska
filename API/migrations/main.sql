@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS `timeofflog`;
 DROP TABLE IF EXISTS `timeoff`;
 DROP TABLE IF EXISTS `timeoffstatustype`;
 DROP TABLE IF EXISTS `timeofftype`;
+DROP TABLE IF EXISTS `logtype`;
 
 
 DROP TABLE IF EXISTS `user`;
@@ -25,6 +26,17 @@ CREATE TABLE `user` (
 INSERT INTO `user` (DisplayName, Email, PasswordHash, Active, InsertedOnUtc, UpdatedOnUtc)
 VALUES ('Admin', 'test@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
 /*password: test123*/
+
+
+CREATE TABLE `logtype` (
+  `Id` bigint NOT NULL,
+  `Name` varchar(256) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Name_UNIQUE` (`Name`)
+);
+
+INSERT INTO `logtype` (Id, Name) VALUES (1, 'Insert'), (2, 'Update'), (3, 'Delete');
+
 
 CREATE TABLE `timeentry` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
@@ -49,10 +61,12 @@ CREATE TABLE `timeentrylog` (
   `IsDeleted` tinyint NOT NULL,
   `UserId` bigint NOT NULL,
   `TimeEntryId` bigint NOT NULL,
+  `LogTypeId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,
   PRIMARY KEY (`TimeEntryId`,`InsertedOnUtc`),
   FOREIGN KEY (`TimeEntryId`) REFERENCES `timeentry` (`Id`),
-  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`),
+  FOREIGN KEY (`LogTypeId`) REFERENCES `logtype`(`Id`)
 );
 
 CREATE TABLE `timeoffstatustype` (
@@ -96,12 +110,14 @@ CREATE TABLE `timeofflog` (
   `TimeOffStatusTypeId` bigint NOT NULL,
   `TimeOffId` bigint NOT NULL,
   `UserId` bigint NOT NULL,
+  `LogTypeId` bigint NOT NULL,
   `InsertedOnUtc` datetime NOT NULL,
   PRIMARY KEY (`TimeOffId`,`InsertedOnUtc`),
   FOREIGN KEY (`TimeOffId`) REFERENCES `timeoff` (`Id`),
   FOREIGN KEY (`TimeOffStatusTypeId`) REFERENCES `timeoffstatustype` (`Id`),
   FOREIGN KEY (`TimeOffTypeId`) REFERENCES `timeofftype` (`Id`),
-  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`)
+  FOREIGN KEY (`UserId`) REFERENCES `user`(`Id`),
+  FOREIGN KEY (`LogTypeId`) REFERENCES `logtype`(`Id`)
 );
 
 

@@ -1,3 +1,14 @@
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+    circle: {
+        width: 16,
+        height: 16,
+        borderRadius: 16 / 2,
+        borderWidth: 0.8
+    },
+})
+
 const StyleService = 
 {
     colorPalette: {
@@ -15,7 +26,10 @@ const StyleService =
             default: color = '#ffff00'; break;
         }
         return color;
-    }
+    },
+    get style() {
+        return styles;
+    } 
 };
 
 export default StyleService; 

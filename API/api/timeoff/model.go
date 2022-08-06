@@ -16,7 +16,7 @@ type timeOffModel struct {
 	EndTimeUtc   time.Time `json:"endTimeUtc"`
 	Note         string    `json:"note"`
 	Type         typeModel `json:"type"`
-	Status       typeModel `json:"status"`
+	Status       int64     `json:"status"`
 }
 
 type typeModel struct {
@@ -46,5 +46,5 @@ type historyModel struct {
 	StartTimeUtc    *time.Time    `json:"startTimeUtc,omitempty"`
 	EndTimeUtc      *time.Time    `json:"endTimeUtc,omitempty"`
 	Type            *string       `json:"type,omitempty"`
-	Status          *string       `json:"status,omitempty"`
+	Status          *int64        `json:"status,omitempty"`
 }

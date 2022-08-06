@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { Button, Text } from 'react-native';
+import { Button, Text, View, StyleSheet } from 'react-native';
 
-const HistoryHeader = ({ navigation }) => {
-    return (
-        <Button
-            title="Go to Jane's profile"
-            onPress={() => {
-                    navigation.replace('Tracker', { name: 'Jane' })
-                }
-            }
-        />
-    );
+const HistoryHeader = ({ section }) => {
+    return (<Text style={styles.header}>{section.text}</Text>);
 };
+
+const styles = StyleSheet.create({
+    header: {
+        fontSize: 19,
+        fontWeight: '500'
+    },
+});
 
 export default HistoryHeader;
