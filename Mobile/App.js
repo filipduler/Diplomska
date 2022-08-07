@@ -25,7 +25,7 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      <Tab.Navigator>
+      <Tab.Navigator initialRouteName='Dashboard'>
         <Tab.Screen name="Dashboard" component={DashboardView} />
         <Tab.Screen name="Time Tracker" component={TrackerStack} options={{headerShown: false}} />
         <Tab.Screen name="Time Off" component={TimeOffStack} options={{headerShown: false}} />

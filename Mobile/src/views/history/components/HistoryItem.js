@@ -23,7 +23,7 @@ const HistoryItem = ({ item, onNavigate }) => {
             <View style={styles.container}>
                 <Text style={[styles.column, { fontWeight: '600', flex: 2 } ]}>
                     {`${(item.type === 'TE' ? 'Time entry' : 'Time off')} ${logTypeVerb(item.logType)}`}
-                    {'\n at'} {DateHelper.formatTime(item.insertedOnUtc)}
+                    {'\n at'} {DateHelper.formatTime(item.lastUpdateOnUtc)}
                 </Text>
                 <Text style={[styles.column, { fontSize: 12, flex: 1 } ]}>
                     {start}
