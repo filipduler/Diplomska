@@ -41,7 +41,7 @@ func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
 func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, error) {
 	dbStore := db.New()
 
-	entries, err := dbStore.TimeEntry.GetByMonth(user.Id, month, year)
+	entries, err := dbStore.TimeEntry.GetValidByMonth(user.Id, month, year)
 	if err != nil {
 		return nil, err
 	}

@@ -19,8 +19,8 @@ type TimeEntryModel struct {
 func (store *timeEntryTable) Insert(te *TimeEntryModel) (int64, error) {
 	te.BeforeInsert()
 
-	res, err := store.Exec("INSERT INTO TimeEntry (StartTimeUtc, EndTimeUtc, Note, DailyHours, IsDeleted, UserId, InsertedOnUtc, UpdatedOnUtc) "+
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	res, err := store.Exec(`INSERT INTO TimeEntry (StartTimeUtc, EndTimeUtc, Note, DailyHours, IsDeleted, UserId, InsertedOnUtc, UpdatedOnUtc) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		te.StartTimeUtc,
 		te.EndTimeUtc,
 		te.Note,
@@ -38,7 +38,8 @@ func (store *timeEntryTable) Insert(te *TimeEntryModel) (int64, error) {
 func (store *timeEntryTable) Update(te *TimeEntryModel) error {
 	te.BeforeUpdate()
 
-	_, err := store.Exec("UPDATE TimeEntry SET StartTimeUtc = ?, EndTimeUtc = ?, Note = ?, IsDeleted = ?, UpdatedOnUtc = ? WHERE Id = ?",
+	_, err := store.Exec(`UPDATE TimeEntry SET StartTimeUtc = ?, EndTimeUtc = ?, Note = ?, IsDeleted = ?, UpdatedOnUtc = ? 
+		WHERE Id = ?`,
 		te.StartTimeUtc,
 		te.EndTimeUtc,
 		te.Note,
@@ -53,10 +54,19 @@ func (store *timeEntryTable) DeleteUnfinished(userId int64) error {
 	return err
 }
 
-func (store *timeEntryTable) GetByMonth(userId int64, month int, year int) ([]TimeEntryModel, error) {
+func (store *timeEntryTable) GetValidByMonth(userId int64, month int, year int) ([]TimeEntryModel, error) {
 	te := []TimeEntryModel{}
-	err := store.db.Select(&te, "SELECT * FROM timeentry "+
-		"WHERE StartTimeUtc IS NOT NULL AND IsDeleted = 0 AND UserId = ? AND MONTH(StartTimeUtc) = ? AND YEAR(StartTimeUtc) = ?", userId, month, year)
+	err := store.db.Select(&te, `SELECT * FROM validtimeentry 
+		WHERE UserId = ? AND MONTH(StartTimeUtc) = ? AND YEAR(StartTimeUtc) = ?`, userId, month, year)
+	if err != nil {
+		return nil, err
+	}
+	return te, nil
+}
+
+func (store *timeEntryTable) GetValidFrom(userId int64, from time.Time) ([]TimeEntryModel, error) {
+	te := []TimeEntryModel{}
+	err := store.db.Select(&te, `SELECT * FROM validtimeentry WHERE UserId = ? AND StartTimeUtc > ?`, userId, from)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +75,10 @@ func (store *timeEntryTable) GetByMonth(userId int64, month int, year int) ([]Ti
 
 func (store *timeEntryTable) GetUnfinishedDaily(userId int64) (*TimeEntryModel, error) {
 	te := TimeEntryModel{}
-	err := store.db.Get(&te, "SELECT * FROM TimeEntry "+
-		"WHERE UserId = ? AND StartTimeUtc >= UTC_TIMESTAMP() - INTERVAL 1 DAY "+
-		"AND IsDeleted = 0 AND EndTimeUtc IS NULL "+
-		"ORDER BY StartTimeUtc DESC LIMIT 1", userId)
+	err := store.db.Get(&te, `SELECT * FROM TimeEntry 
+		WHERE UserId = ? AND StartTimeUtc >= UTC_TIMESTAMP() - INTERVAL 1 DAY 
+		AND IsDeleted = 0 AND EndTimeUtc IS NULL 
+		ORDER BY StartTimeUtc DESC LIMIT 1`, userId)
 
 	if err != nil {
 		return nil, err
@@ -78,7 +88,7 @@ func (store *timeEntryTable) GetUnfinishedDaily(userId int64) (*TimeEntryModel, 
 
 func (store *timeEntryTable) GetById(id int64) (*TimeEntryModel, error) {
 	te := TimeEntryModel{}
-	err := store.db.Get(&te, "SELECT * FROM TimeEntry WHERE Id = ?", id)
+	err := store.db.Get(&te, `SELECT * FROM TimeEntry WHERE Id = ?`, id)
 	if err != nil {
 		return nil, err
 	}

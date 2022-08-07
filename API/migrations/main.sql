@@ -7,8 +7,9 @@ DROP TABLE IF EXISTS `timeoffstatustype`;
 DROP TABLE IF EXISTS `timeofftype`;
 DROP TABLE IF EXISTS `logtype`;
 
-
 DROP TABLE IF EXISTS `user`;
+
+DROP VIEW IF EXISTS `validtimeentry`;
 
 CREATE TABLE `user` (
   `Id` bigint NOT NULL AUTO_INCREMENT,
@@ -54,6 +55,10 @@ CREATE TABLE `timeentry` (
 
 INSERT INTO `timeentry` (StartTimeUtc, EndTimeUtc, Note, DailyHours, IsDeleted, UserId, InsertedOnUtc, UpdatedOnUtc) VALUES 
 (UTC_TIMESTAMP, UTC_TIMESTAMP, 'asd', 13.3, false, 1, UTC_TIMESTAMP, UTC_TIMESTAMP);
+
+CREATE VIEW `validtimeentry` AS
+    SELECT * FROM `timeentry`
+    WHERE `EndTimeUtc` IS NOT NULL AND `IsDeleted` = 0;
 
 CREATE TABLE `timeentrylog` (
   `StartTimeUtc` datetime NOT NULL,

@@ -22,7 +22,7 @@ const Requests =
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
 
     /*********HISTORY********/
-    getHistory: async () => await _innerFetch('GET', `/history`),
+    getHistory: async (from, to) => await _innerFetch('GET', `/history`, JSON.stringify({ from, to })),
 }
 
 export default Requests;

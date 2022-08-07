@@ -2,6 +2,7 @@ package main
 
 import (
 	"api/api/auth"
+	"api/api/dashboard"
 	"api/api/entry"
 	"api/api/history"
 	"api/api/timeoff"
@@ -29,6 +30,7 @@ func main() {
 	entry.NewHTTP(group)
 	timeoff.NewHTTP(group)
 	history.NewHTTP(group)
+	dashboard.NewHTTP(group)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }
