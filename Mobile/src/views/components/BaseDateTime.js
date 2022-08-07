@@ -10,16 +10,15 @@ const isIOS = Platform.OS === 'ios';
 const prepareDate = (date) => {
     const mDate = moment(date || moment());
     return {
-        date: DateHelper.formatDate(mDate),
-        time: DateHelper.formatTime(mDate),
+        date: DateHelper.formatFullDate(mDate),
         raw: mDate
     };
 }
 
 const BaseDateTime = ({ style, value, disabled, onChange }) => {
 
-    const [date, setDate] = useState(prepareDate(value));
-    const [pickerType, setPickerType] = useState(null);
+    const [ date, setDate ] = useState(prepareDate(value));
+    const [ pickerType, setPickerType ] = useState(null);
 
     const onDateChange = (event, selectedDate) => {
         let close = false;
@@ -66,24 +65,14 @@ const BaseDateTime = ({ style, value, disabled, onChange }) => {
     const prepareDateModal = (type) => {
         let res = null;
         
-        if (isIOS && type === 'date') {
+        if (isIOS && type === 'datetime') {
             res = (<DateTimePicker
                 value={date.raw.toDate()}
-                locale={'en_GB'}
-                display="inline"
-                mode='date'
-                onChange={onDateChange}
-            />);
-        }
-        else if (isIOS && type === 'time') {
-            res = (<DateTimePicker
-                value={date.raw.toDate()}
-                mode='time'
                 locale={'en_GB'}
                 display="spinner"
-                is24Hour={true}
+                mode='datetime'
                 onChange={onDateChange}
-            />)
+            />);
         }
 
         return res;
@@ -91,8 +80,7 @@ const BaseDateTime = ({ style, value, disabled, onChange }) => {
 
     return (
         <View style={style}>
-            <Button title={date.date} onPress={() => toggleDateType('date')} disabled={disabled}/>
-            <Button title={date.time} onPress={() => toggleDateType('time')} disabled={disabled}/>
+            <Button title={date.date} onPress={() => toggleDateType('datetime')} disabled={disabled}/>
             {prepareDateModal(pickerType)}
         </View>
 

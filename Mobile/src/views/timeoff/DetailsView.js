@@ -17,7 +17,7 @@ const DetailsView = ({ route, navigation }) => {
     const [typeList, setTypeList] = useState([])
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
-    const [type, setType] = useState(1);
+    const [type, setType] = useState({id: 1});
     const [note, setNote] = useState('');
     const [status, setStatus] = useState(null);
 
@@ -50,7 +50,7 @@ const DetailsView = ({ route, navigation }) => {
 
             const endTime = DateHelper.convertUTCToLocal(item.endTimeUtc);
             setEndTime(endTime);
-
+console.log('wtf',item.type);
             setType(item.type);
             setNote(item.note);
             setStatus({
@@ -93,7 +93,7 @@ const DetailsView = ({ route, navigation }) => {
             note: note,
             typeId: type
         };
-
+        
         const response = await Requests.postTimeOffSave(body);
         console.log(response);
         if (response && response.ok) {
@@ -129,7 +129,7 @@ const DetailsView = ({ route, navigation }) => {
                             <RNPickerSelect
                                 disabled={readonlyMode}
                                 value={type.id}
-                                onValueChange={(value) => setType(value)}
+                                onValueChange={(value) => !!value ? setType(value) : null}
                                 items={typeList}
                             />
                         ) : (<Text>{type.name}</Text>)}

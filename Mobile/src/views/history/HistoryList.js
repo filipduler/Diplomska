@@ -58,18 +58,23 @@ const HistoryList = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <SectionList
-                sections={keys}
-                keyExtractor={(item, index) => item + index}
-                renderItem={({ item }) => <HistoryItem item={item} onNavigate={navigateToHistoryView}/>}
-                renderSectionHeader={({ section }) => <HistoryHeader section={section} />}
-            />
+            <View style={styles.innerContainer}>
+                <SectionList
+                    sections={keys}
+                    keyExtractor={(item, index) => item + index}
+                    renderItem={({ item }) => <HistoryItem item={item} onNavigate={navigateToHistoryView}/>}
+                    renderSectionHeader={({ section }) => <HistoryHeader section={section} />}
+                />
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
+    },
+    innerContainer: {
         flex: 1,
         padding: 20
     },
