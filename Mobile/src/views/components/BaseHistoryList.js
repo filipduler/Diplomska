@@ -4,6 +4,7 @@ import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import { useFocusEffect } from '@react-navigation/native';
 import BaseBold from '../components/BaseBold'
+import MiscServices from 'mobile/src/services/misc';
 
 const prepareTimeOffHistory = (log) => {
     let res = null;
@@ -26,7 +27,7 @@ const prepareTimeOffHistory = (log) => {
                 <View>
                     <BaseBold style={styles.headerRow}>{who} closed the request</BaseBold>
                     <Text style={styles.bodyRow}>
-                        <BaseBold>status</BaseBold> {log.status}
+                        <BaseBold>status</BaseBold> {MiscServices.getTimeOffStatusName(log.status)}
                     </Text>
                 </View>
             )

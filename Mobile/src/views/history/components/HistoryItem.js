@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Text, View, StyleSheet } from 'react-native'
+import { Pressable, Text, View, StyleSheet } from 'react-native'
 import BaseBold from 'mobile/src/views/components/BaseBold'
 import DateHelper from 'mobile/src/helpers/date'
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -13,25 +13,27 @@ const logTypeVerb = (logTypeId) => {
     }
 }
 
-const HistoryItem = ({ item }) => {
+
+const HistoryItem = ({ item, onNavigate }) => {
     const start = DateHelper.formatDate(item.startTimeUtc) + '\n' + DateHelper.formatTime(item.startTimeUtc);
     const end = DateHelper.formatDate(item.endTimeUtc) + '\n' + DateHelper.formatTime(item.endTimeUtc);
 
     return (
-        <View style={styles.container}
-            onPress={() => navigateToHistoryView(item.id, item.type)}>
-            <Text style={[styles.column, { fontWeight: '600', flex: 2 } ]}>
-                {`${(item.type === 'TE' ? 'Time entry' : 'Time off')} ${logTypeVerb(item.logType)}`}
-                {'\n at'} {DateHelper.formatTime(item.insertedOnUtc)}
-            </Text>
-            <Text style={[styles.column, { fontSize: 12, flex: 1 } ]}>
-                {start}
-            </Text>
-            <Icon name="minus" size={18} color="#000"/>
-            <Text style={[styles.column, { fontSize: 12, flex: 1 } ]}>
-                {end}
-            </Text>
-        </View>
+        <Pressable onPress={() => onNavigate(item.id, item.type)}>
+            <View style={styles.container}>
+                <Text style={[styles.column, { fontWeight: '600', flex: 2 } ]}>
+                    {`${(item.type === 'TE' ? 'Time entry' : 'Time off')} ${logTypeVerb(item.logType)}`}
+                    {'\n at'} {DateHelper.formatTime(item.insertedOnUtc)}
+                </Text>
+                <Text style={[styles.column, { fontSize: 12, flex: 1 } ]}>
+                    {start}
+                </Text>
+                <Icon name="minus" size={18} color="#000"/>
+                <Text style={[styles.column, { fontSize: 12, flex: 1 } ]}>
+                    {end}
+                </Text>
+            </View>
+        </Pressable>
     );
 };
 

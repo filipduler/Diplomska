@@ -16,7 +16,7 @@ const prepareDate = (date) => {
     };
 }
 
-const BaseDateTime = ({ style, value, onChange }) => {
+const BaseDateTime = ({ style, value, disabled, onChange }) => {
 
     const [date, setDate] = useState(prepareDate(value));
     const [pickerType, setPickerType] = useState(null);
@@ -91,8 +91,8 @@ const BaseDateTime = ({ style, value, onChange }) => {
 
     return (
         <View style={style}>
-            <Button title={date.date} onPress={() => toggleDateType('date')} />
-            <Button title={date.time} onPress={() => toggleDateType('time')} />
+            <Button title={date.date} onPress={() => toggleDateType('date')} disabled={disabled}/>
+            <Button title={date.time} onPress={() => toggleDateType('time')} disabled={disabled}/>
             {prepareDateModal(pickerType)}
         </View>
 

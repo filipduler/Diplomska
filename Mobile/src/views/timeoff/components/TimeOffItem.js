@@ -13,7 +13,7 @@ const TimeOffItem = (props) => {
     const { data, handleEntryDetails } = props;
     const start = DateHelper.formatDate(data.startTime) + '\n' + DateHelper.formatTime(data.startTime);
     const end = DateHelper.formatDate(data.endTime) + '\n' + DateHelper.formatTime(data.endTime);
-    const color = StyleService.getColorFromStatus(data.status.id);
+    const color = StyleService.getColorFromStatus(data.status);
 
     return (
         <Pressable onPress={() => handleEntryDetails(data.id)} style={styles.itemContainer}>

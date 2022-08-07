@@ -11,12 +11,6 @@ const styles = StyleSheet.create({
 
 const StyleService = 
 {
-    colorPalette: {
-        c1: '#C2DED1',
-        c2: '#ECE5C7',
-        c3: '#CDC2AE',
-        c4: '#354259',
-    },
     getColorFromStatus: (statusId) => {
         let color;
         switch(statusId) {

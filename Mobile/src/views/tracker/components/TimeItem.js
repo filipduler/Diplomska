@@ -9,14 +9,13 @@ import {
     Pressable
 } from 'react-native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import OpenConfirm from 'mobile/src/helpers/confirm'
 
 let rowDict = {};
 let prevOpenedRow;
 
-const TimeItem = (props) => {
-    const hasDescription = !!props.data.notePreview;
+const TimeItem = ({ data, handleDetails, handleDelete }) => {
+    const hasDescription = !!data.notePreview;
     const rowHeight = hasDescription ? 60 : 60;
 
     const closeRow = (id) => {
@@ -28,7 +27,8 @@ const TimeItem = (props) => {
 
     const leftSwipe = () => {
         return (
-            <Pressable onPress={props.handleDelete} activeOpacity={0.6}>
+            <Pressable onPress={() => OpenConfirm('Delete time entry', 'Are you sure?', 'Delete', handleDelete)} 
+                activeOpacity={0.6}>
                 <View style={styles.deleteBox}>
                     <Text style={styles.deleteButton}>Delete</Text>
                 </View>
@@ -38,18 +38,18 @@ const TimeItem = (props) => {
     return (
         <GestureHandlerRootView>
             <Swipeable renderRightActions={leftSwipe} 
-                ref={ref => rowDict[props.data.id] = ref} 
-                key={props.data.id}
-                onBegan={() => closeRow(props.data.id)}>
-                <Pressable onPress={props.handleDetails} style={styles.itemContainer}>
+                ref={ref => rowDict[data.id] = ref} 
+                key={data.id}
+                onBegan={() => closeRow(data.id)}>
+                <Pressable onPress={handleDetails} style={styles.itemContainer}>
                     <View style={styles.itemRow}>
-                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{props.data.startText}</Text>
-                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{props.data.endText}</Text>
-                            <Text style={[styles.itemColumn, { textAlign: 'right', paddingRight: 10 }]}>{props.data.timeText}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.startText}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.endText}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'right', paddingRight: 10 }]}>{data.timeText}</Text>
                     </View>
-                    {props.data.notePreview ? (
+                    {data.notePreview ? (
                         <View style={styles.itemRow}>
-                            <Text style={[styles.itemColumn, { textAlign: 'center' } ]}>{props.data.notePreview}</Text>
+                            <Text style={[styles.itemColumn, { textAlign: 'center' } ]}>{data.notePreview}</Text>
                         </View>
                     ) : null}
                     

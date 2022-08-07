@@ -46,8 +46,9 @@ const HistoryList = ({ navigation }) => {
             setKeys(arr);
         }
     }
-
+    
     const navigateToHistoryView = (id, type) => {
+        console.log(id, type)
         if (type === 'TE') {
             navigation.navigate('Tracker History', { id: id })
         } else if (type === 'TF') {
@@ -60,7 +61,7 @@ const HistoryList = ({ navigation }) => {
             <SectionList
                 sections={keys}
                 keyExtractor={(item, index) => item + index}
-                renderItem={({ item }) => <HistoryItem item={item} />}
+                renderItem={({ item }) => <HistoryItem item={item} onNavigate={navigateToHistoryView}/>}
                 renderSectionHeader={({ section }) => <HistoryHeader section={section} />}
             />
         </SafeAreaView>

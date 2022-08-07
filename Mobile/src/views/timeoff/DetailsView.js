@@ -6,22 +6,13 @@ import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
 import StyleService from 'mobile/src/services/styles';
 import BaseDateTime from '../components/BaseDateTime'
-
-const getTimeOffStatusName = (statusId) => {
-    let name = null;
-    switch(statusId) {
-        case 1: name = 'Pending'; break;
-        case 2: name = 'Accepted'; break;
-        case 3: name = 'Rejected'; break;
-        case 4: name = 'Canceled'; break;
-    }
-    return name;
-}
+import OpenConfirm from 'mobile/src/helpers/confirm'
+import MiscServices from 'mobile/src/services/misc';
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
 
-    const [readonlyMode, setReadonlyMode] = useState(false)
+    const [ readonlyMode, setReadonlyMode ] = useState(false)
 
     const [typeList, setTypeList] = useState([])
     const [startTime, setStartTime] = useState(new Date());
@@ -60,12 +51,12 @@ const DetailsView = ({ route, navigation }) => {
             const endTime = DateHelper.convertUTCToLocal(item.endTimeUtc);
             setEndTime(endTime);
 
-            setType(item.type.id);
+            setType(item.type);
             setNote(item.note);
             setStatus({
                 isFinished: item.isFinished,
                 isCancellable: item.isCancellable,
-                label: getTimeOffStatusName(item.status),
+                label: MiscServices.getTimeOffStatusName(item.status),
                 color: StyleService.getColorFromStatus(item.status)
             })
 
@@ -86,12 +77,12 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const closeRequest = async () => {
-        const response = await Requests.putTimeOffCloseRequest(id);
-        console.log(response);
-        if (response && response.ok) {
-            //refresh entry data
-            await loadEntry();
-        }
+        OpenConfirm('Close time off request', 'Are you sure?', 'Close', async () => {
+            const response = await Requests.putTimeOffCloseRequest(id);
+            if (response && response.ok) {
+                await loadEntry();
+            }
+        })
     }
 
     const save = async () => {
@@ -120,24 +111,29 @@ const DetailsView = ({ route, navigation }) => {
                     <Text style={styles.label}>Start</Text>
                     <BaseDateTime style={styles.date}
                         value={startTime.raw}
-                        onChange={x => setStartTime(x)} />
+                        onChange={x => setStartTime(x)}
+                        disabled={readonlyMode} />
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>End</Text>
                     <BaseDateTime style={styles.date}
                         value={endTime.raw}
-                        onChange={x => setEndTime(x)} />
+                        onChange={x => setEndTime(x)}
+                        disabled={readonlyMode} />
                 </View>
 
                 <View style={styles.row}>
                     <Text style={styles.label}>Type</Text>
                     <View style={styles.date}>
-                        <RNPickerSelect
-                            disabled={readonlyMode}
-                            value={type}
-                            onValueChange={(value) => setType(value)}
-                            items={typeList}
-                        />
+                        {!readonlyMode ? (
+                            <RNPickerSelect
+                                disabled={readonlyMode}
+                                value={type.id}
+                                onValueChange={(value) => setType(value)}
+                                items={typeList}
+                            />
+                        ) : (<Text>{type.name}</Text>)}
+                        
                     </View>
 
                 </View>
@@ -174,13 +170,15 @@ const DetailsView = ({ route, navigation }) => {
                 )}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
+                <View>
                     {id > 0 && (
                         <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
                     )}
-
-                    {(id === 0 || (status !== null && !status.isFinished)) && (
-                        <Button title='Save' onPress={save} />
-                    )}
+                </View>
+                
+                <View>
+                    <Button title='Save' onPress={save} disabled={!(id === 0 || (status !== null && !status.isFinished))} />
+                </View>
                 </View>
         </SafeAreaView>
     );
