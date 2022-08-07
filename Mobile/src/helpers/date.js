@@ -30,13 +30,22 @@ const DateHelper =
 		let seconds = Math.ceil(divisor_for_seconds);
 
 		return {
-			h: StringHelpers.padStringLeft(hours, 2, '0'),
-			m: StringHelpers.padStringLeft(minutes, 2, '0'),
-			s: StringHelpers.padStringLeft(seconds, 2, '0'),
+			h: hours,
+			m: minutes,
+			s: seconds,
+		};
+	},
+	secondsToTimeZeroPadded: (secs) => {
+		const time = DateHelper.secondsToTime(secs);
+
+		return {
+			h: StringHelpers.padStringLeft(time.h, 2, '0'),
+			m: StringHelpers.padStringLeft(time.m, 2, '0'),
+			s: StringHelpers.padStringLeft(time.s, 2, '0'),
 		};
 	},
 	secondsToTimeDisplay: (secs) => {
-		const time = DateHelper.secondsToTime(secs);
+		const time = DateHelper.secondsToTimeZeroPadded(secs);
 		return `${time.h}:${time.m}:${time.s}`;
 	},
 	formatDate: (date) => moment(date).format('DD, MMM YYYY'),

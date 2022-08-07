@@ -53,7 +53,7 @@ const CheckInOut = (props) => {
                 const secs = counter.seconds + 1;
                 setCounter({
                     seconds: secs,
-                    time: DateHelper.secondsToTime(secs)
+                    time: DateHelper.secondsToTimeZeroPadded(secs)
                 });
             }, 1000);
             return () => clearInterval(timer);
@@ -89,7 +89,6 @@ const CheckInOut = (props) => {
                 setCheckIn(true);
             }
         }
-        
     }
 
     const startTimer = (timer) => {
@@ -102,7 +101,7 @@ const CheckInOut = (props) => {
 
             let secs = Math.trunc(ms / 1000);
             if (!isNaN(secs)) {
-                setCounter({ seconds: secs, time: DateHelper.secondsToTime(secs) });
+                setCounter({ seconds: secs, time: DateHelper.secondsToTimeZeroPadded(secs) });
             }
         }
     }

@@ -22,16 +22,24 @@ const Requests =
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
 
     /*********HISTORY********/
-    getHistory: async (from, to) => await _innerFetch('GET', `/history`, JSON.stringify({ from, to })),
+    getHistory: async (from, to) => await _innerFetch('GET', `/history`, null, { from, to }),
+
+    /*********DASHBOARD********/
+    getDashboard: async () => await _innerFetch('GET', `/dashboard`),
 }
 
 export default Requests;
 
 
-async function _innerFetch(method, url, body) {
+async function _innerFetch(method, url, body, params) {
     let res = null;
     try {
-        const response = await fetch(Config.API_HOST + url, {
+        let parameters = '';
+        if(params) {
+            parameters = `?${new URLSearchParams(params)}`;
+        }
+        
+        const response = await fetch(Config.API_HOST + url + parameters, {
             method: method,
             body: body,
             headers: {

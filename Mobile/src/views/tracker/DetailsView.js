@@ -50,6 +50,7 @@ const DetailsView = ({ route, navigation }) => {
             endTime: endTime,
             note: note
         };
+        console.log(body)
 
         const response = await Requests.postSaveEntry(body);
         console.log(response);
@@ -67,13 +68,13 @@ const DetailsView = ({ route, navigation }) => {
                 <View style={styles.row}>
                     <Text style={styles.label}>Start</Text>
                     <BaseDateTime style={styles.date}
-                        value={startTime.raw}
+                        value={startTime}
                         onChange={x => setStartTime(x)} />
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>End</Text>
                     <BaseDateTime style={styles.date}
-                        value={endTime.raw}
+                        value={endTime}
                         onChange={x => setEndTime(x)} />
                 </View>
                 <View style={styles.row}>

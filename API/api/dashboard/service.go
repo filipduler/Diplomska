@@ -13,7 +13,7 @@ func getDashboard(user *db.UserModel) (*dashboardReponse, error) {
 	response := dashboardReponse{}
 
 	now := time.Now().UTC()
-	monthStart := time.Date(now.Year(), now.Month(), 0, 0, 0, 0, 0, time.UTC)
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 
 	prevMonth := monthStart.AddDate(0, -1, 0)
 
