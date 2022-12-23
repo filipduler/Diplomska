@@ -11,20 +11,17 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import Requests from 'mobile/src/services/requests';
-
-let activeTimer = null;
+import Counter from 'mobile/src/views/tracker/components/Counter.js';
+import Store from '../../../services/store';
 
 const CheckInOut = (props) => {
-    const [checkIn, setCheckIn] = useState(true);
-    const [counter, setCounter] = useState(null);
+    const [timer, setTimer] = useState(null);
 
     const onCheckIn = async () => {
-        const res = await Requests.postStartTimer();
-        console.log(res);
-        if(res && res.ok) {
-            setCheckIn(!checkIn);
-            startTimer(res.payload);
-        }
+        setTimer({
+            timerStart: Date.now(),
+            pauseStart: null
+        });
     }
 
     const onCheckOut = async () => {
@@ -39,86 +36,65 @@ const CheckInOut = (props) => {
         props.onNewEntry?.call();
     }
     
-    const onCancel = async () => {
-        setCheckIn(!checkIn);
-        stopTimer();
-        
-        const res = await Requests.postCancelTimer();
-        console.log(res);
+    const onCancel = () => {
+        setTimer(null)
+    }
+    
+    const onPause = () => {
+        timer.pauseStart = Date.now();
+        setTimer(timer);
     }
 
-    React.useEffect(() => {
-        if (counter) {
-            const timer = setInterval(() => {
-                const secs = counter.seconds + 1;
-                setCounter({
-                    seconds: secs,
-                    time: DateHelper.secondsToTimeZeroPadded(secs)
-                });
-            }, 1000);
-            return () => clearInterval(timer);
-        }
-    }, [counter]);
+    const onCancelPause = () => {
+        timer.pauseStart = null;
+        setTimer(timer);
+    }
 
     useFocusEffect(
         React.useCallback(() => {
             //on focus
             console.log('focus');
-            checkActiveTimer();
+            //checkActiveTimer();
 
             return () => {
                 //on unfocus
                 console.log('unfocus');
-                setCounter(null);
+                //setCounter(null);
             };
         }, [])
     )
 
     const checkActiveTimer = async () => {
-        if(activeTimer) {
-            setCheckIn(false);
-            startTimer(activeTimer);
-        } else {
-            const res = await Requests.getCheckTimer();
-            if (res) {
-                setCheckIn(!res.ok);
-                if (res.ok) {
-                    startTimer(res.payload);
-                }
-            } else {
-                setCheckIn(true);
-            }
-        }
-    }
+        const activeTimer = await Store.timer.getTimerAsync();
 
-    const startTimer = (timer) => {
-        activeTimer = timer;
-        if (timer) {
-            let ms = Date.now() - new Date(timer.startTimeUtc);
+        if(activeTimer) {
+
+            let ms = Date.now() - new Date(activeTimer.start);
             if(ms < 0) {
                 ms = 0;
             }
-
+            console.log('ms ', ms);
             let secs = Math.trunc(ms / 1000);
             if (!isNaN(secs)) {
                 setCounter({ seconds: secs, time: DateHelper.secondsToTimeZeroPadded(secs) });
             }
+
+            setCheckIn(true);
+            startTimer(activeTimer);
         }
     }
-
-    const stopTimer = () => {
-        setCounter(null);
-        activeTimer = null;
-    }
-
     return (
         <View style={styles.row}>
-            {checkIn
+            {!timer
             ? (<Button onPress={onCheckIn} title="Check-in" />)
             : (
                 <>
-                    {counter?.time ? (<Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>) : null}
-                    <Button onPress={onCancel} title="Cancel" />
+                    
+                    <Counter start={timer.timerStart} onCancel={onCancel} />
+                    {timer.pauseStart 
+                        ? (<Counter start={timer.pauseStart} onCancel={onCancel} />)
+                        : (<Button onPress={onCancelPause} title="Pause" />)}
+                        
                     <Button onPress={onCheckOut} title="Check-out" />
                 </>
             )}

@@ -1,4 +1,5 @@
 import Config from 'react-native-config'
+import Store from 'mobile/src/services/store';
 
 const Requests =
 {
@@ -26,6 +27,8 @@ const Requests =
 
     /*********DASHBOARD********/
     getDashboard: async () => await _innerFetch('GET', `/dashboard`),
+
+    postLogin: async (data) => await _innerFetch('POST', `/auth/login`, JSON.stringify(data)),
 }
 
 export default Requests;
@@ -45,7 +48,7 @@ async function _innerFetch(method, url, body, params) {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'token': Config.API_JWT
+                'token': await Store.auth.getJWTAsync()
             }
         });
         if (response.ok) {

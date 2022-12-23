@@ -4,19 +4,14 @@ import TimeItem from './components/TimeItem';
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import Store from 'mobile/src/services/store';
-import StyleService from 'mobile/src/services/styles';
 import {
     View,
     SafeAreaView,
     Text,
     SectionList,
     StyleSheet,
-    Switch,
-    Button
 } from 'react-native';
-import CheckInOut from './components/CheckInOut'
 import MonthSelector from './components/MonthSelector'
-import Icon from 'react-native-vector-icons/AntDesign'
 import _ from 'lodash';
 
 
@@ -125,19 +120,6 @@ const MonthListView = ({ navigation }) => {
                         </View>
                     )}
                 />
-                <View>
-                    <Text style={{fontSize: 16}}>Manual</Text>
-                    <Switch
-                        trackColor={{ false: "#767577", true: "#81b0ff" }}
-                        onValueChange={state => setIsManualEnabled(state)}
-                        value={isManualEnabled}
-                    />
-                </View>
-                <View>
-                    {isManualEnabled
-                        ? <Button title='New Entry' onPress={() => navigation.navigate('Details', { id: 0 })} />
-                        : <CheckInOut onNewEntry={refreshMonthlyEntries} />}
-                </View>
             </View>
         </SafeAreaView>
     );
