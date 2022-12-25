@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Button, TextInput } from 'react-native';
 import Requests from 'mobile/src/services/requests';
-import Store from '../../services/store';
+import Store from 'mobile/src/services/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AuthContext } from 'mobile/App.js';
 
-const LoginView = ({ navigation }) => {
+const LoginView = () => {
     const { setLoggedInStatus } = React.useContext(AuthContext);
 
     const [email, setEmail] = useState('');
@@ -28,13 +29,13 @@ const LoginView = ({ navigation }) => {
                 placeholder='Email' 
                 keyboardType='email-address' 
                 value={email} 
-                autoCapitalize={false}
+                autoCapitalize='none'
                 onChangeText={(x) => setEmail(x)} />
             <TextInput 
                 placeholder='Password' 
                 secureTextEntry={true} 
                 value={password} 
-                autoCapitalize={false}
+                autoCapitalize='none'
                 onChangeText={(x) => setPassword(x)} />
             <Button title='Login' onPress={login} />
         </SafeAreaView>

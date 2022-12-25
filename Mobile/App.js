@@ -20,9 +20,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-const AuthContext = React.createContext();
+export const AuthContext = React.createContext();
 
-const App = () => {
+export const App = () => {
 
   const [loggedIn, setLoggedIn] = useState(Store.auth.isLogged);
 
@@ -56,5 +56,3 @@ const App = () => {
     </NavigationContainer>
   );
 };
-
-export default App;

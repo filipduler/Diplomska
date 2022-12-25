@@ -65,6 +65,28 @@ const DateHelper =
 		}
 
 		return displayTime.startOf('day').unix();
+	},
+	timeDiffInSec: (date) => {
+		let ms = Date.now() - new Date(date);
+		if(ms < 0) {
+			ms = 0;
+		}
+
+		const secs = Math.trunc(ms / 1000);
+		if (!isNaN(secs)) {
+			return secs;
+		}
+		return null;
+	},
+	hmsFormat: (secs) => {
+		const hms = DateHelper.secondsToTime(secs);
+		if(hms.h > 0) {
+			return `${hms.h}h ${hms.m}m ${hms.s}s`;
+		} else if(hms.m > 0) {
+			return `${hms.m}m ${hms.s}s`;
+		}
+
+		return `${hms.s}s`;
 	}
 }
 

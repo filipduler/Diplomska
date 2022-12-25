@@ -7,6 +7,7 @@ import {
     StyleSheet,
     Button,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 const Counter = ({ start, onCancel }) => {
     const [counter, setCounter] = useState(null);
@@ -21,21 +22,20 @@ const Counter = ({ start, onCancel }) => {
                 });
             }, 1000);
             return () => clearInterval(timer);
+
         }
     }, [counter]);
 
     useFocusEffect(
         React.useCallback(() => {
-            if(start) {
-                let ms = Date.now() - new Date(start);
-                if(ms < 0) {
-                    ms = 0;
-                }
+            let ms = Date.now() - new Date(start);
+            if (ms < 0) {
+                ms = 0;
+            }
 
-                let secs = Math.trunc(ms / 1000);
-                if (!isNaN(secs)) {
-                    setCounter({ seconds: secs, time: DateHelper.secondsToTimeZeroPadded(secs) });
-                }
+            let secs = Math.trunc(ms / 1000);
+            if (!isNaN(secs)) {
+                setCounter({ seconds: secs, time: DateHelper.secondsToTimeZeroPadded(secs) });
             }
 
             return () => {
@@ -44,14 +44,15 @@ const Counter = ({ start, onCancel }) => {
         }, [])
     )
 
+
     return (
         <View style={styles.row}>
             {counter?.time
-            ? (<>
+                ? (<>
                     <Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>
-                    <Button onPress={() => onCancel?.call()} title="Cancel" />
+                    <Icon style={styles.icon} name="close" size={21} onPress={() => onCancel?.call()} />
                 </>)
-            : null}
+                : null}
         </View>
     )
 };
@@ -59,6 +60,12 @@ const Counter = ({ start, onCancel }) => {
 
 
 const styles = StyleSheet.create({
+    row: {
+        flexDirection: 'row'
+    },
+    icon: {
+        alignSelf: 'center'
+    },
     text: {
         fontSize: 21,
         fontWeight: "500"

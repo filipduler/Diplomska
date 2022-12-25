@@ -8,11 +8,7 @@ const Requests =
     getTimeEntry: async (id) => await _innerFetch('GET', `/entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),
     getTimeEntryHistory: async (id) => await _innerFetch('GET', `/entry/${id}/history`),
-    postStartTimer: async () => await _innerFetch('POST', '/entry/start-timer'),
-    postStopTimer: async (timeEntryId) => await _innerFetch('POST', `/entry/stop-timer/${timeEntryId}`),
-    getCheckTimer: async () => await _innerFetch('GET', '/entry/check-timer'),
-    postCancelTimer: async () => await _innerFetch('POST', '/entry/cancel-timer'),
-    postSaveEntry: async (body) => await _innerFetch('POST', '/entry/save', JSON.stringify(body)),
+    postSaveEntry: async (body) => await _innerFetch('POST', '/time-entry/save', JSON.stringify(body)),
 
     /*********TIME OFF********/
     getTimeOffEntries: async () => await _innerFetch('GET', '/time-off'),
@@ -36,6 +32,7 @@ export default Requests;
 
 async function _innerFetch(method, url, body, params) {
     let res = null;
+    console.log(body);
     try {
         let parameters = '';
         if(params) {
@@ -48,7 +45,7 @@ async function _innerFetch(method, url, body, params) {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'token': await Store.auth.getJWTAsync()
+                'Authorization': `Bearer ${await Store.auth.getJWTAsync()}`
             }
         });
         if (response.ok) {

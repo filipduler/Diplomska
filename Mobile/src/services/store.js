@@ -38,7 +38,12 @@ const Store = {
             return timer ? JSON.parse(timer) : null;
         },
         setTimerAsync: async function(timerObject) {
-            await AsyncStorage.setItem(TIMER_STORE_KEY, JSON.stringify(timerObject));
+            if(timerObject){
+                await AsyncStorage.setItem(TIMER_STORE_KEY, JSON.stringify(timerObject));
+            }
+        },
+        removeTimerAsync: async function() {
+            await AsyncStorage.removeItem(TIMER_STORE_KEY);
         }
     }
 }

@@ -3,12 +3,10 @@ import DateHelper from 'mobile/src/helpers/date';
 import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
-    Text,
     StyleSheet,
     Button,
-    Dimensions,
-    Animated,
-    TouchableOpacity,
+    Text,
+    TextInput
 } from 'react-native';
 import Requests from 'mobile/src/services/requests';
 import Counter from 'mobile/src/views/tracker/components/Counter.js';
@@ -17,72 +15,107 @@ import Store from '../../../services/store';
 const CheckInOut = (props) => {
     const [timer, setTimer] = useState(null);
 
+    //save the timer
+    useEffect(() => {
+        Store.timer.setTimerAsync(timer);
+    }, [timer]);
+
     const onCheckIn = async () => {
         setTimer({
             timerStart: Date.now(),
-            pauseStart: null
+            pauseStart: null,
+            pauseSecs: 0,
+            note: '',
         });
     }
 
     const onCheckOut = async () => {
-        const timeEntryId = activeTimer.id;
-        setCheckIn(!checkIn);
-        stopTimer();
-
-        const res = await Requests.postStopTimer(timeEntryId);
-        console.log(res);
-
-        //refresh list of entries
-        props.onNewEntry?.call();
+        const response = await Requests.postSaveEntry({
+            startTimeUtc: new Date(timer.timerStart),
+            endTimeUtc: new Date(Date.now()),
+            pauseSeconds: timer.pauseSecs,
+            note: timer.note
+        });
+        
+        if(response && response.ok) {
+            await onCancel();
+        }
     }
     
-    const onCancel = () => {
-        setTimer(null)
+    const onCancel = async () => {
+        setTimer(null);
+        await Store.timer.removeTimerAsync();
     }
     
     const onPause = () => {
-        timer.pauseStart = Date.now();
-        setTimer(timer);
+        let now;
+
+        //in case we already have pause seconds we start counting with the previous
+        //time already counted in
+        if(timer.pauseSecs > 0) {
+            now = Date.now() - (timer.pauseSecs * 1000);     
+        }
+        setTimer(timer => ({
+            ...timer,
+            pauseStart: now ?? Date.now()
+        }));
     }
 
     const onCancelPause = () => {
-        timer.pauseStart = null;
-        setTimer(timer);
+        setTimer(timer => ({
+            ...timer,
+            pauseStart: null
+        }));
+    }
+
+    const onResume = () => {
+        let start = timer.pauseStart;
+
+        //if we already have active seconds add them to the new time delta
+        if(timer.pauseSecs > 0) {
+            start = timer.pauseStart + (timer.pauseSecs * 1000);     
+        }
+
+        let pauseSecs = 0;
+        let secs = DateHelper.timeDiffInSec(start);
+        if (secs) {
+            pauseSecs = timer.pauseSecs + secs;
+        }
+
+        setTimer(timer => ({
+            ...timer,
+            pauseStart: null,
+            pauseSecs: pauseSecs
+        }));
     }
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus');
-            //checkActiveTimer();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus');
-                //setCounter(null);
-            };
+            checkActiveTimer();
         }, [])
     )
 
     const checkActiveTimer = async () => {
-        const activeTimer = await Store.timer.getTimerAsync();
-
-        if(activeTimer) {
-
-            let ms = Date.now() - new Date(activeTimer.start);
-            if(ms < 0) {
-                ms = 0;
-            }
-            console.log('ms ', ms);
-            let secs = Math.trunc(ms / 1000);
-            if (!isNaN(secs)) {
-                setCounter({ seconds: secs, time: DateHelper.secondsToTimeZeroPadded(secs) });
-            }
-
-            setCheckIn(true);
-            startTimer(activeTimer);
+        const storedTimer = Store.timer.getTimerAsync(timer);
+        if(storedTimer) {
+            setTimer(storedTimer);
         }
     }
+
+    const pauseComponent = () => {
+        if(timer.pauseStart) {
+            return <>
+                <Counter start={timer.pauseStart} onCancel={onCancelPause} />
+                <Button onPress={onResume} title="Resume" />
+            </>;
+        }
+
+        return <>
+            {timer.pauseSecs > 0 ? <Text style={{ fontSize: 21, fontWeight: "500" }}>{DateHelper.hmsFormat(timer.pauseSecs)}</Text> : null}
+            <Button onPress={onPause} title="Pause" />
+        </>;
+    }
+
     return (
         <View style={styles.row}>
             {!timer
@@ -91,10 +124,20 @@ const CheckInOut = (props) => {
                 <>
                     
                     <Counter start={timer.timerStart} onCancel={onCancel} />
-                    {timer.pauseStart 
-                        ? (<Counter start={timer.pauseStart} onCancel={onCancel} />)
-                        : (<Button onPress={onCancelPause} title="Pause" />)}
+                    {pauseComponent()}
                         
+                    <TextInput
+                        multiline={true}
+                        numberOfLines={3}
+                        value={timer?.note}
+                        onChangeText={(text) => setTimer(timer => ({
+                            ...timer,
+                            note: text
+                        }))}
+                        style={styles.textInput}
+                        maxLength={512}
+                        textAlignVertical='top'
+                    />
                     <Button onPress={onCheckOut} title="Check-out" />
                 </>
             )}
