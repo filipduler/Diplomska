@@ -36,14 +36,7 @@ func httpEntry(c echo.Context) error {
 		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
 	}
 
-	entryResponse := entryModel{
-		Id:              entry.Id,
-		StartTimeUtc:    entry.StartTimeUtc,
-		EndTimeUtc:      entry.EndTimeUtc,
-		TimeDiffSeconds: int(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Seconds()),
-		Note:            entry.Note,
-		Day:             entry.StartTimeUtc.Day(),
-	}
+	entryResponse := MapToEntryModel(entry)
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, entryResponse))
 }
@@ -75,15 +68,7 @@ func httpMonthlyEntries(c echo.Context) error {
 	}
 
 	for _, element := range entries {
-		day := element.StartTimeUtc.Day()
-		res.Entries = append(res.Entries, entryModel{
-			Id:              element.Id,
-			StartTimeUtc:    element.StartTimeUtc,
-			EndTimeUtc:      element.EndTimeUtc,
-			TimeDiffSeconds: int(element.EndTimeUtc.Sub(element.StartTimeUtc).Seconds()),
-			Note:            element.Note,
-			Day:             day,
-		})
+		res.Entries = append(res.Entries, MapToEntryModel(&element))
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))

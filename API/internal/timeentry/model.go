@@ -1,6 +1,9 @@
 package timeentry
 
-import "time"
+import (
+	"api/domain"
+	"time"
+)
 
 type saveTimeEntryRequest struct {
 	Id           *int64    `json:"id"`
@@ -23,4 +26,15 @@ type entryModel struct {
 	TimeDiffSeconds int       `json:"timeDiffSeconds"`
 	Note            string    `json:"note"`
 	Day             int       `json:"day"`
+}
+
+func MapToEntryModel(model *domain.TimeEntryModel) entryModel {
+	return entryModel{
+		Id:              model.Id,
+		StartTimeUtc:    model.StartTimeUtc,
+		EndTimeUtc:      model.EndTimeUtc,
+		TimeDiffSeconds: int(model.EndTimeUtc.Sub(model.StartTimeUtc).Seconds()) - model.PauseSeconds,
+		Note:            model.Note,
+		Day:             model.StartTimeUtc.Day(),
+	}
 }
