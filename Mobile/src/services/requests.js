@@ -4,10 +4,10 @@ import Store from 'mobile/src/services/store';
 const Requests =
 {
     /*********TIME ENTRY********/
-    getTimeEntries: async (month, year) => await _innerFetch('GET', `/entry/${year}/${month}`),
-    getTimeEntry: async (id) => await _innerFetch('GET', `/entry/${id}`),
-    deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/entry/${timeEntryId}`),
-    getTimeEntryHistory: async (id) => await _innerFetch('GET', `/entry/${id}/history`),
+    getTimeEntries: async (month, year) => await _innerFetch('GET', `/time-entry/${year}/${month}`),
+    getTimeEntry: async (id) => await _innerFetch('GET', `/time-entry/${id}`),
+    deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/time-entry/${timeEntryId}`),
+    getTimeEntryHistory: async (id) => await _innerFetch('GET', `/time-entry/${id}/history`),
     postSaveEntry: async (body) => await _innerFetch('POST', '/time-entry/save', JSON.stringify(body)),
 
     /*********TIME OFF********/

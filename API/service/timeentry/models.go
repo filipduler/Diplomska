@@ -1,24 +1,21 @@
 package timeentry
 
-import "github.com/golang-jwt/jwt"
+import "time"
 
-type JWTClaims struct {
-	UserId int64  `json:"userId"`
-	Email  string `json:"email"`
-	jwt.StandardClaims
-}
+type HistoryAction string
 
-type refreshClaims struct {
-	UserId int64 `json:"userId"`
-	jwt.StandardClaims
-}
+const (
+	EntryCreated HistoryAction = "EntryCreated"
+	EntryDeleted HistoryAction = "EntryDeleted"
+	TimeChange   HistoryAction = "TimeChange"
+	PauseChange  HistoryAction = "PauseChange"
+)
 
-type tokenDTO struct {
-	Token  string
-	Expiry int64
-}
-
-type loginDTO struct {
-	Token   tokenDTO
-	Refresh tokenDTO
+type HistoryModel struct {
+	Action          HistoryAction `json:"action"`
+	ModifiedByOwner bool          `json:"modifiedByOwner"`
+	ModifierName    string        `json:"modifierName"`
+	StartTimeUtc    *time.Time    `json:"startTimeUtc,omitempty"`
+	EndTimeUtc      *time.Time    `json:"endTimeUtc,omitempty"`
+	PauseSeconds    *int          `json:"pauseSeconds,omitempty"`
 }

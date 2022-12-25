@@ -2,10 +2,12 @@ package timeentry
 
 import (
 	"api/domain"
+	userService "api/service/user"
 	"api/utils"
 	"errors"
 	"time"
 
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -20,46 +22,26 @@ func (*TimeEntryService) GetTimeEntry(timeEntryId int64, user *domain.UserModel)
 	db := utils.GetConnection()
 
 	var timeEntry domain.TimeEntryModel
-	tx := db.Where("Id = ? AND UserId = ?", timeEntryId, user.Id).First(&timeEntry)
+	tx := db.Where("Id = ? AND UserId = ? AND IsDeleted = false", timeEntryId, user.Id).First(&timeEntry)
 
 	return &timeEntry, tx.Error
 }
 
-/*func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, error) {
-	dbStore := db.New()
-
-	entries, err := dbStore.TimeEntry.GetValidByMonth(user.Id, month, year)
-	if err != nil {
-		return nil, err
-	}
-
-	res := entriesResponse{
-		Year:    year,
-		Month:   month,
-		Entries: []entryModel{},
-	}
-
-	for _, element := range entries {
-		if element.EndTimeUtc != nil {
-			day := element.StartTimeUtc.Day()
-			res.Entries = append(res.Entries, entryModel{
-				Id:              element.Id,
-				StartTimeUtc:    element.StartTimeUtc,
-				EndTimeUtc:      *element.EndTimeUtc,
-				TimeDiffSeconds: int(element.EndTimeUtc.Sub(element.StartTimeUtc).Seconds()),
-				Note:            element.Note,
-				Day:             day,
-			})
-		}
-
-	}
-	return &res, nil
-}*/
-
-func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int32, note string, user *domain.UserModel) (int64, error) {
+func (*TimeEntryService) GetEntries(month int, year int, user *domain.UserModel) ([]domain.TimeEntryModel, error) {
 	db := utils.GetConnection()
 
-	//update path
+	var timeEntries []domain.TimeEntryModel
+	tx := db.
+		Where("UserId = ? AND MONTH(StartTimeUtc) = ? AND YEAR(StartTimeUtc) = ? AND IsDeleted = false", user.Id, month, year).
+		Find(&timeEntries)
+
+	return timeEntries, tx.Error
+}
+
+func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int, note string, user *domain.UserModel) (int64, error) {
+	db := utils.GetConnection()
+
+	//update time entry
 	if id != nil {
 		updateModel, err := s.GetTimeEntry(*id, user)
 		if err != nil {
@@ -73,21 +55,15 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 			updateModel.Note = note
 			updateModel.OnUpdate()
 
-			if timeEntryTx := tx.Save(&updateModel); timeEntryTx != nil {
+			//update time entry
+			if timeEntryTx := tx.Save(&updateModel); timeEntryTx.Error != nil {
 				return timeEntryTx.Error
 			}
 
-			logModel := domain.TimeEntryLogModel{
-				StartTimeUtc: startTimeUtc,
-				EndTimeUtc:   endTimeUtc,
-				PauseSeconds: pauseSeconds,
-				TimeEntryId:  updateModel.Id,
-				IsDeleted:    false,
-				UserId:       user.Id,
-			}
-			logModel.OnInsert()
+			//insert log
+			logModel := mapToTimeEntryLog(user.Id, updateModel, domain.UpdateLogType)
 
-			if timeEntryLogTx := tx.Create(&updateModel); timeEntryLogTx != nil {
+			if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx.Error != nil {
 				return timeEntryLogTx.Error
 			}
 
@@ -109,122 +85,78 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 	}
 	insertModel.OnInsert()
 
-	result := db.Create(&insertModel)
-	return insertModel.Id, result.Error
+	txErr := db.Transaction(func(tx *gorm.DB) error {
 
-	/*var model *db.TimeEntryModel = nil
-	endTime := request.EndTime.UTC()
-	id := lo.FromPtrOr(request.Id, 0)
-
-	err := dbStore.Transact(func() error {
-		if id == 0 {
-			model = &db.TimeEntryModel{
-				StartTimeUtc: request.StartTime.UTC(),
-				EndTimeUtc:   &endTime,
-				Note:         request.Note,
-				IsDeleted:    false,
-				UserId:       user.Id,
-			}
-			timeOffId, err := dbStore.TimeEntry.Insert(model)
-			if err != nil {
-				return err
-			}
-			model.Id = timeOffId
-		} else {
-			var err error
-			model, err = dbStore.TimeEntry.GetById(id)
-			if err != nil {
-				return err
-			}
-
-			if model.UserId != user.Id {
-				return api.ErrIncorrectPermissions
-			}
-
-			model.StartTimeUtc = request.StartTime.UTC()
-			model.EndTimeUtc = &endTime
-			model.Note = request.Note
-
-			err = dbStore.TimeEntry.Update(model)
-			if err != nil {
-				return err
-			}
+		//insert time entry
+		if timeEntryTx := tx.Create(&insertModel); timeEntryTx.Error != nil {
+			return timeEntryTx.Error
 		}
 
-		log, err := mapToEntryLog(user.Id, model, lo.Ternary(id > 0, db.UpdateLogType, db.InsertLogType))
-		if err != nil {
-			return err
+		logModel := mapToTimeEntryLog(user.Id, &insertModel, domain.InsertLogType)
+
+		//insert log
+		if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx.Error != nil {
+			return timeEntryLogTx.Error
 		}
 
-		return dbStore.TimeEntryLog.Insert(log)
+		return nil
 	})
 
-	if err != nil {
-		return 0, err
-	}
-
-	return model.Id, nil*/
+	return insertModel.Id, txErr
 }
 
-/*func deleteEntry(timeEntryId int64, user *db.UserModel) error {
-	dbStore := db.New()
+func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, user *domain.UserModel) error {
+	db := utils.GetConnection()
 
-	te, err := dbStore.TimeEntry.GetById(timeEntryId)
+	entry, err := s.GetTimeEntry(timeEntryId, user)
 	if err != nil {
 		return err
 	}
 
-	if te.UserId != user.Id {
-		return api.ErrIncorrectPermissions
-	}
+	return db.Transaction(func(tx *gorm.DB) error {
+		logModel := mapToTimeEntryLog(user.Id, entry, domain.DeleteLogType)
 
-	te.IsDeleted = true
-	dbStore.Transact(func() error {
-		err := dbStore.TimeEntry.Update(te)
-		if err != nil {
-			return err
+		//delete time entry
+		if timeEntryTx := tx.Delete(&entry); timeEntryTx != nil {
+			return timeEntryTx.Error
+		}
+		//insert log
+		if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx != nil {
+			return timeEntryLogTx.Error
 		}
 
-		log, err := mapToEntryLog(user.Id, te, db.DeleteLogType)
-		if err != nil {
-			return err
-		}
-
-		return dbStore.TimeEntryLog.Insert(log)
+		return nil
 	})
-
-	return err
 }
 
+func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, user *domain.UserModel) (map[time.Time][]HistoryModel, error) {
+	db := utils.GetConnection()
 
-func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]historyModel, error) {
-	dbStore := db.New()
-
-	to, err := dbStore.TimeEntry.GetById(timeEntryId)
+	timeEntry, err := s.GetTimeEntry(timeEntryId, user)
 	if err != nil {
 		return nil, err
 	}
 
-	if to.UserId != user.Id {
-		return nil, api.ErrIncorrectPermissions
+	var logs []domain.TimeEntryLogModel
+	tx := db.Where("TimeEntryId = ?", timeEntryId).Find(&logs)
+	if tx.Error != nil {
+		return nil, tx.Error
 	}
 
-	logs, err := dbStore.TimeEntryLog.GetByTimeEntryId(timeEntryId)
+	userIds := lo.Uniq(lo.Map(logs, func(log domain.TimeEntryLogModel, _ int) int64 { return log.UserId }))
+
+	userService := userService.UserService{}
+	userMap, err := userService.GetUserMap(userIds)
 	if err != nil {
 		return nil, err
 	}
 
-	userIds := lo.Map(logs, func(log db.TimeEntryLogModel, _ int) int64 { return log.UserId })
-	uniqueUserIds := lo.Uniq(userIds)
-	userMap, err := apiutils.GetUserMap(uniqueUserIds, &dbStore)
-	if err != nil {
-		return nil, err
-	}
-
-	historyMap := map[time.Time][]historyModel{}
+	historyMap := map[time.Time][]HistoryModel{}
 
 	for i, logEntry := range logs {
-		logMessages := []historyModel{}
+		logMessages := []HistoryModel{}
+
+		modifiedByOwner := logEntry.UserId == timeEntry.UserId
 
 		//load modifier user
 		curUser := userMap[logEntry.UserId]
@@ -233,59 +165,73 @@ func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]histor
 		start := logEntry.StartTimeUtc
 		end := logEntry.EndTimeUtc
 
-		if i == 0 {
-			logMessages = append(logMessages, historyModel{
+		switch domain.LogType(logEntry.LogTypeId) {
+		case domain.InsertLogType:
+			logMessages = append(logMessages, HistoryModel{
 				Action:          EntryCreated,
-				ModifiedByOwner: logEntry.UserId == to.UserId,
+				ModifiedByOwner: modifiedByOwner,
 				ModifierName:    curUser.DisplayName,
 				StartTimeUtc:    &start,
 				EndTimeUtc:      &end,
 			})
-		} else {
-			prevLog := logs[i-1]
-			if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
-				logMessages = append(logMessages, historyModel{
-					Action:          TimeChange,
-					ModifiedByOwner: logEntry.UserId == to.UserId,
-					ModifierName:    curUser.DisplayName,
-					StartTimeUtc:    &start,
-					EndTimeUtc:      &end,
-				})
+			break
+		case domain.UpdateLogType:
+			if len(logs)-1 >= 0 {
+				prevLog := logs[i-1]
+				if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
+					logMessages = append(logMessages, HistoryModel{
+						Action:          TimeChange,
+						ModifiedByOwner: modifiedByOwner,
+						ModifierName:    curUser.DisplayName,
+						StartTimeUtc:    &start,
+						EndTimeUtc:      &end,
+					})
+				}
+
+				if prevLog.PauseSeconds != logEntry.PauseSeconds {
+					logMessages = append(logMessages, HistoryModel{
+						Action:          PauseChange,
+						ModifiedByOwner: modifiedByOwner,
+						ModifierName:    curUser.DisplayName,
+						PauseSeconds:    &logEntry.PauseSeconds,
+					})
+				}
+
 			}
 
-			if logEntry.IsDeleted {
-				logMessages = append(logMessages, historyModel{
-					Action:          EntryDeleted,
-					ModifiedByOwner: logEntry.UserId == to.UserId,
-					ModifierName:    curUser.DisplayName,
-				})
+			break
+		case domain.DeleteLogType:
+			logMessages = append(logMessages, HistoryModel{
+				Action:          EntryDeleted,
+				ModifiedByOwner: modifiedByOwner,
+				ModifierName:    curUser.DisplayName,
+			})
+			break
+		}
+
+		if len(logMessages) > 0 {
+			inserted := logEntry.InsertedOnUtc
+			inserted = inserted.Truncate(60 * time.Second)
+
+			if messages, ok := historyMap[inserted]; ok {
+				historyMap[inserted] = append(messages, logMessages...)
+			} else {
+				historyMap[inserted] = logMessages
 			}
 		}
-
-		inserted := logEntry.InsertedOnUtc
-		inserted = inserted.Truncate(60 * time.Second)
-
-		if messages, ok := historyMap[inserted]; ok {
-			historyMap[inserted] = append(messages, logMessages...)
-		} else {
-			historyMap[inserted] = logMessages
-		}
-
 	}
 	return historyMap, nil
 }
 
-func mapToEntryLog(userId int64, entry *db.TimeEntryModel, logType db.LogType) (*db.TimeEntryLogModel, error) {
-	if entry.EndTimeUtc == nil {
-		return nil, ErrEndDateUtcNull
-	}
-	return &db.TimeEntryLogModel{
+func mapToTimeEntryLog(userId int64, entry *domain.TimeEntryModel, logType domain.LogType) domain.TimeEntryLogModel {
+	model := domain.TimeEntryLogModel{
 		StartTimeUtc: entry.StartTimeUtc,
-		EndTimeUtc:   *entry.EndTimeUtc,
-		IsDeleted:    entry.IsDeleted,
+		EndTimeUtc:   entry.EndTimeUtc,
+		PauseSeconds: entry.PauseSeconds,
 		TimeEntryId:  entry.Id,
 		UserId:       userId,
 		LogTypeId:    int64(logType),
-	}, nil
+	}
+	model.OnInsert()
+	return model
 }
-*/

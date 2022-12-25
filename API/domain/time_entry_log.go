@@ -7,11 +7,11 @@ import (
 type TimeEntryLogModel struct {
 	LogBaseModel
 	StartTimeUtc time.Time `gorm:"column:StartTimeUtc"`
-	EndTimeUtc   time.Time `gorm:"column:DisEndTimeUtcplayName"`
-	PauseSeconds int32     `gorm:"column:PauseSeconds"`
-	IsDeleted    bool      `gorm:"column:IsDeleted"`
-	UserId       int64     `gorm:"column:DisplayName"`
+	EndTimeUtc   time.Time `gorm:"column:EndTimeUtc"`
+	PauseSeconds int       `gorm:"column:PauseSeconds"`
+	UserId       int64     `gorm:"column:UserId"`
 	TimeEntryId  int64     `gorm:"column:TimeEntryId"`
+	LogTypeId    int64     `gorm:"column:LogTypeId"`
 }
 
 func (TimeEntryLogModel) TableName() string {

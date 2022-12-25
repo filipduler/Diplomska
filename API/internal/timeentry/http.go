@@ -4,7 +4,9 @@ import (
 	"api/api"
 	"api/internal"
 	"api/service/timeentry"
+	"api/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -13,30 +15,37 @@ func NewHTTP(r *echo.Group) {
 	group := r.Group("/time-entry")
 
 	group.POST("/save", httpSaveEntry)
-	/*group.GET("/:id", httpEntry)
 	group.GET("/:year/:month", httpMonthlyEntries)
-
+	group.GET("/:id", httpEntry)
 	group.DELETE("/:id", httpDeleteEntry)
-	group.GET("/:id/history", httpEntryHistory)*/
+	group.GET("/:id/history", httpEntryHistory)
 }
 
-/*func httpEntry(c echo.Context) error {
+func httpEntry(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	user, err := api.GetUser(c)
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	entry, err := timeEntryService.GetTimeEntry(timeEntryId, user)
 	if err != nil {
 		c.Logger().Error(err)
+		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
 	}
 
-	res, err := getEntry(timeEntryId, user)
-	if err != nil {
-		c.Logger().Error(err)
+	entryResponse := entryModel{
+		Id:              entry.Id,
+		StartTimeUtc:    entry.StartTimeUtc,
+		EndTimeUtc:      entry.EndTimeUtc,
+		TimeDiffSeconds: int(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Seconds()),
+		Note:            entry.Note,
+		Day:             entry.StartTimeUtc.Day(),
 	}
 
-	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
+	return c.JSON(http.StatusOK, api.NewResponse(err == nil, entryResponse))
 }
 
 func httpMonthlyEntries(c echo.Context) error {
@@ -50,18 +59,35 @@ func httpMonthlyEntries(c echo.Context) error {
 		return err
 	}
 
-	user, err := api.GetUser(c)
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	entries, err := timeEntryService.GetEntries(month, year, user)
 	if err != nil {
 		c.Logger().Error(err)
+		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
 	}
 
-	res, err := getEntries(month, year, user)
-	if err != nil {
-		c.Logger().Error(err)
+	res := entriesResponse{
+		Year:    year,
+		Month:   month,
+		Entries: []entryModel{},
+	}
+
+	for _, element := range entries {
+		day := element.StartTimeUtc.Day()
+		res.Entries = append(res.Entries, entryModel{
+			Id:              element.Id,
+			StartTimeUtc:    element.StartTimeUtc,
+			EndTimeUtc:      element.EndTimeUtc,
+			TimeDiffSeconds: int(element.EndTimeUtc.Sub(element.StartTimeUtc).Seconds()),
+			Note:            element.Note,
+			Day:             day,
+		})
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
-}*/
+}
 
 func httpSaveEntry(c echo.Context) error {
 	request := saveTimeEntryRequest{}
@@ -86,18 +112,17 @@ func httpSaveEntry(c echo.Context) error {
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, id))
 }
 
-/*func httpDeleteEntry(c echo.Context) error {
+func httpDeleteEntry(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	user, err := api.GetUser(c)
-	if err != nil {
-		c.Logger().Error(err)
-	}
+	user, _ := internal.GetUser(c)
 
-	err = deleteEntry(timeEntryId, user)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	err = timeEntryService.DeleteTimeEntry(timeEntryId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -111,16 +136,14 @@ func httpEntryHistory(c echo.Context) error {
 		return err
 	}
 
-	user, err := api.GetUser(c)
-	if err != nil {
-		c.Logger().Error(err)
-	}
+	user, _ := internal.GetUser(c)
 
-	res, err := entryHistory(timeEntryId, user)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	res, err := timeEntryService.TimeEntryHistory(timeEntryId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }
-*/

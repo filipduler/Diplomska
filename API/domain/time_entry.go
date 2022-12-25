@@ -9,7 +9,7 @@ type TimeEntryModel struct {
 	StartTimeUtc   time.Time `gorm:"column:StartTimeUtc"`
 	EndTimeUtc     time.Time `gorm:"column:EndTimeUtc"`
 	DailyWorkHours float32   `gorm:"column:DailyWorkHours"`
-	PauseSeconds   int32     `gorm:"column:PauseSeconds"`
+	PauseSeconds   int       `gorm:"column:PauseSeconds"`
 	Note           string    `gorm:"column:Note"`
 	IsDeleted      bool      `gorm:"column:IsDeleted"`
 	UserId         int64     `gorm:"column:UserId"`
