@@ -1,5 +1,6 @@
 package db
 
+/*
 type timeOffTypeTable struct{ *store }
 
 type TimeOffTypeModel struct {
@@ -14,4 +15,4 @@ func (store *timeOffTypeTable) Get() ([]TimeOffTypeModel, error) {
 		return nil, err
 	}
 	return te, nil
-}
+}*/

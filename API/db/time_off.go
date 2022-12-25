@@ -1,5 +1,6 @@
 package db
 
+/*
 import (
 	"time"
 )
@@ -65,4 +66,4 @@ func (store *timeOffTable) Update(tf *TimeOffModel) error {
 		tf.UpdatedOnUtc,
 		tf.Id)
 	return err
-}
+}*/

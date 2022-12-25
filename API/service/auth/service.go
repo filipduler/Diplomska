@@ -1,7 +1,8 @@
 package auth
 
 import (
-	"api/db"
+	"api/domain"
+	"api/service/user"
 	"api/utils"
 	"errors"
 	"fmt"
@@ -11,28 +12,30 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type AuthService struct{}
+
 var (
 	ErrInvalidToken = errors.New("expired on invalid token")
 )
 
-func loginUser(email string, password string) (*loginDTO, error) {
-	dbStore := db.New()
+func (s *AuthService) LoginUser(email string, password string) (*loginDTO, error) {
+	userService := user.UserService{}
 	normalizedEmail := utils.NormalizeDown(email)
 
-	user, err := dbStore.User.GetByEmail(normalizedEmail)
+	user, err := userService.GetUserByEmail(normalizedEmail)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, err
 	}
 
 	return generateLoginTokens(user)
 }
 
-func refreshUser(refreshToken string) (*tokenDTO, error) {
-	dbStore := db.New()
+func (s *AuthService) RefreshUser(refreshToken string) (*tokenDTO, error) {
+	userService := user.UserService{}
 
 	token, err := jwt.ParseWithClaims(refreshToken, &refreshClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != "HS256" {
@@ -50,7 +53,7 @@ func refreshUser(refreshToken string) (*tokenDTO, error) {
 
 	claims := token.Claims.(*refreshClaims)
 
-	user, err := dbStore.User.GetById(claims.UserId)
+	user, err := userService.GetUserById(claims.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +61,7 @@ func refreshUser(refreshToken string) (*tokenDTO, error) {
 	return generateLoginToken(user)
 }
 
-func generateRefreshToken(user *db.UserModel) (*tokenDTO, error) {
+func generateRefreshToken(user *domain.UserModel) (*tokenDTO, error) {
 	secret := utils.GetConfig().JWT.Secret
 	expiry := time.Now().Add(utils.GetConfig().JWT.RefreshExpiryMinutes).Unix()
 
@@ -81,13 +84,12 @@ func generateRefreshToken(user *db.UserModel) (*tokenDTO, error) {
 	}, nil
 }
 
-func generateLoginToken(user *db.UserModel) (*tokenDTO, error) {
+func generateLoginToken(user *domain.UserModel) (*tokenDTO, error) {
 	secret := utils.GetConfig().JWT.Secret
 	expiry := time.Now().Add(utils.GetConfig().JWT.TokenExpiryMinutes).Unix()
 
-	claims := &jwtClaims{
+	claims := &JWTClaims{
 		user.Id,
-		user.DisplayName,
 		user.Email,
 		jwt.StandardClaims{
 			ExpiresAt: expiry,
@@ -106,7 +108,7 @@ func generateLoginToken(user *db.UserModel) (*tokenDTO, error) {
 	}, nil
 }
 
-func generateLoginTokens(user *db.UserModel) (*loginDTO, error) {
+func generateLoginTokens(user *domain.UserModel) (*loginDTO, error) {
 	login, err := generateLoginToken(user)
 	if err != nil {
 		return nil, err

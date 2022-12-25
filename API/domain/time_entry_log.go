@@ -1,11 +1,24 @@
-package db
+package domain
 
 import (
-	"fmt"
 	"time"
 )
 
-type timeEntryLogTable struct{ *store }
+type TimeEntryLogModel struct {
+	LogBaseModel
+	StartTimeUtc time.Time `gorm:"column:StartTimeUtc"`
+	EndTimeUtc   time.Time `gorm:"column:DisEndTimeUtcplayName"`
+	PauseSeconds int32     `gorm:"column:PauseSeconds"`
+	IsDeleted    bool      `gorm:"column:IsDeleted"`
+	UserId       int64     `gorm:"column:DisplayName"`
+	TimeEntryId  int64     `gorm:"column:TimeEntryId"`
+}
+
+func (TimeEntryLogModel) TableName() string {
+	return "timeentrylog"
+}
+
+/*type timeEntryLogTable struct{ *store }
 
 type TimeEntryLogModel struct {
 	StartTimeUtc  time.Time `db:"StartTimeUtc"`
@@ -60,7 +73,7 @@ func (store *timeEntryLogTable) GetLastEntryByRange(userId int64, from *time.Tim
 func (store *timeEntryLogTable) Insert(tel *TimeEntryLogModel) error {
 	tel.InsertedOnUtc = time.Now()
 
-	_, err := store.Exec(`INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, LogTypeId, InsertedOnUtc) 
+	_, err := store.Exec(`INSERT INTO TimeEntryLog (StartTimeUtc, EndTimeUtc, IsDeleted, UserId, TimeEntryId, LogTypeId, InsertedOnUtc)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		tel.StartTimeUtc,
 		tel.EndTimeUtc,
@@ -70,4 +83,4 @@ func (store *timeEntryLogTable) Insert(tel *TimeEntryLogModel) error {
 		tel.LogTypeId,
 		tel.InsertedOnUtc)
 	return err
-}
+}*/

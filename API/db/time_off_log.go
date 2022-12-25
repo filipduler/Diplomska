@@ -1,5 +1,6 @@
 package db
 
+/*
 import (
 	"fmt"
 	"time"
@@ -60,7 +61,7 @@ func (store *timeOffLogTable) GetLastEntryByRange(userId int64, from *time.Time,
 
 func (store *timeOffLogTable) Insert(tf *TimeOffLogModel) error {
 	tf.InsertedOnUtc = time.Now().UTC()
-	_, err := store.Exec(`INSERT INTO TimeOffLog 
+	_, err := store.Exec(`INSERT INTO TimeOffLog
 			(StartTimeUtc, EndTimeUtc, TimeOffTypeId, TimeOffStatusTypeId, TimeOffId, UserId, LogTypeId, InsertedOnUtc)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		tf.StartTimeUtc,
@@ -72,4 +73,4 @@ func (store *timeOffLogTable) Insert(tf *TimeOffLogModel) error {
 		tf.LogTypeId,
 		tf.InsertedOnUtc)
 	return err
-}
+}*/

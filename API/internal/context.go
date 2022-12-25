@@ -1,7 +1,7 @@
-package api
+package internal
 
 import (
-	"api/db"
+	"api/domain"
 	"errors"
 
 	"github.com/labstack/echo/v4"
@@ -15,10 +15,10 @@ var (
 	errUserNotFound = errors.New("user not initialized in echo context")
 )
 
-func GetUser(c echo.Context) (*db.UserModel, error) {
+func GetUser(c echo.Context) (*domain.UserModel, error) {
 	user := c.Get(UserKey)
 	if user != nil {
-		return user.(*db.UserModel), nil
+		return user.(*domain.UserModel), nil
 	}
 	return nil, errUserNotFound
 }

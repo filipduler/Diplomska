@@ -1,44 +1,31 @@
-package entry
+package timeentry
 
 import (
-	"api/api"
-	apiutils "api/api/api_utils"
-	"api/db"
+	"api/domain"
+	"api/utils"
 	"errors"
 	"time"
 
-	"github.com/samber/lo"
+	"gorm.io/gorm"
 )
+
+type TimeEntryService struct{}
 
 var (
 	ErrNoActiveTimer  = errors.New("no active timers available")
 	ErrEndDateUtcNull = errors.New("end time is null")
 )
 
-func getEntry(timeEntryId int64, user *db.UserModel) (*entryModel, error) {
-	dbStore := db.New()
+func (*TimeEntryService) GetTimeEntry(timeEntryId int64, user *domain.UserModel) (*domain.TimeEntryModel, error) {
+	db := utils.GetConnection()
 
-	entry, err := dbStore.TimeEntry.GetById(timeEntryId)
-	if err != nil {
-		return nil, err
-	}
+	var timeEntry domain.TimeEntryModel
+	tx := db.Where("Id = ? AND UserId = ?", timeEntryId, user.Id).First(&timeEntry)
 
-	if entry.UserId != user.Id {
-		return nil, api.ErrIncorrectPermissions
-	}
-
-	day := entry.StartTimeUtc.Day()
-	return &entryModel{
-		Id:              entry.Id,
-		StartTimeUtc:    entry.StartTimeUtc,
-		EndTimeUtc:      *entry.EndTimeUtc,
-		TimeDiffSeconds: int(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Seconds()),
-		Note:            entry.Note,
-		Day:             day,
-	}, nil
+	return &timeEntry, tx.Error
 }
 
-func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, error) {
+/*func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, error) {
 	dbStore := db.New()
 
 	entries, err := dbStore.TimeEntry.GetValidByMonth(user.Id, month, year)
@@ -67,12 +54,65 @@ func getEntries(month int, year int, user *db.UserModel) (*entriesResponse, erro
 
 	}
 	return &res, nil
-}
+}*/
 
-func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
-	dbStore := db.New()
+func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int32, note string, user *domain.UserModel) (int64, error) {
+	db := utils.GetConnection()
 
-	var model *db.TimeEntryModel = nil
+	//update path
+	if id != nil {
+		updateModel, err := s.GetTimeEntry(*id, user)
+		if err != nil {
+			return 0, err
+		}
+
+		txErr := db.Transaction(func(tx *gorm.DB) error {
+			updateModel.StartTimeUtc = startTimeUtc
+			updateModel.EndTimeUtc = endTimeUtc
+			updateModel.PauseSeconds = pauseSeconds
+			updateModel.Note = note
+			updateModel.OnUpdate()
+
+			if timeEntryTx := tx.Save(&updateModel); timeEntryTx != nil {
+				return timeEntryTx.Error
+			}
+
+			logModel := domain.TimeEntryLogModel{
+				StartTimeUtc: startTimeUtc,
+				EndTimeUtc:   endTimeUtc,
+				PauseSeconds: pauseSeconds,
+				TimeEntryId:  updateModel.Id,
+				IsDeleted:    false,
+				UserId:       user.Id,
+			}
+			logModel.OnInsert()
+
+			if timeEntryLogTx := tx.Create(&updateModel); timeEntryLogTx != nil {
+				return timeEntryLogTx.Error
+			}
+
+			return nil
+		})
+
+		return updateModel.Id, txErr
+	}
+
+	//insert logic
+	insertModel := domain.TimeEntryModel{
+		StartTimeUtc:   startTimeUtc,
+		EndTimeUtc:     endTimeUtc,
+		DailyWorkHours: user.DailyWorkHours,
+		PauseSeconds:   pauseSeconds,
+		Note:           note,
+		IsDeleted:      false,
+		UserId:         user.Id,
+	}
+	insertModel.OnInsert()
+
+	result := db.Create(&insertModel)
+	return insertModel.Id, result.Error
+
+	/*var model *db.TimeEntryModel = nil
 	endTime := request.EndTime.UTC()
 	id := lo.FromPtrOr(request.Id, 0)
 
@@ -123,10 +163,10 @@ func saveEntry(request *saveEntryRequest, user *db.UserModel) (int64, error) {
 		return 0, err
 	}
 
-	return model.Id, nil
+	return model.Id, nil*/
 }
 
-func deleteEntry(timeEntryId int64, user *db.UserModel) error {
+/*func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 	dbStore := db.New()
 
 	te, err := dbStore.TimeEntry.GetById(timeEntryId)
@@ -156,87 +196,6 @@ func deleteEntry(timeEntryId int64, user *db.UserModel) error {
 	return err
 }
 
-func startTimerEntry(user *db.UserModel) (*timerModel, error) {
-	dbStore := db.New()
-	now := time.Now()
-
-	timeEntryId, err := dbStore.TimeEntry.Insert(&db.TimeEntryModel{
-		StartTimeUtc: now,
-		EndTimeUtc:   nil,
-		Note:         "",
-		DailyHours:   8, //TODO FIX
-		IsDeleted:    false,
-		UserId:       user.Id,
-	})
-
-	if err == nil {
-		te, err := dbStore.TimeEntry.GetById(timeEntryId)
-		if err == nil {
-			return &timerModel{
-				Id:           te.Id,
-				StartTimeUtc: te.StartTimeUtc,
-			}, nil
-		} else {
-			return nil, err
-		}
-	}
-
-	return nil, err
-}
-
-func checkTimerEntry(user *db.UserModel) (*timerModel, error) {
-	dbStore := db.New()
-	te, err := dbStore.TimeEntry.GetUnfinishedDaily(user.Id)
-
-	if err == nil {
-		return &timerModel{
-			Id:           te.Id,
-			StartTimeUtc: te.StartTimeUtc,
-		}, nil
-	}
-	return nil, err
-}
-
-func stopTimerEntry(timeEntryId int64, user *db.UserModel) error {
-	dbStore := db.New()
-
-	te, err := dbStore.TimeEntry.GetById(timeEntryId)
-
-	if err == nil {
-		now := time.Now()
-
-		if te.UserId != user.Id {
-			return api.ErrIncorrectPermissions
-		}
-
-		//check if its a valid timer
-		if te.EndTimeUtc != nil || te.IsDeleted {
-			return ErrNoActiveTimer
-		}
-
-		te.EndTimeUtc = &now
-		return dbStore.Transact(func() error {
-			err := dbStore.TimeEntry.Update(te)
-			if err != nil {
-				return err
-			}
-
-			log, err := mapToEntryLog(user.Id, te, db.InsertLogType)
-			if err != nil {
-				return err
-			}
-
-			return dbStore.TimeEntryLog.Insert(log)
-		})
-	}
-
-	return err
-}
-
-func cancelTimerEntry(user *db.UserModel) error {
-	dbStore := db.New()
-	return dbStore.TimeEntry.DeleteUnfinished(user.Id)
-}
 
 func entryHistory(timeEntryId int64, user *db.UserModel) (map[time.Time][]historyModel, error) {
 	dbStore := db.New()
@@ -329,3 +288,4 @@ func mapToEntryLog(userId int64, entry *db.TimeEntryModel, logType db.LogType) (
 		LogTypeId:    int64(logType),
 	}, nil
 }
+*/
