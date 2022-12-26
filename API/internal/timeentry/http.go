@@ -36,7 +36,7 @@ func httpEntry(c echo.Context) error {
 		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
 	}
 
-	entryResponse := MapToEntryModel(entry)
+	entryResponse := mapToEntryModel(entry)
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, entryResponse))
 }
@@ -68,7 +68,7 @@ func httpMonthlyEntries(c echo.Context) error {
 	}
 
 	for _, element := range entries {
-		res.Entries = append(res.Entries, MapToEntryModel(&element))
+		res.Entries = append(res.Entries, mapToEntryModel(&element))
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))

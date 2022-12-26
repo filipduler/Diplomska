@@ -28,7 +28,7 @@ type entryModel struct {
 	Day             int       `json:"day"`
 }
 
-func MapToEntryModel(model *domain.TimeEntryModel) entryModel {
+func mapToEntryModel(model *domain.TimeEntryModel) entryModel {
 	return entryModel{
 		Id:              model.Id,
 		StartTimeUtc:    model.StartTimeUtc,
