@@ -176,7 +176,7 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, user *domain.User
 			})
 			break
 		case domain.UpdateLogType:
-			if len(logs)-1 >= 0 {
+			if len(logs)-1 >= 0 && i > 0 {
 				prevLog := logs[i-1]
 				if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
 					logMessages = append(logMessages, HistoryModel{

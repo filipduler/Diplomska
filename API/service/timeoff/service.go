@@ -2,9 +2,11 @@ package timeoff
 
 import (
 	"api/domain"
+	userService "api/service/user"
 	"api/utils"
 	"time"
 
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -56,11 +58,14 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 			updateModel.StartTimeUtc = startTimeUtc
 			updateModel.EndTimeUtc = endTimeUtc
 			updateModel.Note = note
+
+			//we have to set TimeOffType to nil if not it doesnt save
+			updateModel.TimeOffType = nil
 			updateModel.TimeOffTypeId = offTypeId
 			updateModel.OnUpdate()
 
 			//update time off entry
-			if entryTx := tx.Save(&updateModel); entryTx.Error != nil {
+			if entryTx := tx.Updates(updateModel); entryTx.Error != nil {
 				return entryTx.Error
 			}
 
@@ -133,8 +138,109 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserMode
 	})
 }
 
+func (s *TimeOffService) TimeOffHistory(timeOffId int64, user *domain.UserModel) (map[time.Time][]HistoryModel, error) {
+	db := utils.GetConnection()
+
+	timeOff, err := s.GetTimeOffEntry(timeOffId, user)
+	if err != nil {
+		return nil, err
+	}
+
+	var logs []domain.TimeOffLogModel
+	tx := db.
+		Where("TimeOffId = ?", timeOffId).
+		Preload("TimeOffType").
+		Find(&logs)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	userIds := lo.Uniq(lo.Map(logs, func(log domain.TimeOffLogModel, _ int) int64 { return log.UserId }))
+
+	userService := userService.UserService{}
+	userMap, err := userService.GetUserMap(userIds)
+	if err != nil {
+		return nil, err
+	}
+
+	historyMap := map[time.Time][]HistoryModel{}
+
+	for i, logEntry := range logs {
+		logMessages := []HistoryModel{}
+
+		modifiedByOwner := logEntry.UserId == timeOff.UserId
+
+		//load modifier user
+		curUser := userMap[logEntry.UserId]
+
+		//copy time objects
+		start := logEntry.StartTimeUtc
+		end := logEntry.EndTimeUtc
+
+		switch domain.LogType(logEntry.LogTypeId) {
+		case domain.InsertLogType:
+			//on insert
+			logMessages = append(logMessages, HistoryModel{
+				Action:          RequestOpen,
+				ModifiedByOwner: modifiedByOwner,
+				ModifierName:    curUser.DisplayName,
+				StartTimeUtc:    &start,
+				EndTimeUtc:      &end,
+				Type:            &logEntry.TimeOffType.Name,
+			})
+			break
+		case domain.UpdateLogType:
+			if len(logs)-1 >= 0 && i > 0 {
+				prevLog := logs[i-1]
+
+				//time change
+				if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
+					logMessages = append(logMessages, HistoryModel{
+						Action:          TimeChange,
+						ModifiedByOwner: modifiedByOwner,
+						ModifierName:    curUser.DisplayName,
+						StartTimeUtc:    &start,
+						EndTimeUtc:      &end,
+					})
+				}
+
+				//type change
+				if prevLog.TimeOffTypeId != logEntry.TimeOffTypeId {
+					logMessages = append(logMessages, HistoryModel{
+						Action:          TypeChange,
+						ModifiedByOwner: modifiedByOwner,
+						ModifierName:    curUser.DisplayName,
+						Type:            &logEntry.TimeOffType.Name,
+					})
+				}
+
+				//status change
+				if prevLog.TimeOffStatusTypeId != logEntry.TimeOffStatusTypeId &&
+					(logEntry.TimeOffStatusTypeId == int64(domain.AcceptedTimeOffStatus) ||
+						logEntry.TimeOffStatusTypeId == int64(domain.RejectedTimeOffStatus) ||
+						logEntry.TimeOffStatusTypeId == int64(domain.CanceledTimeOffStatus)) {
+					status := logEntry.TimeOffStatusTypeId
+					logMessages = append(logMessages, HistoryModel{
+						Action:          RequestClosed,
+						ModifiedByOwner: modifiedByOwner,
+						ModifierName:    curUser.DisplayName,
+						Status:          &status,
+					})
+				}
+			}
+
+			break
+		}
+
+		if len(logMessages) > 0 {
+			historyMap[logEntry.InsertedOnUtc] = logMessages
+		}
+	}
+	return historyMap, nil
+}
+
 func mapToTimeOffEntryLog(userId int64, entry *domain.TimeOffModel, logType domain.LogType) domain.TimeOffLogModel {
-	return domain.TimeOffLogModel{
+	model := domain.TimeOffLogModel{
 		StartTimeUtc:        entry.StartTimeUtc,
 		EndTimeUtc:          entry.EndTimeUtc,
 		TimeOffTypeId:       entry.TimeOffTypeId,
@@ -143,4 +249,6 @@ func mapToTimeOffEntryLog(userId int64, entry *domain.TimeOffModel, logType doma
 		UserId:              userId,
 		LogTypeId:           int64(logType),
 	}
+	model.OnInsert()
+	return model
 }

@@ -86,15 +86,7 @@ console.log('wtf',item.type);
     }
 
     const save = async () => {
-        const body = {
-            id: id || null,
-            startTime: startTime,
-            endTime: endTime,
-            note: note,
-            typeId: type
-        };
-        
-        const response = await Requests.postTimeOffSave(body);
+        const response = await Requests.postTimeOffSave(id, startTime, endTime, note, type);
         console.log(response);
         if (response && response.ok) {
             navigation.goBack();

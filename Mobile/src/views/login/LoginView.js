@@ -12,9 +12,7 @@ const LoginView = () => {
     const [password, setPassword] = useState('');
 
     const login = async () => {
-        const response = await Requests.postLogin({
-            email, password
-        });
+        const response = await Requests.postLogin(email, password);
         console.log(response);
         if(response && response.ok) {
             await Store.auth.setJWTAsync(response.payload.token.token);

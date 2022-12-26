@@ -13,7 +13,7 @@ func (*UserService) GetUserById(id int64) (*domain.UserModel, error) {
 	db := utils.GetConnection()
 
 	var user domain.UserModel
-	tx := db.First(&user, id)
+	tx := db.Find(&user, id)
 	return &user, tx.Error
 }
 
@@ -21,7 +21,7 @@ func (*UserService) GetUserByEmail(email string) (*domain.UserModel, error) {
 	db := utils.GetConnection()
 
 	var user domain.UserModel
-	tx := db.Where("email = ?", email).First(&user)
+	tx := db.Where("Email = ?", email).First(&user)
 	return &user, tx.Error
 }
 
@@ -39,4 +39,16 @@ func (*UserService) GetUserMap(userIds []int64) (map[int64]domain.UserModel, err
 	}
 
 	return lo.KeyBy(users, func(user domain.UserModel) int64 { return user.Id }), nil
+}
+
+func (*UserService) SetImpersonatedUser(user domain.UserModel, impersonatedUserId *int64) error {
+	db := utils.GetConnection()
+
+	if !user.IsAdmin {
+		return ErrImpersonationInvalidPermission
+	}
+
+	user.ImpersonatedUserId = impersonatedUserId
+	tx := db.Save(user)
+	return tx.Error
 }

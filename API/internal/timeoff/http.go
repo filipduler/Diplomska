@@ -20,9 +20,7 @@ func NewHTTP(r *echo.Group) {
 	group.PUT("/:id/close-request", httpCloseRequest)
 	group.POST("/save", httpSave)
 	group.GET("/:id", httpEntry)
-	/*
-		group.GET("/:id/history", httpEntryHistory)
-	*/
+	group.GET("/:id/history", httpEntryHistory)
 }
 
 func httpEntries(c echo.Context) error {
@@ -146,22 +144,18 @@ func httpSave(c echo.Context) error {
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, timeOffId))
 }
 
-/*func httpEntryHistory(c echo.Context) error {
+func httpEntryHistory(c echo.Context) error {
 	timeOffId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	user, err := api.GetUser(c)
-	if err != nil {
-		c.Logger().Error(err)
-	}
-
-	res, err := entryHistory(timeOffId, user)
+	user, _ := internal.GetUser(c)
+	timeOffService := timeoff.TimeOffService{}
+	res, err := timeOffService.TimeOffHistory(timeOffId, user)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
 	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
 }
-*/

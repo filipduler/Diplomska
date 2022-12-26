@@ -25,7 +25,17 @@ const Requests =
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
     getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/types'),
     putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
-    postTimeOffSave: async (body) => await _innerFetch('POST', `/time-off/save`, JSON.stringify(body)),
+    postTimeOffSave: async (id, startTimeUtc, endTimeUtc, note, typeId) => {
+        const request = {
+            id: id > 0 ? id : null,
+            startTimeUtc: startTimeUtc,
+            endTimeUtc: endTimeUtc,
+            note: note,
+            typeId: typeId
+        };
+
+        return await _innerFetch('POST', '/time-off/save', JSON.stringify(request));
+    },
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
 
     /*********HISTORY********/
@@ -34,7 +44,14 @@ const Requests =
     /*********DASHBOARD********/
     getDashboard: async () => await _innerFetch('GET', `/dashboard`),
 
-    postLogin: async (data) => await _innerFetch('POST', `/auth/login`, JSON.stringify(data)),
+     /*********AUTH********/
+    postLogin: async (email, password) => {
+        const request = {
+            email: email, 
+            password: password
+        };
+        return await _innerFetch('POST', `/auth/login`, JSON.stringify(request));
+    }
 }
 
 export default Requests;
