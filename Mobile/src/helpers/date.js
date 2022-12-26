@@ -1,3 +1,4 @@
+import { regexLiteral } from '@babel/types';
 import moment, { isMoment } from 'moment';
 import * as StringHelpers from './strings';
 
@@ -52,15 +53,15 @@ const DateHelper =
 	formatTime: (date, includeSeconds = false) => moment(date).format('HH:mm' + (includeSeconds ? 'ss' : '')),
 	formatFullDate: (date, fromUTC = true) => {
 		let displayTime = date;
-		if(fromUTC) {
+		if (fromUTC) {
 			displayTime = DateHelper.convertUTCToLocal(date);
 		}
-		
+
 		return `${DateHelper.formatDate(displayTime)}, ${DateHelper.formatTime(displayTime)}`;
 	},
 	roundToDayAsUnix: (date, fromUTC = true) => {
 		let displayTime = moment(date);
-		if(fromUTC) {
+		if (fromUTC) {
 			displayTime = DateHelper.convertUTCToLocal(date);
 		}
 
@@ -68,7 +69,7 @@ const DateHelper =
 	},
 	timeDiffInSec: (date) => {
 		let ms = Date.now() - new Date(date);
-		if(ms < 0) {
+		if (ms < 0) {
 			ms = 0;
 		}
 
@@ -78,15 +79,50 @@ const DateHelper =
 		}
 		return null;
 	},
-	hmsFormat: (secs) => {
+	hmsFormat: (secs, hours = true, minutes = true, seconds = true) => {
 		const hms = DateHelper.secondsToTime(secs);
-		if(hms.h > 0) {
-			return `${hms.h}h ${hms.m}m ${hms.s}s`;
-		} else if(hms.m > 0) {
-			return `${hms.m}m ${hms.s}s`;
+		let parts = [];
+		if (hours) {
+			parts.push(`${hms.h}h`)
+		}
+		if (minutes) {
+			parts.push(`${hms.m}m`)
+		}
+		if (seconds) {
+			parts.push(`${hms.s}s`)
 		}
 
-		return `${hms.s}s`;
+		return parts.join(' ');
+	},
+	parseHMSFormat: (str) => {
+		const hRegex = /\d+h/;
+		const mRegex = /\d+m/;
+		const sRegex = /\d+s/;
+
+		const resObj = {
+			h: 0,
+			m: 0,
+			s: 0
+		};
+
+		const setValue = (regex, char, selector) => {
+			const match = regex.exec(str);
+			if (match && match.length > 0) {
+				let val = match[0].replace(char, '');
+				if (!isNaN(val)) {
+					selector(parseInt(val));
+				}
+			}
+		}
+
+		setValue(hRegex, 'h', value => resObj.h = value);
+		setValue(mRegex, 'm', value => resObj.m = value);
+		setValue(sRegex, 's', value => resObj.s = value);
+
+		return resObj;
+	},
+	hmsObjectToSeconds: (hmsObject) => {
+		return hmsObject.h * 3600 + hmsObject.m * 60 + hmsObject.s;
 	}
 }
 

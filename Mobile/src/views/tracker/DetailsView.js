@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button, Text, SafeAreaView, View, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { Button, Text, SafeAreaView, View, StyleSheet, TextInput, ScrollView, Modal, Pressable } from 'react-native';
 import DateHelper from 'mobile/src/helpers/date';
 import BaseDateTime from '../components/BaseDateTime'
 import Requests from 'mobile/src/services/requests';
 
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
+
+    const [pauseModal, setPauseModal] = useState({
+        visible: false,
+        text: '',
+        pauseSeconds: 0
+    });
+    const [breakTextInput, setbreakTextInput] = useState(false);
 
     const [startTime, setStartTime] = useState(new Date());
     const [endTime, setEndTime] = useState(new Date());
@@ -44,25 +51,73 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const save = async () => {
-        const body = {
-            id: id > 0 ? id : null,
-            startTime: startTime,
-            endTime: endTime,
-            note: note
-        };
-        console.log(body)
-
-        const response = await Requests.postSaveEntry(body);
+        const response = await Requests.postSaveEntry(
+            id,
+            startTime, 
+            endTime, 
+            pauseModal.pauseSeconds, 
+            note);
         console.log(response);
+
         if (response && response.ok) {
             navigation.goBack();
         }
     }
 
+    const onOpenBreakModal = () => {
+        setPauseModal(pause => ({
+            ...pause,
+            visible: true,
+            text: DateHelper.hmsFormat(pause.pauseSeconds, true, true, false)
+        }));
+    }
+
+    const onPauseModalClose = () => {
+        setPauseModal(pause => ({
+            ...pause,
+            visible: false,
+            text: ''
+        }));
+    }
+
+    const onPauseModalConfirm = () => {
+        const hmsObject = DateHelper.parseHMSFormat(pauseModal.text);
+        const seconds = DateHelper.hmsObjectToSeconds(hmsObject);
+
+        setPauseModal(pause => ({
+            ...pause,
+            pauseSeconds: seconds,
+            visible: false
+        }));
+    }
+
     return (
         <SafeAreaView style={styles.container}>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={pauseModal.visible}
+                onRequestClose={onPauseModalClose}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Break time</Text>
+                        <TextInput 
+                            value={pauseModal.text} 
+                            onChangeText={x => setPauseModal(pause => ({...pause, text: x }))} />
+                        <Button
+                            title='Cancel'
+                            onPress={onPauseModalClose}
+                        />
+                        <Button
+                            title='Confirm'
+                            onPress={onPauseModalConfirm}
+                        />
+                    </View>
+                </View>
+            </Modal>
             <ScrollView
-                style={{  padding: 20, flex: 1 }}
+                style={{ padding: 20, flex: 1 }}
                 scrollEnabled={false}
                 keyboardShouldPersistTaps='handled'>
                 <View style={styles.row}>
@@ -78,12 +133,19 @@ const DetailsView = ({ route, navigation }) => {
                         onChange={x => setEndTime(x)} />
                 </View>
                 <View style={styles.row}>
+                    <Text style={styles.label}>Break</Text>
+                    <Button 
+                        style={styles.date} 
+                        title={DateHelper.hmsFormat(pauseModal.pauseSeconds, true, true, false)} 
+                        onPress={onOpenBreakModal} />
+                </View>
+                <View style={styles.row}>
                     <Text style={styles.label}>Note</Text>
                 </View>
                 <View>
                     <TextInput
                         multiline={true}
-                        numberOfLines={6}
+                        numberOfLines={3}
                         value={note}
                         onChangeText={(text) => setNote(text)}
                         style={styles.textInput}
@@ -93,15 +155,56 @@ const DetailsView = ({ route, navigation }) => {
                 </View>
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
-                    <Button title='History'
-                        onPress={() => navigation.navigate('History', { id: id })} />
-                    <Button title='Save' onPress={save} />
-                </View>
+                <Button title='History'
+                    onPress={() => navigation.navigate('History', { id: id })} />
+                <Button title='Save' onPress={save} />
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        marginTop: 22
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    button: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2
+    },
+    buttonOpen: {
+        backgroundColor: "#F194FF",
+    },
+    buttonClose: {
+        backgroundColor: "#2196F3",
+    },
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: "center"
+    },
     container: {
         flex: 1,
     },

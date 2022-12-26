@@ -30,12 +30,12 @@ const CheckInOut = (props) => {
     }
 
     const onCheckOut = async () => {
-        const response = await Requests.postSaveEntry({
-            startTimeUtc: new Date(timer.timerStart),
-            endTimeUtc: new Date(Date.now()),
-            pauseSeconds: timer.pauseSecs,
-            note: timer.note
-        });
+        const response = await Requests.postSaveEntry(
+            null, 
+            new Date(timer.timerStart), 
+            new Date(Date.now()), 
+            timer.pauseSecs, 
+            timer.note);
         
         if(response && response.ok) {
             await onCancel();

@@ -8,7 +8,17 @@ const Requests =
     getTimeEntry: async (id) => await _innerFetch('GET', `/time-entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/time-entry/${timeEntryId}`),
     getTimeEntryHistory: async (id) => await _innerFetch('GET', `/time-entry/${id}/history`),
-    postSaveEntry: async (body) => await _innerFetch('POST', '/time-entry/save', JSON.stringify(body)),
+    postSaveEntry: async (id, startTimeUtc, endTimeUtc, pauseSeconds, note) => {
+        const request = {
+            id: id > 0 ? id : null,
+            startTimeUtc: startTimeUtc,
+            endTimeUtc: endTimeUtc,
+            pauseSeconds: pauseSeconds,
+            note: note
+        };
+
+        return await _innerFetch('POST', '/time-entry/save', JSON.stringify(request));
+    },
 
     /*********TIME OFF********/
     getTimeOffEntries: async () => await _innerFetch('GET', '/time-off'),
