@@ -3,6 +3,7 @@ package main
 import (
 	"api/internal/auth"
 	"api/internal/timeentry"
+	"api/internal/timeoff"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,7 +27,7 @@ func main() {
 
 	auth.NewHTTP(group)
 	timeentry.NewHTTP(group)
-	//timeoff.NewHTTP(group)
+	timeoff.NewHTTP(group)
 	//history.NewHTTP(group)
 	//dashboard.NewHTTP(group)
 

@@ -56,15 +56,15 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 			updateModel.OnUpdate()
 
 			//update time entry
-			if timeEntryTx := tx.Save(&updateModel); timeEntryTx.Error != nil {
-				return timeEntryTx.Error
+			if entryTx := tx.Save(&updateModel); entryTx.Error != nil {
+				return entryTx.Error
 			}
 
 			//insert log
 			logModel := mapToTimeEntryLog(user.Id, updateModel, domain.UpdateLogType)
 
-			if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx.Error != nil {
-				return timeEntryLogTx.Error
+			if logTx := tx.Create(&logModel); logTx.Error != nil {
+				return logTx.Error
 			}
 
 			return nil
@@ -88,15 +88,15 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 	txErr := db.Transaction(func(tx *gorm.DB) error {
 
 		//insert time entry
-		if timeEntryTx := tx.Create(&insertModel); timeEntryTx.Error != nil {
-			return timeEntryTx.Error
+		if entryTx := tx.Create(&insertModel); entryTx.Error != nil {
+			return entryTx.Error
 		}
 
 		logModel := mapToTimeEntryLog(user.Id, &insertModel, domain.InsertLogType)
 
 		//insert log
-		if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx.Error != nil {
-			return timeEntryLogTx.Error
+		if logTx := tx.Create(&logModel); logTx.Error != nil {
+			return logTx.Error
 		}
 
 		return nil
@@ -117,12 +117,12 @@ func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, user *domain.UserM
 		logModel := mapToTimeEntryLog(user.Id, entry, domain.DeleteLogType)
 
 		//delete time entry
-		if timeEntryTx := tx.Delete(&entry); timeEntryTx != nil {
-			return timeEntryTx.Error
+		if entryTx := tx.Delete(&entry); entryTx.Error != nil {
+			return entryTx.Error
 		}
 		//insert log
-		if timeEntryLogTx := tx.Create(&logModel); timeEntryLogTx != nil {
-			return timeEntryLogTx.Error
+		if logTx := tx.Create(&logModel); logTx.Error != nil {
+			return logTx.Error
 		}
 
 		return nil

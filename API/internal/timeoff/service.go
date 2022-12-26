@@ -1,6 +1,6 @@
 package timeoff
 
-import (
+/*import (
 	"api/api"
 	apiutils "api/api/api_utils"
 	"api/db"
@@ -9,28 +9,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func getEntries(user *db.UserModel) ([]timeOffModel, error) {
-	dbStore := db.New()
 
-	entries, err := dbStore.TimeOff.GetByUserId(user.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	typeMap, err := getTimeOffTypeMap(&dbStore)
-	if err != nil {
-		return nil, err
-	}
-
-	res := []timeOffModel{}
-	for _, entry := range entries {
-		if resEntry, ok := mapEntry(&entry, typeMap); ok {
-			res = append(res, *resEntry)
-		}
-	}
-
-	return res, nil
-}
 
 func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error) {
 	dbStore := db.New()
@@ -60,20 +39,7 @@ func getEntry(timeOffId int64, user *db.UserModel) (*timeOffDetailsModel, error)
 	return nil, api.ErrEntryNotFound
 }
 
-func getTypes() ([]typeModel, error) {
-	dbStore := db.New()
-	types, err := dbStore.TimeOffType.Get()
-	if err != nil {
-		return nil, err
-	}
 
-	return lo.Map(types, func(t db.TimeOffTypeModel, _ int) typeModel {
-		return typeModel{
-			Id:   t.Id,
-			Name: t.Name,
-		}
-	}), nil
-}
 
 func saveEntry(request *saveRequest, user *db.UserModel) (int64, error) {
 	dbStore := db.New()
@@ -270,14 +236,4 @@ func mapEntry(entry *db.TimeOffModel, typeMap map[int64]db.TimeOffTypeModel) (*t
 	return nil, false
 }
 
-func mapToEntryLog(userId int64, entry *db.TimeOffModel, logType db.LogType) db.TimeOffLogModel {
-	return db.TimeOffLogModel{
-		StartTimeUtc:        entry.StartTimeUtc,
-		EndTimeUtc:          entry.EndTimeUtc,
-		TimeOffTypeId:       entry.TimeOffTypeId,
-		TimeOffStatusTypeId: entry.TimeOffStatusTypeId,
-		TimeOffId:           entry.Id,
-		UserId:              userId,
-		LogTypeId:           int64(logType),
-	}
-}
+*/
