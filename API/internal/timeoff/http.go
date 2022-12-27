@@ -16,6 +16,7 @@ func NewHTTP(r *echo.Group) {
 	group := r.Group("/time-off")
 
 	group.GET("", httpEntries)
+	group.GET("/status/:status", httpEntriesByStatus)
 	group.GET("/status-types", httpTypes)
 	group.PUT("/:id/close-request", httpCloseRequest)
 	group.POST("/save", httpSave)
@@ -27,7 +28,44 @@ func httpEntries(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	entries, err := timeOffService.GetTimeOffEntries(user)
+	entries, err := timeOffService.GetTimeOffEntriesByUser(user)
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
+	}
+
+	res := []timeOffModel{}
+	for _, entry := range entries {
+		res = append(res, timeOffModel{
+			Id:           entry.Id,
+			StartTimeUtc: entry.StartTimeUtc,
+			EndTimeUtc:   entry.EndTimeUtc,
+			Note:         entry.Note,
+			Type: typeModel{
+				Id:   entry.TimeOffType.Id,
+				Name: entry.TimeOffType.Name,
+			},
+			Status: entry.TimeOffStatusTypeId,
+		})
+	}
+
+	return c.JSON(http.StatusOK, api.NewResponse(true, res))
+}
+
+func httpEntriesByStatus(c echo.Context) error {
+	statusRaw, err := utils.ParseStrToInt64(c.Param("status"))
+	if err != nil {
+		return err
+	}
+
+	user, _ := internal.GetUser(c)
+	if !user.IsAdmin {
+		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+	}
+
+	timeOffService := timeoff.TimeOffService{}
+
+	entries, err := timeOffService.GetTimeOffEntriesByStatus(domain.TimeOffStatus(statusRaw))
 	if err != nil {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
@@ -57,14 +95,16 @@ func httpEntry(c echo.Context) error {
 		return err
 	}
 
-	user, _ := internal.GetUser(c)
+	//user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	entry, err := timeOffService.GetTimeOffEntry(timeOffId, user)
+	entry, err := timeOffService.GetTimeOffEntry(timeOffId)
 	if err != nil {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
 	}
+
+	//TODO validate if user has access..
 
 	res := timeOffDetailsModel{
 		timeOffModel: timeOffModel{

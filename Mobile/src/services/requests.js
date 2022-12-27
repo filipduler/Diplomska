@@ -22,6 +22,7 @@ const Requests =
 
     /*********TIME OFF********/
     getTimeOffEntries: async () => await _innerFetch('GET', '/time-off'),
+    getTimeOffEntriesByStatus: async (status) => await _innerFetch('GET', `/time-off/status/${status}`),
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
     getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/types'),
     putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
@@ -44,14 +45,20 @@ const Requests =
     /*********DASHBOARD********/
     getDashboard: async () => await _innerFetch('GET', `/dashboard`),
 
-     /*********AUTH********/
+    /*********AUTH********/
     postLogin: async (email, password) => {
         const request = {
             email: email, 
             password: password
         };
         return await _innerFetch('POST', `/auth/login`, JSON.stringify(request));
-    }
+    },
+
+     /*********USERS********/
+     getUserInfo: async () => await _innerFetch('GET', '/user/info'),
+     getUsers: async () => await _innerFetch('GET', '/user/users'),
+     postImpersonate: async (userId) => await _innerFetch('POST', `/user/impersonate/${userId}`),
+     postClearImpersonation: async () => await _innerFetch('POST', '/user/clear-impersonation'),
 }
 
 export default Requests;
@@ -59,7 +66,6 @@ export default Requests;
 
 async function _innerFetch(method, url, body, params) {
     let res = null;
-    console.log(body);
     try {
         let parameters = '';
         if(params) {

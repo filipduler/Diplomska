@@ -17,19 +17,15 @@ const Store = {
         }
     },
     auth: {
-        logged: false,
-        get isLogged() {
-            return this.logged;
-        },
-        set isLogged(value) {
-            this.logged = value;
-        },
         getJWTAsync: async function() {
             return await AsyncStorage.getItem(JWT_STORE_KEY);
 
         },
         setJWTAsync: async function(jwt) {
             await AsyncStorage.setItem(JWT_STORE_KEY, jwt);
+        },
+        removeJWTAsync: async function(jwt) {
+            await AsyncStorage.removeItem(JWT_STORE_KEY);
         }
     },
     timer: {

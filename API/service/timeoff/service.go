@@ -2,6 +2,7 @@ package timeoff
 
 import (
 	"api/domain"
+	"api/service"
 	userService "api/service/user"
 	"api/utils"
 	"time"
@@ -12,23 +13,34 @@ import (
 
 type TimeOffService struct{}
 
-func (*TimeOffService) GetTimeOffEntry(timeOffId int64, user *domain.UserModel) (*domain.TimeOffModel, error) {
+func (*TimeOffService) GetTimeOffEntry(timeOffId int64) (*domain.TimeOffModel, error) {
 	db := utils.GetConnection()
 
 	var timeOffEntry domain.TimeOffModel
 	tx := db.
-		Where("Id = ? AND UserId = ?", timeOffId, user.Id).
+		Where("Id = ?", timeOffId).
 		Preload("TimeOffType").
 		First(&timeOffEntry)
 
 	return &timeOffEntry, tx.Error
 }
 
-func (*TimeOffService) GetTimeOffEntries(user *domain.UserModel) ([]domain.TimeOffModel, error) {
+func (*TimeOffService) GetTimeOffEntriesByUser(user *domain.UserModel) ([]domain.TimeOffModel, error) {
 	db := utils.GetConnection()
 
 	var entries []domain.TimeOffModel
 	tx := db.Where("UserId = ?", user.Id).
+		Preload("TimeOffType").
+		Find(&entries)
+
+	return entries, tx.Error
+}
+
+func (*TimeOffService) GetTimeOffEntriesByStatus(status domain.TimeOffStatus) ([]domain.TimeOffModel, error) {
+	db := utils.GetConnection()
+
+	var entries []domain.TimeOffModel
+	tx := db.Where("TimeOffStatusTypeId = ?", int64(status)).
 		Preload("TimeOffType").
 		Find(&entries)
 
@@ -49,9 +61,13 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 
 	//update time entry
 	if id != nil {
-		updateModel, err := s.GetTimeOffEntry(*id, user)
+		updateModel, err := s.GetTimeOffEntry(*id)
 		if err != nil {
 			return 0, err
+		}
+
+		if updateModel.UserId != user.Id {
+			return 0, service.ErrInvalidPermission
 		}
 
 		txErr := db.Transaction(func(tx *gorm.DB) error {
@@ -116,7 +132,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserModel, status domain.TimeOffStatus) error {
 	db := utils.GetConnection()
 
-	timeOffEntry, err := s.GetTimeOffEntry(timeOffId, user)
+	timeOffEntry, err := s.GetTimeOffEntry(timeOffId)
 	if err != nil {
 		return err
 	}
@@ -141,7 +157,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserMode
 func (s *TimeOffService) TimeOffHistory(timeOffId int64, user *domain.UserModel) (map[time.Time][]HistoryModel, error) {
 	db := utils.GetConnection()
 
-	timeOff, err := s.GetTimeOffEntry(timeOffId, user)
+	timeOff, err := s.GetTimeOffEntry(timeOffId)
 	if err != nil {
 		return nil, err
 	}

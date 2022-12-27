@@ -2,17 +2,13 @@ import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
-import StyleService from 'mobile/src/services/styles';
+import { TimeOffStatus } from 'mobile/src/services/constants';
 import {
-    SafeAreaView,
-    View,
-    StyleSheet,
-    FlatList,
-    Button
+    FlatList
 } from 'react-native';
-import TimeOffList from './components/TimeOffList';
+import TimeOffItem from './TimeOffItem';
 
-const ListView = ({ navigation }) => {
+const TimeOffList = ({ onItemPress, pendingOnly }) => {
 
     const [entries, setEntries] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -20,12 +16,12 @@ const ListView = ({ navigation }) => {
     useFocusEffect(
         React.useCallback(() => {
             //on focus
-            console.log('focus ListView');
+            console.log('focus TimeOffList');
             getEntries()
 
             return () => {
                 //on unfocus
-                console.log('unfocus ListView');
+                console.log('unfocus TimeOffList');
             };
         }, [])
     )
@@ -33,7 +29,10 @@ const ListView = ({ navigation }) => {
     const getEntries = async () => {
         let arr = [];
         try {
-            const response = await Requests.getTimeOffEntries();
+            const response = await (pendingOnly
+                ? Requests.getTimeOffEntries()
+                : Requests.getTimeOffEntriesByStatus(TimeOffStatus.Pending));
+                
             if (response && response.ok && response.payload) {
                 for (const entry of response.payload) {
                     arr.push({
@@ -55,22 +54,13 @@ const ListView = ({ navigation }) => {
     const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.innerContainer}>
-                <TimeOffList onItemPress={navigateToDetails}/>
-                <Button title='New Request' onPress={() => navigateToDetails(0)} />
-            </View>
-        </SafeAreaView>
+        <FlatList
+            refreshing={refreshing}
+            onRefresh={getEntries}
+            data={entries}
+            renderItem={({ item }) => <TimeOffItem data={item} handleEntryDetails={onItemPress} />}
+        />
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    innerContainer: {
-        flex: 1,
-        padding: 20
-    },
-});
-export default ListView;
+export default TimeOffList;
