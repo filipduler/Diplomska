@@ -1,27 +1,67 @@
 package timeentry
 
 import (
-	"api/api"
+	"api/domain"
 	"api/internal"
 	"api/service/timeentry"
 	"api/utils"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/samber/lo"
 )
 
 func NewHTTP(r *echo.Group) {
 	group := r.Group("/time-entry")
 
-	group.POST("/save", httpSaveEntry)
-	group.GET("/:year/:month", httpMonthlyEntries)
-	group.GET("/:id", httpEntry)
-	group.DELETE("/:id", httpDeleteEntry)
-	group.GET("/:id/history", httpEntryHistory)
+	group.GET("/stats", statsHTTP)
+	group.POST("/save", entryHTTP)
+	group.GET("/:year/:month", monthlyEntriesHTTP)
+	group.GET("/:id", entryHTTP)
+	group.DELETE("/:id", deleteEntryHTTP)
+	group.GET("/:id/history", entryHistoryHTTP)
+	group.GET("/changes", entryChangesHTTP)
 }
 
-func httpEntry(c echo.Context) error {
+func statsHTTP(c echo.Context) error {
+	res := timeEntryStatsReponse{}
+
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	now := time.Now().UTC()
+	monthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	prevMonth := monthStart.AddDate(0, -1, 0)
+
+	entries, err := timeEntryService.GetEntriesFrom(prevMonth, user.EffectiveUserId())
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	getTimeEntrySum := func(entries []domain.TimeEntryModel, from time.Time, to time.Time) int64 {
+		filteredEntries := lo.Filter(entries, func(entry domain.TimeEntryModel, _ int) bool {
+			return entry.StartTimeUtc.After(from) && entry.StartTimeUtc.Before(to)
+		})
+
+		return lo.SumBy(filteredEntries, func(entry domain.TimeEntryModel) int64 {
+			return int64(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Minutes())
+		})
+	}
+
+	//this month
+	res.ThisMonthMinutes = getTimeEntrySum(entries, monthStart, utils.EndOfMonth(monthStart))
+
+	//this day
+	dayStart := utils.DayStart(now)
+	dayEnd := utils.DayEnd(now)
+	res.TodayMinutes = getTimeEntrySum(entries, dayStart, dayEnd)
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
+}
+
+func entryHTTP(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
@@ -30,18 +70,17 @@ func httpEntry(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeEntryService := timeentry.TimeEntryService{}
 
-	entry, err := timeEntryService.GetTimeEntry(timeEntryId, user)
+	entry, err := timeEntryService.GetTimeEntry(timeEntryId, user.EffectiveUserId())
 	if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
+		return internal.NewHTTPError(c, err)
 	}
 
 	entryResponse := mapToEntryModel(entry)
 
-	return c.JSON(http.StatusOK, api.NewResponse(err == nil, entryResponse))
+	return c.JSON(http.StatusOK, internal.NewResponse(err == nil, entryResponse))
 }
 
-func httpMonthlyEntries(c echo.Context) error {
+func monthlyEntriesHTTP(c echo.Context) error {
 	month, err := strconv.Atoi(c.Param("month"))
 	if err != nil {
 		return err
@@ -55,10 +94,9 @@ func httpMonthlyEntries(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeEntryService := timeentry.TimeEntryService{}
 
-	entries, err := timeEntryService.GetEntries(month, year, user)
+	entries, err := timeEntryService.GetEntries(month, year, user.EffectiveUserId())
 	if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
+		return internal.NewHTTPError(c, err)
 	}
 
 	res := entriesResponse{
@@ -71,10 +109,10 @@ func httpMonthlyEntries(c echo.Context) error {
 		res.Entries = append(res.Entries, mapToEntryModel(&element))
 	}
 
-	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
+	return c.JSON(http.StatusOK, internal.NewResponse(err == nil, res))
 }
 
-func httpSaveEntry(c echo.Context) error {
+func saveEntryHTTP(c echo.Context) error {
 	request := saveTimeEntryRequest{}
 	if err := c.Bind(&request); err != nil {
 		return err
@@ -89,15 +127,16 @@ func httpSaveEntry(c echo.Context) error {
 		request.EndTimeUtc,
 		request.PauseSeconds,
 		request.Note,
-		user)
+		user.DailyWorkHours,
+		user.Id)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
-	return c.JSON(http.StatusOK, api.NewResponse(err == nil, id))
+	return c.JSON(http.StatusOK, internal.NewResponse(err == nil, id))
 }
 
-func httpDeleteEntry(c echo.Context) error {
+func deleteEntryHTTP(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
@@ -107,15 +146,15 @@ func httpDeleteEntry(c echo.Context) error {
 
 	timeEntryService := timeentry.TimeEntryService{}
 
-	err = timeEntryService.DeleteTimeEntry(timeEntryId, user)
+	err = timeEntryService.DeleteTimeEntry(timeEntryId, user.Id)
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
-	return c.JSON(http.StatusOK, api.NewEmptyResponse(err == nil))
+	return c.JSON(http.StatusOK, internal.NewEmptyResponse(err == nil))
 }
 
-func httpEntryHistory(c echo.Context) error {
+func entryHistoryHTTP(c echo.Context) error {
 	timeEntryId, err := utils.ParseStrToInt64(c.Param("id"))
 	if err != nil {
 		return err
@@ -125,10 +164,39 @@ func httpEntryHistory(c echo.Context) error {
 
 	timeEntryService := timeentry.TimeEntryService{}
 
-	res, err := timeEntryService.TimeEntryHistory(timeEntryId, user)
+	res, err := timeEntryService.TimeEntryHistory(timeEntryId, user.EffectiveUserId())
 	if err != nil {
 		c.Logger().Error(err)
 	}
 
-	return c.JSON(http.StatusOK, api.NewResponse(err == nil, res))
+	return c.JSON(http.StatusOK, internal.NewResponse(err == nil, res))
+}
+
+func entryChangesHTTP(c echo.Context) error {
+	request := internal.ChangeRequest{}
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	timeEntryLogs, err := timeEntryService.GetTimeEntryLogs(user.EffectiveUserId(), request.From, request.To)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	var res []internal.ChangeModel
+
+	for _, log := range timeEntryLogs {
+		res = append(res, internal.ChangeModel{
+			Id:              log.TimeEntryId,
+			StartTimeUtc:    log.StartTimeUtc,
+			EndTimeUtc:      log.EndTimeUtc,
+			LogType:         log.LogTypeId,
+			LastUpdateOnUtc: log.InsertedOnUtc,
+		})
+	}
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
 }

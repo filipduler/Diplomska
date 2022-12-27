@@ -5,6 +5,7 @@ import (
 	"api/service"
 	userService "api/service/user"
 	"api/utils"
+	"fmt"
 	"time"
 
 	"github.com/samber/lo"
@@ -25,11 +26,11 @@ func (*TimeOffService) GetTimeOffEntry(timeOffId int64) (*domain.TimeOffModel, e
 	return &timeOffEntry, tx.Error
 }
 
-func (*TimeOffService) GetTimeOffEntriesByUser(user *domain.UserModel) ([]domain.TimeOffModel, error) {
+func (*TimeOffService) GetTimeOffEntriesByUser(userId int64) ([]domain.TimeOffModel, error) {
 	db := utils.GetConnection()
 
 	var entries []domain.TimeOffModel
-	tx := db.Where("UserId = ?", user.Id).
+	tx := db.Where("UserId = ?", userId).
 		Preload("TimeOffType").
 		Find(&entries)
 
@@ -47,6 +48,38 @@ func (*TimeOffService) GetTimeOffEntriesByStatus(status domain.TimeOffStatus) ([
 	return entries, tx.Error
 }
 
+func (s *TimeOffService) GetTimeOffLogs(userId int64, from *time.Time, to *time.Time) ([]domain.TimeOffLogModel, error) {
+	db := utils.GetConnection()
+
+	var dateQuery string
+	var args []interface{}
+	args = append(args, userId)
+
+	if from != nil && to != nil {
+		dateQuery = "AND InsertedOnUtc > ? AND InsertedOnUtc < ?"
+		args = append(args, from, to)
+	} else if from != nil {
+		dateQuery = "AND InsertedOnUtc > ?"
+		args = append(args, from)
+	} else if to != nil {
+		dateQuery = "AND InsertedOnUtc < ?"
+		args = append(args, to)
+	}
+
+	var logs []domain.TimeOffLogModel
+	tx := db.Raw(fmt.Sprintf(`WITH last_log_entries AS (
+			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeOffId ORDER BY InsertedOnUtc DESC) AS rn
+			FROM timeofflog AS m
+			WHERE m.UserId = ? %s
+		)
+		SELECT *
+		FROM last_log_entries WHERE rn = 1`, dateQuery), args...).
+		Preload("TimeOffType").
+		Find(&logs)
+
+	return logs, tx.Error
+}
+
 func (*TimeOffService) GetStatusTypes() ([]domain.TimeOffTypeModel, error) {
 	db := utils.GetConnection()
 
@@ -56,7 +89,7 @@ func (*TimeOffService) GetStatusTypes() ([]domain.TimeOffTypeModel, error) {
 	return types, tx.Error
 }
 
-func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, note string, offTypeId int64, user *domain.UserModel) (int64, error) {
+func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, note string, offTypeId int64, userId int64) (int64, error) {
 	db := utils.GetConnection()
 
 	//update time entry
@@ -66,7 +99,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 			return 0, err
 		}
 
-		if updateModel.UserId != user.Id {
+		if updateModel.UserId != userId {
 			return 0, service.ErrInvalidPermission
 		}
 
@@ -86,7 +119,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 			}
 
 			//insert log
-			logModel := mapToTimeOffEntryLog(user.Id, updateModel, domain.UpdateLogType)
+			logModel := mapToTimeOffEntryLog(userId, updateModel, domain.UpdateLogType)
 
 			if logTx := tx.Create(&logModel); logTx.Error != nil {
 				return logTx.Error
@@ -105,7 +138,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 		Note:                note,
 		TimeOffTypeId:       offTypeId,
 		TimeOffStatusTypeId: int64(domain.PendingTimeOffStatus),
-		UserId:              user.Id,
+		UserId:              userId,
 	}
 	insertModel.OnInsert()
 
@@ -116,7 +149,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 			return entryTx.Error
 		}
 
-		logModel := mapToTimeOffEntryLog(user.Id, &insertModel, domain.InsertLogType)
+		logModel := mapToTimeOffEntryLog(userId, &insertModel, domain.InsertLogType)
 
 		//insert log
 		if logTx := tx.Create(&logModel); logTx.Error != nil {
@@ -129,7 +162,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startTimeUtc time.Time, end
 	return insertModel.Id, txErr
 }
 
-func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserModel, status domain.TimeOffStatus) error {
+func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, status domain.TimeOffStatus) error {
 	db := utils.GetConnection()
 
 	timeOffEntry, err := s.GetTimeOffEntry(timeOffId)
@@ -144,7 +177,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserMode
 			return tx.Error
 		}
 
-		logModel := mapToTimeOffEntryLog(user.Id, timeOffEntry, domain.UpdateLogType)
+		logModel := mapToTimeOffEntryLog(userId, timeOffEntry, domain.UpdateLogType)
 
 		if logTx := tx.Create(&logModel); logTx.Error != nil {
 			return logTx.Error
@@ -154,7 +187,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, user *domain.UserMode
 	})
 }
 
-func (s *TimeOffService) TimeOffHistory(timeOffId int64, user *domain.UserModel) (map[time.Time][]HistoryModel, error) {
+func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time.Time][]HistoryModel, error) {
 	db := utils.GetConnection()
 
 	timeOff, err := s.GetTimeOffEntry(timeOffId)

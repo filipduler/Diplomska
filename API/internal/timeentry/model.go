@@ -19,6 +19,11 @@ type entriesResponse struct {
 	Entries []entryModel `json:"entries"`
 }
 
+type timeEntryStatsReponse struct {
+	TodayMinutes     int64 `json:"todayMinutes"`
+	ThisMonthMinutes int64 `json:"thisMonthMinutes"`
+}
+
 type entryModel struct {
 	Id              int64     `json:"id"`
 	StartTimeUtc    time.Time `json:"startTimeUtc"`

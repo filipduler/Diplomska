@@ -30,8 +30,6 @@ func main() {
 	timeentry.NewHTTP(group)
 	timeoff.NewHTTP(group)
 	user.NewHTTP(group)
-	//history.NewHTTP(group)
-	//dashboard.NewHTTP(group)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

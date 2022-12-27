@@ -1,7 +1,6 @@
 package user
 
 import (
-	"api/api"
 	"api/domain"
 	"api/internal"
 	userService "api/service/user"
@@ -36,15 +35,14 @@ func infoHTTP(c echo.Context) error {
 func usersHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	if !user.IsAdmin {
-		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+		return c.JSON(http.StatusUnauthorized, internal.NewEmptyResponse(false))
 	}
 
 	userService := userService.UserService{}
 
 	users, err := userService.GetNonAdminUsers()
 	if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
+		return internal.NewHTTPError(c, err)
 	}
 
 	userOptons := lo.Map(users, func(user domain.UserModel, _ int) userOptionModel {
@@ -66,7 +64,7 @@ func impersonateHTTP(c echo.Context) error {
 
 	user, _ := internal.GetUser(c)
 	if !user.IsAdmin {
-		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+		return c.JSON(http.StatusUnauthorized, internal.NewEmptyResponse(false))
 	}
 
 	userService := userService.UserService{}
@@ -81,7 +79,7 @@ func impersonateHTTP(c echo.Context) error {
 func clearImpersonationHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	if !user.IsAdmin {
-		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+		return c.JSON(http.StatusUnauthorized, internal.NewEmptyResponse(false))
 	}
 
 	userService := userService.UserService{}
