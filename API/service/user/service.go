@@ -9,6 +9,14 @@ import (
 
 type UserService struct{}
 
+func (*UserService) GetNonAdminUsers() ([]domain.UserModel, error) {
+	db := utils.GetConnection()
+
+	var users []domain.UserModel
+	tx := db.Where("IsAdmin = false").Find(&users)
+	return users, tx.Error
+}
+
 func (*UserService) GetUserById(id int64) (*domain.UserModel, error) {
 	db := utils.GetConnection()
 
@@ -41,7 +49,7 @@ func (*UserService) GetUserMap(userIds []int64) (map[int64]domain.UserModel, err
 	return lo.KeyBy(users, func(user domain.UserModel) int64 { return user.Id }), nil
 }
 
-func (*UserService) SetImpersonatedUser(user domain.UserModel, impersonatedUserId *int64) error {
+func (*UserService) SetImpersonatedUser(user *domain.UserModel, impersonatedUserId *int64) error {
 	db := utils.GetConnection()
 
 	if !user.IsAdmin {

@@ -1,16 +1,24 @@
 package user
 
 import (
+	"api/api"
+	"api/domain"
 	"api/internal"
+	userService "api/service/user"
+	"api/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/samber/lo"
 )
 
 func NewHTTP(r *echo.Group) {
 	group := r.Group("/user")
 
 	group.GET("/info", infoHTTP)
+	group.GET("/users", usersHTTP)
+	group.POST("/impersonate/:userId", impersonateHTTP)
+	group.POST("/clear-impersonation", clearImpersonationHTTP)
 }
 
 func infoHTTP(c echo.Context) error {
@@ -23,4 +31,64 @@ func infoHTTP(c echo.Context) error {
 		IsAdmin:         user.IsAdmin,
 		IsImpersonating: user.ImpersonatedUserId != nil,
 	}))
+}
+
+func usersHTTP(c echo.Context) error {
+	user, _ := internal.GetUser(c)
+	if !user.IsAdmin {
+		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+	}
+
+	userService := userService.UserService{}
+
+	users, err := userService.GetNonAdminUsers()
+	if err != nil {
+		c.Logger().Error(err)
+		return c.JSON(http.StatusOK, api.NewEmptyResponse(false))
+	}
+
+	userOptons := lo.Map(users, func(user domain.UserModel, _ int) userOptionModel {
+		return userOptionModel{
+			UserId: user.Id,
+			Name:   user.DisplayName,
+			Email:  user.Email,
+		}
+	})
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, userOptons))
+}
+
+func impersonateHTTP(c echo.Context) error {
+	userId, err := utils.ParseStrToInt64(c.Param("userId"))
+	if err != nil {
+		return err
+	}
+
+	user, _ := internal.GetUser(c)
+	if !user.IsAdmin {
+		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+	}
+
+	userService := userService.UserService{}
+
+	err = userService.SetImpersonatedUser(user, &userId)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+	return c.JSON(http.StatusOK, internal.NewEmptyResponse(err == nil))
+}
+
+func clearImpersonationHTTP(c echo.Context) error {
+	user, _ := internal.GetUser(c)
+	if !user.IsAdmin {
+		return c.JSON(http.StatusUnauthorized, api.NewEmptyResponse(false))
+	}
+
+	userService := userService.UserService{}
+
+	err := userService.SetImpersonatedUser(user, nil)
+	if err != nil {
+		c.Logger().Error(err)
+	}
+	return c.JSON(http.StatusOK, internal.NewEmptyResponse(err == nil))
 }

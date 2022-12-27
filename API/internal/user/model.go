@@ -7,3 +7,9 @@ type userModel struct {
 	IsAdmin         bool   `json:"isAdmin"`
 	IsImpersonating bool   `json:"isImpersonating"`
 }
+
+type userOptionModel struct {
+	UserId int64  `json:"userId"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+}
