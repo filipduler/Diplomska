@@ -59,7 +59,7 @@ export const App = () => {
 			<Tab.Screen name="Time Tracker" component={TrackerStack} options={{ headerShown: false }} />
 			<Tab.Screen name="Time Off" component={TimeOffStack} options={{ headerShown: false }} />
 			<Tab.Screen name="History" component={HistoryStack} options={{ headerShown: false }} />
-			{Auth.userInfo.isAdmin ? <Tab.Screen name="AdminStack" component={AdminStack} options={{ headerShown: false }} /> : null}
+			{Auth.userInfo.isAdmin ? <Tab.Screen name="Admin" component={AdminStack} options={{ headerShown: false }} /> : null}
 		</Tab.Navigator>
 	}
 

@@ -8,8 +8,8 @@ const Stack = createStackNavigator();
 
 const AdminStack = () => {
     return (
-        <Stack.Navigator initialRouteName='List' screenOptions={{ headerMode: 'screen' }}>
-            <Stack.Screen name="Admin" component={AdminView} options={{ title: 'Admin' }}/>
+        <Stack.Navigator initialRouteName='Administration' screenOptions={{ headerMode: 'screen' }}>
+            <Stack.Screen name="Administration" component={AdminView} options={{ title: 'Admin' }}/>
             <Stack.Screen name="Details" component={DetailsView} options={{ title: 'Time Off Details' }} />
             <Stack.Screen name="History" component={HistoryView} options={{ title: 'Time Off History' }} />
         </Stack.Navigator>

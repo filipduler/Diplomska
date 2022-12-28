@@ -5,9 +5,11 @@ const Requests =
 {
     /*********TIME ENTRY********/
     getTimeEntries: async (month, year) => await _innerFetch('GET', `/time-entry/${year}/${month}`),
+    getTimeEntryStats: async () => await _innerFetch('GET', '/time-entry/stats'),
     getTimeEntry: async (id) => await _innerFetch('GET', `/time-entry/${id}`),
     deleteTimeEntry: async (timeEntryId) => await _innerFetch('DELETE', `/time-entry/${timeEntryId}`),
     getTimeEntryHistory: async (id) => await _innerFetch('GET', `/time-entry/${id}/history`),
+    getTimeEntryChanges: async (from, to) => await _innerFetch('GET', `/time-entry/changes`, null, { from, to }),
     postSaveEntry: async (id, startTimeUtc, endTimeUtc, pauseSeconds, note) => {
         const request = {
             id: id > 0 ? id : null,
@@ -38,6 +40,7 @@ const Requests =
         return await _innerFetch('POST', '/time-off/save', JSON.stringify(request));
     },
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
+    getTimeOffChanges: async (from, to) => await _innerFetch('GET', `/time-off/changes`, null, { from, to }),
 
     /*********HISTORY********/
     getHistory: async (from, to) => await _innerFetch('GET', `/history`, null, { from, to }),

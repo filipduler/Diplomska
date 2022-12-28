@@ -9,49 +9,62 @@ import HistoryItem from './components/HistoryItem'
 import HistoryHeader from './components/HistoryHeader'
 import _ from 'lodash';
 
+const TIME_ENTRY_TYPE = 'TE';
+const TIME_OFF_TYPE = 'TF';
+
 const HistoryList = ({ navigation }) => {
     const [keys, setKeys] = useState([]);
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus HistoryView');
             loadHistory();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus HistoryView');
-            };
         }, [])
     )
 
     const loadHistory = async () => {
         const arr = [];
         try {
-            const response = await Requests.getHistory();
-            console.log(response);
-            if (response && response.ok && response.payload) {
-                const groupedResults = _.groupBy(response.payload, x => DateHelper.roundToDayAsUnix(x.lastUpdateOnUtc));
+            const items = await fetchHistory();
+            const groupedResults = _.groupBy(items, x => DateHelper.roundToDayAsUnix(x.lastUpdateOnUtc));
 
-                for (const unix of Object.keys(groupedResults)) {
-                    arr.push({
-                        text: DateHelper.formatDate(moment.unix(unix)),
-                        data: _.sortBy(groupedResults[unix], item => new Date(item.lastUpdateOnUtc))
-                    })
-                }
+            for (const unix of Object.keys(groupedResults)) {
+                arr.push({
+                    text: DateHelper.formatDate(moment.unix(unix)),
+                    data: _.sortBy(groupedResults[unix], item => new Date(item.lastUpdateOnUtc))
+                })
             }
         }
         finally {
-            console.log(arr);
             setKeys(arr);
         }
     }
+
+    const fetchHistory = async () => {
+        const teResponse = Requests.getTimeEntryChanges(null, null);
+        const tfResponse = Requests.getTimeOffChanges(null, null);
+        await Promise.allSettled([teResponse, tfResponse]);
+
+        const items = [];
+
+        const appendItems = async (responsePromise, type) => {
+            const res = await responsePromise;
+            if(res && res.ok && res.payload) {
+                for(const entry of res.payload) {
+                    entry.type = type;
+                    items.push(entry);
+                }
+            }
+        }
+        await appendItems(teResponse, TIME_ENTRY_TYPE)
+        await appendItems(tfResponse, TIME_OFF_TYPE)
+
+        return items;
+    }
     
     const navigateToHistoryView = (id, type) => {
-        console.log(id, type)
-        if (type === 'TE') {
+        if (type === TIME_ENTRY_TYPE) {
             navigation.navigate('Tracker History', { id: id })
-        } else if (type === 'TF') {
+        } else if (type === TIME_OFF_TYPE) {
             navigation.navigate('Time Off History', { id: id })
         }
     }
