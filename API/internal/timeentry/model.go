@@ -20,8 +20,8 @@ type entriesResponse struct {
 }
 
 type dailyHoursModel struct {
-	Day       int  `json:"day"`
-	Completed bool `json:"completed"`
+	Day         int  `json:"day"`
+	IsCompleted bool `json:"isCompleted"`
 }
 
 type timeEntryStatsReponse struct {

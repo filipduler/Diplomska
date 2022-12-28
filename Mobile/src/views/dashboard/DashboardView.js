@@ -5,8 +5,9 @@ import DateHelper from 'mobile/src/helpers/date';
 import Requests from 'mobile/src/services/requests';
 import { Calendar } from 'react-native-calendars';
 import moment from 'moment/moment';
+import _ from 'lodash';
 
-const NOW = Date.now();
+const NOW = moment(Date.now()).format('YYYY-MM-DD');
 
 const DashboardView = () => {
     const [markedDates, setMarkedDates] = useState({});
@@ -22,8 +23,8 @@ const DashboardView = () => {
     const getDashboard = async () => {
         const response = await Requests.getTimeEntryStats();
         if (response && response.ok) {
-            setStats({ 
-                today: DateHelper.hmsFormat(response.payload.todayMinutes * 60, true, true, false), 
+            setStats({
+                today: DateHelper.hmsFormat(response.payload.todayMinutes * 60, true, true, false),
                 thisMonth: DateHelper.hmsFormat(response.payload.thisMonthMinutes * 60, true, true, false)
             })
         }
@@ -31,65 +32,111 @@ const DashboardView = () => {
         await refreshCalendarMarkers(Date.now());
     }
 
-    const refreshCalendarMarkers = async (timestamp) => {
-        const currentDate = new Date(timestamp);
-
-        const month = currentDate.getMonth() + 1;
-        const year = currentDate.getFullYear();
+    const fetchDaysOff = async (year, month) => {
+        const ranges = [];
 
         const tfResponse = await Requests.getDaysOff(month, year);
         if (tfResponse && tfResponse.ok) {
-            const daysOff = (tfResponse.payload || []).sort((a, b) => a - b);
+            const daysOff = _.sortBy(tfResponse.payload, (num) => num);
 
             //join days together in ranges
-            const ranges = [];
             for (const dayOff of daysOff) {
                 const rangeArr = ranges.find(x => x[x.length - 1] === dayOff - 1);
                 rangeArr
                     ? rangeArr.push(dayOff)
                     : ranges.push([dayOff]);
             }
+        }
 
-            const markedDates = {};
+        return ranges;
+    }
 
-            //marked days off
-            for (const range of ranges) {
-                for (let i = 0; i < range.length; i++) {
-                    const day = range[i];
-                    const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const fetchCompletedDays = async (year, month) => {
+        const incompletedRanges = [];
+        const completedRanges = [];
 
-                    const obj = { color: 'red' };
-                    if (range.length > 1) {
-                        if (i === 0) {
-                            obj.startingDay = true;
-                        }
-                        else if (i === range.length - 1) {
-                            obj.endingDay = true;
-                        }
-                    } else if (range.length === 1) {
+        const cdResponse = await Requests.getDaysCompleted(month, year);
+        if (cdResponse && cdResponse.ok) {
+            const daysCompleted = _.sortBy(cdResponse.payload, 'day');
+
+            for (const completedDay of daysCompleted) {
+                const targetRange = completedDay.isCompleted
+                    ? completedRanges
+                    : incompletedRanges;
+
+                const rangeArr = targetRange.find(x => x[x.length - 1].day === completedDay.day - 1);
+                rangeArr
+                    ? rangeArr.push(completedDay.day)
+                    : targetRange.push([completedDay.day]);
+            }
+        }
+
+        return {
+            incompletedRanges,
+            completedRanges
+        };
+    }
+
+    const refreshCalendarMarkers = async (timestamp) => {
+        const currentDate = new Date(timestamp);
+        const markedDates = {};
+
+        const month = currentDate.getMonth() + 1;
+        const year = currentDate.getFullYear();
+
+        const daysOffRanges = await fetchDaysOff(year, month);
+        const { incompletedRanges, completedRanges } = await fetchCompletedDays(year, month);
+
+        const daysUsed = _.uniq([
+            ..._.flatten(daysOffRanges),
+            ..._.flatten(incompletedRanges),
+            ..._.flatten(completedRanges)
+        ]);
+
+        const freeDays = DateHelper.getDaysInMonth(month, year)
+            .filter(x => !(x.getDay() === 6 || x.getDay() === 0) && x <= new Date()) //remove weekends
+            .map(x => x.getDate())
+            .filter(x => !daysUsed.includes(x));
+        
+        const freeDaysranges = [];
+        for (const freeDay of freeDays) {
+            const rangeArr = freeDaysranges.find(x => x[x.length - 1] === freeDay - 1);
+            rangeArr
+                ? rangeArr.push(freeDay)
+                : freeDaysranges.push([freeDay]);
+        }
+
+
+        parseRange(markedDates, freeDaysranges, 'yellow', year, month);
+        parseRange(markedDates, daysOffRanges, 'red', year, month);
+        parseRange(markedDates, incompletedRanges, 'yellow', year, month);
+        parseRange(markedDates, completedRanges, 'green', year, month);
+        
+        //console.log(markedDates);
+        setMarkedDates(markedDates);
+    }
+
+    const parseRange = (markedDates, rangeArray, color, year, month) => {
+        console.log(rangeArray);
+        for (const range of rangeArray) {
+            for (let i = 0; i < range.length; i++) {
+                const day = range[i];
+                const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+
+                const obj = { color: color };
+                if (range.length > 1) {
+                    if (i === 0) {
                         obj.startingDay = true;
+                    }
+                    else if (i === range.length - 1) {
                         obj.endingDay = true;
                     }
-
-                    markedDates[moment(date).format('YYYY-MM-DD')] = obj;
+                } else if (range.length === 1) {
+                    obj.startingDay = true;
+                    obj.endingDay = true;
                 }
+                markedDates[moment(date).format('YYYY-MM-DD')] = obj;
             }
-
-            //disable weekends
-            const pivot = moment().month(month - 1).year(year).startOf('month')
-            const end = moment().month(month - 1).year(year).endOf('month')
-
-            const disabled = { disabled: true }
-            while (pivot.isBefore(end)) {
-                ['Saturday', 'Sunday'].forEach((day) => {
-                    markedDates[pivot.day(day).format("YYYY-MM-DD")] = disabled
-                })
-                pivot.add(7, 'days')
-            }
-
-            
-
-            setMarkedDates(markedDates);
         }
     }
 

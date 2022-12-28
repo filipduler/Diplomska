@@ -240,8 +240,8 @@ func daysCompletedHTTP(c echo.Context) error {
 		}
 
 		res = append(res, dailyHoursModel{
-			Day:       firstEntry.StartTimeUtc.Day(),
-			Completed: dailyHours >= firstEntry.DailyWorkHours,
+			Day:         firstEntry.StartTimeUtc.Day(),
+			IsCompleted: dailyHours >= firstEntry.DailyWorkHours,
 		})
 	}
 
