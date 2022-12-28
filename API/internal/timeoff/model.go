@@ -1,6 +1,9 @@
 package timeoff
 
-import "time"
+import (
+	"api/domain"
+	"time"
+)
 
 type saveRequest struct {
 	Id           *int64    `json:"id"`
@@ -17,6 +20,20 @@ type timeOffModel struct {
 	Note         string    `json:"note"`
 	Type         typeModel `json:"type"`
 	Status       int64     `json:"status"`
+}
+
+func mapTimeOffEntry(entry *domain.TimeOffModel) timeOffModel {
+	return timeOffModel{
+		Id:           entry.Id,
+		StartTimeUtc: entry.StartTimeUtc,
+		EndTimeUtc:   entry.EndTimeUtc,
+		Note:         entry.Note,
+		Type: typeModel{
+			Id:   entry.TimeOffType.Id,
+			Name: entry.TimeOffType.Name,
+		},
+		Status: entry.TimeOffStatusTypeId,
+	}
 }
 
 type typeModel struct {

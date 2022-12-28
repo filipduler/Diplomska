@@ -35,17 +35,7 @@ func entriesHTTP(c echo.Context) error {
 
 	res := []timeOffModel{}
 	for _, entry := range entries {
-		res = append(res, timeOffModel{
-			Id:           entry.Id,
-			StartTimeUtc: entry.StartTimeUtc,
-			EndTimeUtc:   entry.EndTimeUtc,
-			Note:         entry.Note,
-			Type: typeModel{
-				Id:   entry.TimeOffType.Id,
-				Name: entry.TimeOffType.Name,
-			},
-			Status: entry.TimeOffStatusTypeId,
-		})
+		res = append(res, mapTimeOffEntry(&entry))
 	}
 
 	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
@@ -71,17 +61,7 @@ func entriesByStatusHTTP(c echo.Context) error {
 
 	res := []timeOffModel{}
 	for _, entry := range entries {
-		res = append(res, timeOffModel{
-			Id:           entry.Id,
-			StartTimeUtc: entry.StartTimeUtc,
-			EndTimeUtc:   entry.EndTimeUtc,
-			Note:         entry.Note,
-			Type: typeModel{
-				Id:   entry.TimeOffType.Id,
-				Name: entry.TimeOffType.Name,
-			},
-			Status: entry.TimeOffStatusTypeId,
-		})
+		res = append(res, mapTimeOffEntry(&entry))
 	}
 
 	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
@@ -104,17 +84,7 @@ func entryHTTP(c echo.Context) error {
 	//TODO validate if user has access..
 
 	res := timeOffDetailsModel{
-		timeOffModel: timeOffModel{
-			Id:           entry.Id,
-			StartTimeUtc: entry.StartTimeUtc,
-			EndTimeUtc:   entry.EndTimeUtc,
-			Note:         entry.Note,
-			Type: typeModel{
-				Id:   entry.TimeOffType.Id,
-				Name: entry.TimeOffType.Name,
-			},
-			Status: entry.TimeOffStatusTypeId,
-		},
+		timeOffModel:  mapTimeOffEntry(entry),
 		IsCancellable: entry.TimeOffStatusTypeId == int64(domain.PendingTimeOffStatus),
 		IsFinished:    entry.TimeOffStatusTypeId != int64(domain.PendingTimeOffStatus),
 	}

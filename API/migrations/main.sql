@@ -30,6 +30,20 @@ INSERT INTO `user` (DisplayName, Email, PasswordHash, DailyWorkHours, IsAdmin, I
 /*password: test123*/
 
 
+INSERT INTO dayoff (Date) VALUES
+('2023-1-2'),
+('2023-2-8'),
+('2023-4-10'),
+('2023-4-27'),
+('2023-5-1'),
+('2023-5-2'),
+('2023-6-26'),
+('2023-8-15'),
+('2023-10-31'),
+('2023-11-1'),
+('2023-12-25'),
+('2023-12-26');
+
 CREATE TABLE `logtype` (
   `Id` bigint NOT NULL,
   `Name` varchar(256) NOT NULL,
