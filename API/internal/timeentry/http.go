@@ -225,5 +225,25 @@ func daysCompletedHTTP(c echo.Context) error {
 		return internal.NewHTTPError(c, err)
 	}
 
-	return c.JSON(http.StatusOK, internal.NewResponse(true, entries))
+	groupedEntries := lo.GroupBy(entries, func(entry domain.TimeEntryModel) int {
+		return entry.StartTimeUtc.Day()
+	})
+
+	var res []dailyHoursModel
+	for _, dailyEntries := range groupedEntries {
+		var dailyHours float64 = 0
+		firstEntry := dailyEntries[0]
+
+		for _, entry := range dailyEntries {
+			dailyHours += entry.EndTimeUtc.Sub(entry.StartTimeUtc).Hours()
+			dailyHours -= float64(entry.PauseSeconds / 60)
+		}
+
+		res = append(res, dailyHoursModel{
+			Day:       firstEntry.StartTimeUtc.Day(),
+			Completed: dailyHours >= firstEntry.DailyWorkHours,
+		})
+	}
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
 }

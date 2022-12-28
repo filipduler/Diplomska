@@ -7,7 +7,7 @@ type UserModel struct {
 	DisplayName        string  `gorm:"column:DisplayName"`
 	Email              string  `gorm:"column:Email"`
 	PasswordHash       string  `gorm:"column:PasswordHash"`
-	DailyWorkHours     float32 `gorm:"column:DailyWorkHours"`
+	DailyWorkHours     float64 `gorm:"column:DailyWorkHours"`
 	ImpersonatedUserId *int64  `gorm:"column:ImpersonatedUserId"`
 	IsAdmin            bool    `gorm:"column:IsAdmin"`
 }

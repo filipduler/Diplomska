@@ -91,7 +91,7 @@ func (s *TimeEntryService) GetTimeEntryLogs(userId int64, from *time.Time, to *t
 	return logs, tx.Error
 }
 
-func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int, note string, dailyWorkHours float32, userId int64) (int64, error) {
+func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int, note string, dailyWorkHours float64, userId int64) (int64, error) {
 	db := utils.GetConnection()
 
 	//update time entry
