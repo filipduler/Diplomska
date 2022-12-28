@@ -4,8 +4,8 @@ import "time"
 
 type TimeOffModel struct {
 	BaseModel
-	StartTimeUtc        time.Time `gorm:"column:StartTimeUtc"`
-	EndTimeUtc          time.Time `gorm:"column:EndTimeUtc"`
+	StartDate           time.Time `gorm:"column:StartDate"`
+	EndDate             time.Time `gorm:"column:EndDate"`
 	Note                string    `gorm:"column:Note"`
 	TimeOffTypeId       int64     `gorm:"column:TimeOffTypeId"`
 	TimeOffStatusTypeId int64     `gorm:"column:TimeOffStatusTypeId"`

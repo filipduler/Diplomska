@@ -22,6 +22,7 @@ func NewHTTP(r *echo.Group) {
 	group.GET("/:id", entryHTTP)
 	group.GET("/:id/history", entryHistoryHTTP)
 	group.GET("/changes", entryChangesHTTP)
+	group.GET("/days-off/:year/:month", daysOffHTTP)
 }
 
 func entriesHTTP(c echo.Context) error {
@@ -185,12 +186,55 @@ func entryChangesHTTP(c echo.Context) error {
 	for _, log := range timeEntryLogs {
 		res = append(res, internal.ChangeModel{
 			Id:              log.TimeOffId,
-			StartTimeUtc:    log.StartTimeUtc,
-			EndTimeUtc:      log.EndTimeUtc,
+			StartTimeUtc:    log.StartDate,
+			EndTimeUtc:      log.EndDate,
 			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		})
 	}
 
+	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
+}
+
+func daysOffHTTP(c echo.Context) error {
+	/*month, err := strconv.Atoi(c.Param("month"))
+	if err != nil {
+		return err
+	}
+
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil {
+		return err
+	}
+
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeoff.TimeOffService{}
+
+	date := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	startOfMonth := utils.BeginningOfMonth(date)
+	endOfMonth := utils.EndOfMonth(date)
+
+	timeOffEntries, err := timeEntryService.GetTimeOffEntriesBetween(startOfMonth, endOfMonth, user.EffectiveUserId(), domain.AcceptedTimeOffStatus)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	var days []int
+	for _, entry := range timeOffEntries {
+		for day := entry.Day(); day <= entry.Day(); day++ {
+			days = append(days, day)
+		}
+	}
+
+	lo.UniqBy(timeOffEntries, func(entry domain.TimeOffModel) int {
+		return entry.start
+	})
+
+	var res []int
+
+	for day := startOfMonth.Day(); day <= endOfMonth.Day(); day++ {
+
+	}*/
+	var res []int
 	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
 }
