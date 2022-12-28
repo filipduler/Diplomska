@@ -50,6 +50,16 @@ func (*TimeEntryService) GetEntriesFrom(from time.Time, userId int64) ([]domain.
 	return timeEntries, tx.Error
 }
 
+func (*TimeEntryService) GetEntriesBetween(from time.Time, to time.Time, userId int64) ([]domain.TimeEntryModel, error) {
+	db := utils.GetConnection()
+
+	var entries []domain.TimeEntryModel
+	tx := db.Where(`UserId = ? AND StartTimeUtc BETWEEN ? AND ?`, userId, from, to).
+		Find(&entries)
+
+	return entries, tx.Error
+}
+
 func (s *TimeEntryService) GetTimeEntryLogs(userId int64, from *time.Time, to *time.Time) ([]domain.TimeEntryLogModel, error) {
 	db := utils.GetConnection()
 

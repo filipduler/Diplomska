@@ -53,8 +53,8 @@ func (*TimeOffService) GetTimeOffEntriesBetween(from time.Time, to time.Time, us
 
 	var entries []domain.TimeOffModel
 	tx := db.Where(`UserId = ? AND TimeOffStatusTypeId = ? AND 
-		((StartTimeUtc BETWEEN ? AND ?) OR
-		(EndTimeUtc BETWEEN ? AND ?))`, userId, int64(status), from, to, from, to).
+		((StartDate BETWEEN ? AND ?) OR
+		(EndDate BETWEEN ? AND ?))`, userId, int64(status), from, to, from, to).
 		Preload("TimeOffType").
 		Find(&entries)
 

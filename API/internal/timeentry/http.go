@@ -23,6 +23,7 @@ func NewHTTP(r *echo.Group) {
 	group.DELETE("/:id", deleteEntryHTTP)
 	group.GET("/:id/history", entryHistoryHTTP)
 	group.GET("/changes", entryChangesHTTP)
+	group.GET("/days-completed/:year/:month", daysCompletedHTTP)
 }
 
 func statsHTTP(c echo.Context) error {
@@ -199,4 +200,30 @@ func entryChangesHTTP(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
+}
+
+func daysCompletedHTTP(c echo.Context) error {
+	month, err := strconv.Atoi(c.Param("month"))
+	if err != nil {
+		return err
+	}
+
+	year, err := strconv.Atoi(c.Param("year"))
+	if err != nil {
+		return err
+	}
+
+	user, _ := internal.GetUser(c)
+	timeEntryService := timeentry.TimeEntryService{}
+
+	date := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	startOfMonth := utils.BeginningOfMonth(date)
+	endOfMonth := utils.EndOfMonth(date)
+
+	entries, err := timeEntryService.GetEntriesBetween(startOfMonth, endOfMonth, user.EffectiveUserId())
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, entries))
 }

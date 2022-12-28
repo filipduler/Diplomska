@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"math"
 	"time"
 )
 
@@ -43,6 +44,19 @@ func DateEqual(date1, date2 time.Time) bool {
 	y1, m1, d1 := date1.Date()
 	y2, m2, d2 := date2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
+func DaysBetweenRange(from time.Time, to time.Time) []time.Time {
+	var dayArr []time.Time
+	diff := from.Sub(to)
+	days := int(math.Abs(diff.Hours() / 24))
+
+	for i := 0; i <= days; i++ {
+		day := from.Add(time.Hour * 24 * time.Duration(i))
+		dayArr = append(dayArr, day)
+	}
+
+	return dayArr
 }
 
 func FormatHistoryDate(time time.Time) string {

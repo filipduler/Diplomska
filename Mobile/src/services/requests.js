@@ -41,6 +41,7 @@ const Requests =
     },
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
     getTimeOffChanges: async (from, to) => await _innerFetch('GET', `/time-off/changes`, null, { from, to }),
+    getDaysOff: async (month, year) => await _innerFetch('GET', `/time-off/days-off/${year}/${month}`),
 
     /*********HISTORY********/
     getHistory: async (from, to) => await _innerFetch('GET', `/history`, null, { from, to }),

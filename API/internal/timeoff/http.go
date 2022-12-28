@@ -3,9 +3,12 @@ package timeoff
 import (
 	"api/domain"
 	"api/internal"
+	"api/service/daysoff"
 	"api/service/timeoff"
 	"api/utils"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/samber/lo"
@@ -197,7 +200,7 @@ func entryChangesHTTP(c echo.Context) error {
 }
 
 func daysOffHTTP(c echo.Context) error {
-	/*month, err := strconv.Atoi(c.Param("month"))
+	month, err := strconv.Atoi(c.Param("month"))
 	if err != nil {
 		return err
 	}
@@ -214,6 +217,7 @@ func daysOffHTTP(c echo.Context) error {
 	startOfMonth := utils.BeginningOfMonth(date)
 	endOfMonth := utils.EndOfMonth(date)
 
+	//get days off from the time requests
 	timeOffEntries, err := timeEntryService.GetTimeOffEntriesBetween(startOfMonth, endOfMonth, user.EffectiveUserId(), domain.AcceptedTimeOffStatus)
 	if err != nil {
 		return internal.NewHTTPError(c, err)
@@ -221,20 +225,26 @@ func daysOffHTTP(c echo.Context) error {
 
 	var days []int
 	for _, entry := range timeOffEntries {
-		for day := entry.Day(); day <= entry.Day(); day++ {
-			days = append(days, day)
+		dayArray := utils.DaysBetweenRange(entry.StartDate, entry.EndDate)
+		for _, day := range dayArray {
+			weekDay := day.Weekday()
+			if day.After(startOfMonth) && day.Before(endOfMonth) && weekDay != time.Saturday && weekDay != time.Sunday {
+				days = append(days, day.Day())
+			}
 		}
 	}
 
-	lo.UniqBy(timeOffEntries, func(entry domain.TimeOffModel) int {
-		return entry.start
-	})
+	daysOffService := daysoff.DaysOffService{}
+	daysOff, err := daysOffService.GetDaysOff(startOfMonth, endOfMonth)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
 
-	var res []int
+	for _, dayOff := range daysOff {
+		if dayOff.Date.After(startOfMonth) && dayOff.Date.Before(endOfMonth) {
+			days = append(days, dayOff.Date.Day())
+		}
+	}
 
-	for day := startOfMonth.Day(); day <= endOfMonth.Day(); day++ {
-
-	}*/
-	var res []int
-	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
+	return c.JSON(http.StatusOK, internal.NewResponse(true, lo.Uniq(days)))
 }

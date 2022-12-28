@@ -1,0 +1,608 @@
+{
+	"info": {
+		"_postman_id": "46fe1b06-86be-4377-a2d9-df981d8826c6",
+		"name": "Diplomska",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9866322"
+	},
+	"item": [
+		{
+			"name": "Time Entry",
+			"item": [
+				{
+					"name": "Get days completed by month",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/days-completed/2022/12",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"days-completed",
+								"2022",
+								"12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get time entry by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/20",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"20"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get time entry stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/stats",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get changes between ranges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/changes?from&to",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"changes"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": null
+								},
+								{
+									"key": "to",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get time entry history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/20/history",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"20",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get monthly time entries",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "token",
+								"value": "asd",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/2022/12",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"2022",
+								"12"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New time entry",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"startTimeUtc\": \"2012-04-23T18:25:45.512Z\",\r\n    \"endTimeUtc\": \"2012-04-23T18:30:45.512Z\",\r\n    \"pauseSeconds\": 60,\r\n    \"note\": \"test\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/save",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update time entry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "token",
+								"value": "asd",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 20,\r\n    \"startTimeUtc\": \"2012-04-23T18:25:45.512Z\",\r\n    \"endTimeUtc\": \"2012-05-23T18:30:45.512Z\",\r\n    \"pauseSeconds\": 61,\r\n    \"note\": \"test\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/save",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete time entry",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "token",
+								"value": "asd",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseURL}}/api/time-entry/9",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-entry",
+								"9"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"test@test.si\",\r\n    \"password\": \"test123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:1323/api/auth/login",
+							"host": [
+								"localhost"
+							],
+							"port": "1323",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time Off",
+			"item": [
+				{
+					"name": "Get all time off entries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all status types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/status-types",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"status-types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get time off entry by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/1",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get time off history",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/9/history",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"9",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close pending request",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/6/close-request",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"6",
+								"close-request"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New time off entry",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"startTimeUtc\": \"2012-04-23T18:25:45.512Z\",\r\n    \"endTimeUtc\": \"2012-05-23T18:30:45.512Z\",\r\n    \"note\": \"test\",\r\n    \"typeId\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/save",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update time off entry",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 9,\r\n    \"startTimeUtc\": \"2012-04-23T18:25:45.512Z\",\r\n    \"endTimeUtc\": \"2012-05-23T18:30:45.512Z\",\r\n    \"note\": \"test45\",\r\n    \"typeId\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/save",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get changes between ranges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/changes?from&to",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"changes"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": null
+								},
+								{
+									"key": "to",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get days off",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/time-off/days-off/2012/4",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"time-off",
+								"days-off",
+								"2012",
+								"4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get user info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/user/info",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"info"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get normal users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/user/users",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Impersonate user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/user/impersonate/2",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"impersonate",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear impersonation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/user/clear-impersonation",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"clear-impersonation"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoidGVzdEB0ZXN0LnNpIiwiZXhwIjoxOTg3MzQ3MTMyfQ._MflUGB2jUCklqA6ijT5_gdqy-WW7F8WdFowy9rucBw",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "localhost:1323",
+			"type": "string"
+		}
+	]
+}
