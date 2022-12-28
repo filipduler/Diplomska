@@ -5,7 +5,7 @@ import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
 import StyleService from 'mobile/src/services/styles';
-import BaseDateTime from '../components/BaseDateTime'
+import BaseDate from '../components/BaseDate'
 import OpenConfirm from 'mobile/src/helpers/confirm'
 import MiscServices from 'mobile/src/services/misc';
 
@@ -15,8 +15,8 @@ const DetailsView = ({ route, navigation }) => {
     const [ readonlyMode, setReadonlyMode ] = useState(false)
 
     const [typeList, setTypeList] = useState([])
-    const [startTime, setStartTime] = useState(new Date());
-    const [endTime, setEndTime] = useState(new Date());
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
     const [type, setType] = useState({id: 1});
     const [note, setNote] = useState('');
     const [status, setStatus] = useState(null);
@@ -45,12 +45,12 @@ const DetailsView = ({ route, navigation }) => {
         if (response && response.ok) {
             const item = response.payload;
 
-            const startTime = DateHelper.convertUTCToLocal(item.startTimeUtc);
-            setStartTime(startTime);
+            const startDate = DateHelper.convertUTCToLocal(item.startDate);
+            setStartDate(startDate);
 
-            const endTime = DateHelper.convertUTCToLocal(item.endTimeUtc);
-            setEndTime(endTime);
-console.log('wtf',item.type);
+            const endDate = DateHelper.convertUTCToLocal(item.endDate);
+            setEndDate(endDate);
+
             setType(item.type);
             setNote(item.note);
             setStatus({
@@ -86,7 +86,7 @@ console.log('wtf',item.type);
     }
 
     const save = async () => {
-        const response = await Requests.postTimeOffSave(id, startTime, endTime, note, type);
+        const response = await Requests.postTimeOffSave(id, startDate, endDate, note, type);
         console.log(response);
         if (response && response.ok) {
             navigation.goBack();
@@ -101,16 +101,16 @@ console.log('wtf',item.type);
                 keyboardShouldPersistTaps='handled'>
                 <View style={styles.row}>
                     <Text style={styles.label}>Start</Text>
-                    <BaseDateTime style={styles.date}
-                        value={startTime.raw}
-                        onChange={x => setStartTime(x)}
+                    <BaseDate style={styles.date}
+                        value={startDate.raw}
+                        onChange={x => setStartDate(x)}
                         disabled={readonlyMode} />
                 </View>
                 <View style={styles.row}>
                     <Text style={styles.label}>End</Text>
-                    <BaseDateTime style={styles.date}
-                        value={endTime.raw}
-                        onChange={x => setEndTime(x)}
+                    <BaseDate style={styles.date}
+                        value={endDate.raw}
+                        onChange={x => setEndDate(x)}
                         disabled={readonlyMode} />
                 </View>
 
