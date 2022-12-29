@@ -35,7 +35,7 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
                 : Requests.getTimeOffEntriesByStatus(TimeOffStatus.Pending));
                 
             if (response && response.ok && response.payload) {
-                for (const entry of _.orderBy(response.payload, [ 'startDate' ], [ 'desc' ])) {
+                for (const entry of _.orderBy(response.payload, [ 'lastChange' ], [ 'desc' ])) {
                     arr.push({
                         id: entry.id,
                         startDate: DateHelper.convertUTCToLocal(entry.startDate),

@@ -19,12 +19,13 @@ type saveRequest struct {
 }
 
 type timeOffModel struct {
-	Id        int64     `json:"id"`
-	StartDate time.Time `json:"startDate"`
-	EndDate   time.Time `json:"endDate"`
-	Note      string    `json:"note"`
-	Type      typeModel `json:"type"`
-	Status    int64     `json:"status"`
+	Id         int64     `json:"id"`
+	StartDate  time.Time `json:"startDate"`
+	EndDate    time.Time `json:"endDate"`
+	Note       string    `json:"note"`
+	Type       typeModel `json:"type"`
+	Status     int64     `json:"status"`
+	LastChange time.Time `json:"lastChange"`
 }
 
 func mapTimeOffEntry(entry *domain.TimeOffModel) timeOffModel {
@@ -37,7 +38,8 @@ func mapTimeOffEntry(entry *domain.TimeOffModel) timeOffModel {
 			Id:   entry.TimeOffType.Id,
 			Name: entry.TimeOffType.Name,
 		},
-		Status: entry.TimeOffStatusTypeId,
+		Status:     entry.TimeOffStatusTypeId,
+		LastChange: entry.UpdatedOnUtc,
 	}
 }
 
