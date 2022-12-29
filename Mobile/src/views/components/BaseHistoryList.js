@@ -15,8 +15,8 @@ const prepareTimeOffHistory = (log) => {
                 <View>
                     <BaseBold style={styles.headerRow}>New request opened</BaseBold>
                     <Text style={styles.bodyRow}>
-                        <BaseBold>from</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
-                        <BaseBold>to</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}{'\n'}
+                        <BaseBold>from</BaseBold> {DateHelper.formatDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to</BaseBold> {DateHelper.formatDate(log.endTimeUtc)}{'\n'}
                         <BaseBold>type</BaseBold> {log.type}
                     </Text>
                 </View>
@@ -37,8 +37,8 @@ const prepareTimeOffHistory = (log) => {
                 <View>
                     <BaseBold style={styles.headerRow}>{who} changed the time</BaseBold>
                     <Text style={styles.bodyRow}>
-                        <BaseBold>from</BaseBold> {DateHelper.formatFullDate(log.startTimeUtc)}{'\n'}
-                        <BaseBold>to</BaseBold> {DateHelper.formatFullDate(log.endTimeUtc)}
+                        <BaseBold>from</BaseBold> {DateHelper.formatDate(log.startTimeUtc)}{'\n'}
+                        <BaseBold>to</BaseBold> {DateHelper.formatDate(log.endTimeUtc)}
                     </Text>
                 </View>
             )

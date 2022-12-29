@@ -9,6 +9,11 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 
 const DateHelper =
 {
+	getDateWithOffset: (minutes) => {
+		const date = new Date();
+		date.setMinutes(date.getMinutes() + minutes);
+		return date;
+	},
 	getDaysInMonth: (month, year) => {
 		return new Array(31)
 			.fill('')
@@ -123,6 +128,18 @@ const DateHelper =
 	},
 	hmsObjectToSeconds: (hmsObject) => {
 		return hmsObject.h * 3600 + hmsObject.m * 60 + hmsObject.s;
+	},
+	calculateWorkingDays: (start, workingDays) => {
+		const startClone = new Date(start);
+		let endDate;  
+		let count = 0;
+		while (count < workingDays) {
+			endDate = new Date(startClone.setDate(startClone.getDate() + 1));
+			if (endDate.getDay() != 0 && endDate.getDay() != 6) {
+				count++;
+			}
+		}
+		return endDate;
 	}
 }
 

@@ -21,7 +21,7 @@ func (*UserService) GetUserById(id int64) (*domain.UserModel, error) {
 	db := utils.GetConnection()
 
 	var user domain.UserModel
-	tx := db.Find(&user, id)
+	tx := db.Preload("ImpersonatedUser").Find(&user, id)
 	return &user, tx.Error
 }
 

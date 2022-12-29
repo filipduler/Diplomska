@@ -5,6 +5,7 @@ import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthContext } from 'mobile/App.js';
 import { useFocusEffect } from '@react-navigation/native';
+import LoadingView from '../components/LoadingView';
 
 const AuthLoadingView = () => {
     const { onLogIn } = React.useContext(AuthContext);
@@ -22,10 +23,7 @@ const AuthLoadingView = () => {
         }, [])
     )
     return (
-        <SafeAreaView style={styles.container}>
-            <ActivityIndicator />
-            <StatusBar barStyle='default' />
-        </SafeAreaView>
+        <LoadingView loading={true}/>
     );
 };
 

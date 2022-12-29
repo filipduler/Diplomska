@@ -8,12 +8,14 @@ import {
     View,
     StyleSheet,
     FlatList,
-    Button
+    Button,
+    Text
 } from 'react-native';
 import TimeOffList from './components/TimeOffList';
 
 const ListView = ({ navigation }) => {
 
+    const [daysOffLeft, setDaysOffLeft] = useState(0);
     const [entries, setEntries] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -21,7 +23,7 @@ const ListView = ({ navigation }) => {
         React.useCallback(() => {
             //on focus
             console.log('focus ListView');
-            getEntries()
+            getDaysOff();
 
             return () => {
                 //on unfocus
@@ -30,26 +32,11 @@ const ListView = ({ navigation }) => {
         }, [])
     )
 
-    const getEntries = async () => {
-        let arr = [];
-        try {
-            const response = await Requests.getTimeOffEntries();
-            if (response && response.ok && response.payload) {
-                for (const entry of response.payload) {
-                    arr.push({
-                        id: entry.id,
-                        startTime: DateHelper.convertUTCToLocal(entry.startTimeUtc),
-                        endTime: DateHelper.convertUTCToLocal(entry.endTimeUtc),
-                        type: entry.type,
-                        status: entry.status
-                    });
-                }
-            }
-        } finally {
-            setEntries(arr);
-            setRefreshing(false);
+    const getDaysOff = async () => {
+        const response = await Requests.getDaysOffLeft();
+        if(response && response.ok) {
+            setDaysOffLeft(response.payload);
         }
-
     }
 
     const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
@@ -57,7 +44,8 @@ const ListView = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.innerContainer}>
-                <TimeOffList onItemPress={navigateToDetails}/>
+                <Text>Days left {daysOffLeft}</Text>
+                <TimeOffList onItemPress={navigateToDetails} pendingOnly={false}/>
                 <Button title='New Request' onPress={() => navigateToDetails(0)} />
             </View>
         </SafeAreaView>

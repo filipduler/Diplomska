@@ -28,7 +28,7 @@ func infoHTTP(c echo.Context) error {
 		DisplayName:     user.DisplayName,
 		Email:           user.Email,
 		IsAdmin:         user.IsAdmin,
-		IsImpersonating: user.ImpersonatedUserId != nil,
+		IsImpersonating: user.IsImpersonating(),
 	}))
 }
 

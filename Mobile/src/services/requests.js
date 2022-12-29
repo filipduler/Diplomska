@@ -27,7 +27,7 @@ const Requests =
     getTimeOffEntries: async () => await _innerFetch('GET', '/time-off'),
     getTimeOffEntriesByStatus: async (status) => await _innerFetch('GET', `/time-off/status/${status}`),
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
-    getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/types'),
+    getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/status-types'),
     putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
     postTimeOffSave: async (id, startDate, endDate, note, typeId) => {
         const request = {
@@ -43,6 +43,7 @@ const Requests =
     getTimeOffHistory: async (id) => await _innerFetch('GET', `/time-off/${id}/history`),
     getTimeOffChanges: async (from, to) => await _innerFetch('GET', `/time-off/changes`, null, { from, to }),
     getDaysOff: async (month, year) => await _innerFetch('GET', `/time-off/days-off/${year}/${month}`),
+    getDaysOffLeft: async () => await _innerFetch('GET', '/time-off/days-off-left'),
 
     /*********HISTORY********/
     getHistory: async (from, to) => await _innerFetch('GET', `/history`, null, { from, to }),

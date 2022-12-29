@@ -26,6 +26,7 @@ func NewHTTP(r *echo.Group) {
 	group.GET("/:id/history", entryHistoryHTTP)
 	group.GET("/changes", entryChangesHTTP)
 	group.GET("/days-off/:year/:month", daysOffHTTP)
+	group.GET("/days-off-left", daysOffLeftHTTP)
 }
 
 func entriesHTTP(c echo.Context) error {
@@ -141,8 +142,8 @@ func saveHTTP(c echo.Context) error {
 
 	timeOffId, err := timeOffService.SaveTimeOffEntry(
 		request.Id,
-		request.StartTimeUtc,
-		request.EndTimeUtc,
+		request.StartDate,
+		request.EndDate,
 		request.Note,
 		request.TypeId,
 		user.Id)
@@ -211,27 +212,15 @@ func daysOffHTTP(c echo.Context) error {
 	}
 
 	user, _ := internal.GetUser(c)
-	timeEntryService := timeoff.TimeOffService{}
 
 	date := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	startOfMonth := utils.BeginningOfMonth(date)
 	endOfMonth := utils.EndOfMonth(date)
 
 	//get days off from the time requests
-	timeOffEntries, err := timeEntryService.GetTimeOffEntriesBetween(startOfMonth, endOfMonth, user.EffectiveUserId(), domain.AcceptedTimeOffStatus)
+	days, err := getTimeOffDaysBetween(startOfMonth, endOfMonth, user.EffectiveUserId())
 	if err != nil {
 		return internal.NewHTTPError(c, err)
-	}
-
-	var days []int
-	for _, entry := range timeOffEntries {
-		dayArray := utils.DaysBetweenRange(entry.StartDate, entry.EndDate)
-		for _, day := range dayArray {
-			weekDay := day.Weekday()
-			if day.After(startOfMonth) && day.Before(endOfMonth) && weekDay != time.Saturday && weekDay != time.Sunday {
-				days = append(days, day.Day())
-			}
-		}
 	}
 
 	daysOffService := daysoff.DaysOffService{}
@@ -247,4 +236,22 @@ func daysOffHTTP(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, internal.NewResponse(true, lo.Uniq(days)))
+}
+
+func daysOffLeftHTTP(c echo.Context) error {
+	user, _ := internal.GetUser(c)
+
+	date := time.Now()
+	startOfYear := utils.BeginningOfYear(date)
+	endOfYear := utils.EndOfYear(date)
+
+	//get days off from the time requests
+	days, err := getTimeOffDaysBetween(startOfYear, endOfYear, user.EffectiveUserId())
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	daysLeft := user.EffectiveVacationHours() - len(lo.Uniq(days))
+
+	return c.JSON(http.StatusOK, internal.NewResponse(true, daysLeft))
 }

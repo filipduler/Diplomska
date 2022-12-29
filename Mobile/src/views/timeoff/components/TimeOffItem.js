@@ -11,8 +11,8 @@ import Icon from 'react-native-vector-icons/AntDesign';
 
 const TimeOffItem = (props) => {
     const { data, handleEntryDetails } = props;
-    const start = DateHelper.formatDate(data.startTime) + '\n' + DateHelper.formatTime(data.startTime);
-    const end = DateHelper.formatDate(data.endTime) + '\n' + DateHelper.formatTime(data.endTime);
+    const start = DateHelper.formatDate(data.startTime);
+    const end = DateHelper.formatDate(data.endTime);
     const color = StyleService.getColorFromStatus(data.status);
 
     return (

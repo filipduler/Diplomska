@@ -29,7 +29,7 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
     const getEntries = async () => {
         let arr = [];
         try {
-            const response = await (pendingOnly
+            const response = await (!pendingOnly
                 ? Requests.getTimeOffEntries()
                 : Requests.getTimeOffEntriesByStatus(TimeOffStatus.Pending));
                 

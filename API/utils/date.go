@@ -31,6 +31,15 @@ func WeekEnd(date time.Time) time.Time {
 	return res
 }
 
+func BeginningOfYear(date time.Time) time.Time {
+	y, _, _ := date.Date()
+	return time.Date(y, 1, 1, 0, 0, 0, 0, date.Location())
+}
+
+func EndOfYear(date time.Time) time.Time {
+	return BeginningOfYear(date).AddDate(1, 0, 0).Add(-time.Nanosecond)
+}
+
 func BeginningOfMonth(date time.Time) time.Time {
 	y, m, _ := date.Date()
 	return time.Date(y, m, 1, 0, 0, 0, 0, date.Location())

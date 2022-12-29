@@ -6,11 +6,11 @@ import (
 )
 
 type saveRequest struct {
-	Id           *int64    `json:"id"`
-	StartTimeUtc time.Time `json:"startTimeUtc"`
-	EndTimeUtc   time.Time `json:"endTimeUtc"`
-	Note         string    `json:"note"`
-	TypeId       int64     `json:"typeId"`
+	Id        *int64    `json:"id"`
+	StartDate time.Time `json:"startDate"`
+	EndDate   time.Time `json:"endDate"`
+	Note      string    `json:"note"`
+	TypeId    int64     `json:"typeId"`
 }
 
 type timeOffModel struct {

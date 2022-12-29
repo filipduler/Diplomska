@@ -14,7 +14,7 @@ const AdminView = ({ navigation }) => {
                 <ImpersonateUser />
 
                 <Text>Time off requests</Text>
-                <TimeOffList onItemPress={navigateToDetails} />
+                <TimeOffList onItemPress={navigateToDetails} pendingOnly={true} />
             </View>
         </SafeAreaView>
     );

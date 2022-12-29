@@ -24,9 +24,9 @@ CREATE TABLE `user` (
   UNIQUE KEY `User_Email_uindex` (`Email`)
 );
 
-INSERT INTO `user` (DisplayName, Email, PasswordHash, DailyWorkHours, IsAdmin, ImpersonatedUserId, InsertedOnUtc, UpdatedOnUtc) VALUES
-('Administrator', 'admin@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 8, 1, NULL, UTC_TIMESTAMP, UTC_TIMESTAMP),
-('John Doe', 'john.doe@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 8, 0, NULL, UTC_TIMESTAMP, UTC_TIMESTAMP);
+INSERT INTO `user` (DisplayName, Email, PasswordHash, VacationDays, DailyWorkHours, IsAdmin, ImpersonatedUserId, InsertedOnUtc, UpdatedOnUtc) VALUES
+('Administrator', 'admin@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 22, 8, 1, NULL, UTC_TIMESTAMP, UTC_TIMESTAMP),
+('John Doe', 'john.doe@test.si', '$2a$12$fmAWtUTPYLjW0h1fEv9mwO7oLJ7eSDehEAiYDiUEGTEGMl/s9Tp.y', 22, 8, 0, NULL, UTC_TIMESTAMP, UTC_TIMESTAMP);
 /*password: test123*/
 
 

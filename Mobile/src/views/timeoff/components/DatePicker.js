@@ -7,71 +7,62 @@ import moment from 'moment';
 const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
-const prepareDate = (date) => {
-    const mDate = moment(date || moment());
-    return {
-        date: DateHelper.formatDate(mDate),
-        raw: mDate
-    };
-}
+const DatePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate }) => {
 
-const BaseDate = ({ style, value, disabled, onChange }) => {
-
-    const [ date, setDate ] = useState(prepareDate(value));
-    const [ pickerType, setPickerType ] = useState(null);
+    const [date, setDate] = useState(value ?? new Date());
+    const [pickerType, setPickerType] = useState(null);
 
     const onDateChange = (event, selectedDate) => {
         let close = false;
-        try{
-            const newDate = prepareDate(selectedDate);
-            setDate(newDate);
-            if(isIOS && pickerType === 'date') {
+        try {
+            setDate(selectedDate);
+            if (isIOS && pickerType === 'date') {
                 close = true;
             }
-            
+
             if (onChange) {
-                onChange(newDate.raw.toDate());
+                onChange(selectedDate);
             }
         }
-        finally{
-            if(isAndroid || close){
+        finally {
+            if (isAndroid || close) {
                 setPickerType(null);
             }
         }
-        
+
     }
 
-    const toggleDateType = async (type) => {
-        if(isAndroid && type) {
+    const openDatePicker = async () => {
+        if (isAndroid) {
             try {
                 DateTimePickerAndroid.open({
-                    value: date.raw.toDate(),
+                    value: date,
                     onChange: onDateChange,
-                    mode: type,
+                    mode: 'date',
                     is24Hour: true,
-                  });
-              } catch ({ code, message }) {
+                    minimumDate: minimumDate,
+                    maximumDate: maximumDate
+                });
+            } catch ({ code, message }) {
                 console.warn('Cannot open date picker', message);
-              }
-        } else if(isIOS) {
-            if(type === pickerType) {
-                setPickerType(null);
-            } else {
-                setPickerType(type);
             }
+        } else if (isIOS) {
+            setPickerType('date');
         }
     }
 
     const prepareDateModal = (type) => {
         let res = null;
-        
-        if (isIOS && type === 'date') {
+
+        if (isIOS) {
             res = (<DateTimePicker
-                value={date.raw.toDate()}
+                value={date}
                 locale={'en_GB'}
                 display="spinner"
                 mode='date'
                 onChange={onDateChange}
+                minimumDate={minimumDate}
+                maximumDate={maximumDate}
             />);
         }
 
@@ -80,7 +71,7 @@ const BaseDate = ({ style, value, disabled, onChange }) => {
 
     return (
         <View style={style}>
-            <Button title={date.date} onPress={() => toggleDateType('date')} disabled={disabled}/>
+            <Button title={DateHelper.formatDate(date)} onPress={() => openDatePicker()} disabled={disabled} />
             {prepareDateModal(pickerType)}
         </View>
 
@@ -88,5 +79,5 @@ const BaseDate = ({ style, value, disabled, onChange }) => {
 };
 
 
-export default BaseDate;
+export default DatePicker;
 
