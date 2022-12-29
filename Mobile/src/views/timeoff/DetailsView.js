@@ -9,6 +9,7 @@ import OpenConfirm from 'mobile/src/helpers/confirm'
 import MiscServices from 'mobile/src/services/misc';
 import DatePicker from './components/DatePicker';
 import LoadingView from '../components/LoadingView';
+import ShowAlert from 'mobile/src/helpers/alert'
 import _ from 'lodash';
 
 
@@ -44,46 +45,56 @@ const DetailsView = ({ route, navigation }) => {
 
 
     const loadState = async () => {
-        //load days off
-        const doResponse = await Requests.getDaysOffLeft();
-        if (!doResponse || !doResponse.ok) {
-            throw 'failed loading days off';
+        try {
+            //load days off
+            const doResponse = await Requests.getDaysOffLeft();
+            if (!doResponse.ok) {
+                throw 'failed loading days off';
+            }
+            const daysOff = doResponse.payload;
+            setState(state => ({
+                ...state,
+                daysOff: daysOff
+            }));
+
+            //load time off types
+            const tResponse = await Requests.getTimeOffTypes();
+            if (!tResponse.ok) {
+                throw 'failed loading time off types';
+            }
+
+            const types = tResponse.payload.map(x => {
+                return { label: x.name, value: x.id }
+            });
+            setTypeList(types);
+
+            if (id > 0) {
+                await loadEntry(id);
+            } else {
+                const { start, end } = prepareDateObjects(DATE_NEXT_DAY, DATE_NEXT_DAY, DATE_NEXT_DAY, daysOff);
+
+                setForm({
+                    type: types.length > 0 ? types[0].value : null,
+                    note: '',
+                    startDate: start,
+                    endDate: end,
+                    status: null
+                })
+            }
         }
-        const daysOff = doResponse.payload;
-
-        //load time off types
-        const tResponse = await Requests.getTimeOffTypes();
-        if (!tResponse || !tResponse.ok) {
-            throw 'failed loading time off types';
-        }
-
-        const types = tResponse.payload.map(x => {
-            return { label: x.name, value: x.id }
-        });
-        setTypeList(types);
-
-        if (id > 0) {
-            await loadEntry(id);
-        } else {
-            const { start, end } = prepareDateObjects(DATE_NEXT_DAY, DATE_NEXT_DAY, DATE_NEXT_DAY, daysOff);
-            console.log(start, end);
-            setForm({
-                type: types.length > 0 ? types[0].value : null,
-                note: '',
-                startDate: start,
-                endDate: end,
-                status: null
-            })
+        catch (err) {
+            console.error(err);
+            ShowAlert("Error loading required data, try again later.");
+            navigation.goBack();
         }
 
         setState(state => ({
             ...state,
-            daysOff: daysOff,
             loading: false
         }));
     }
 
-    
+
 
     const loadEntry = async (entryId, daysOff) => {
         let isReadonly = false;
@@ -127,7 +138,7 @@ const DetailsView = ({ route, navigation }) => {
             min: absoluteMinDate,
             max: null //TODO technically this should be n (available days off) days before the year ends 
         };
-        
+
         const endObj = {
             date: end,
             min: start,
@@ -164,120 +175,132 @@ const DetailsView = ({ route, navigation }) => {
 
     const closeRequest = async () => {
         OpenConfirm('Close time off request', 'Are you sure?', 'Close', async () => {
-            const response = await Requests.putTimeOffCloseRequest(id);
-            if (response && response.ok) {
-                await loadEntry();
+            try {
+                const response = await Requests.putTimeOffCloseRequest(id);
+                if (response.ok) {
+                    await loadEntry();
+                }
+            }
+            catch (err) {
+                console.error(err);
+                ShowAlert("Unknown error occurred while closing the request.");
             }
         })
     }
 
     const save = async () => {
-        const response = await Requests.postTimeOffSave(
-            id, 
-            form.startDate.date, 
-            form.endDate.date, 
-            form.note, 
-            form.type);
-        if (response && response.ok) {
-            navigation.goBack();
+        try {
+            const response = await Requests.postTimeOffSave(
+                id,
+                form.startDate.date,
+                form.endDate.date,
+                form.note,
+                form.type);
+            if (response.ok) {
+                navigation.goBack();
+            }
+        }
+        catch (err) {
+            console.error(err);
+            ShowAlert("Unknown error occurred while saving the request.");
         }
     }
 
     return (
         <LoadingView loading={state.loading}>
             {form && <SafeAreaView style={styles.container}>
-                    <ScrollView
-                        style={{ padding: 20, flex: 1 }}
-                        scrollEnabled={false}
-                        keyboardShouldPersistTaps='handled'>
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Start</Text>
-                            <DatePicker style={styles.date}
-                                value={form.startDate.date}
-                                onChange={onStartDateChange}
-                                disabled={state.readonly}
-                                minimumDate={form.startDate.min}
-                                maximumDate={form.startDate.max} />
-                        </View>
-                        <View style={styles.row}>
-                            <Text style={styles.label}>End</Text>
-                            <DatePicker style={styles.date}
-                                value={form.endDate.date}
-                                onChange={onEndDateChange}
-                                disabled={state.readonly}
-                                minimumDate={form.endDate.min}
-                                maximumDate={form.endDate.max} />
-                        </View>
+                <ScrollView
+                    style={{ padding: 20, flex: 1 }}
+                    scrollEnabled={false}
+                    keyboardShouldPersistTaps='handled'>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Start</Text>
+                        <DatePicker style={styles.date}
+                            value={form.startDate.date}
+                            onChange={onStartDateChange}
+                            disabled={state.readonly}
+                            minimumDate={form.startDate.min}
+                            maximumDate={form.startDate.max} />
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>End</Text>
+                        <DatePicker style={styles.date}
+                            value={form.endDate.date}
+                            onChange={onEndDateChange}
+                            disabled={state.readonly}
+                            minimumDate={form.endDate.min}
+                            maximumDate={form.endDate.max} />
+                    </View>
 
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Type</Text>
-                            <View style={styles.date}>
-                                {!state.readonly ? (
-                                    <RNPickerSelect
-                                        value={form.type}
-                                        onValueChange={(value) => {
-                                            if (value) {
-                                                console.log(value);
-                                                setForm(form => ({
-                                                    ...form,
-                                                    type: value
-                                                }));
-                                            }
-                                        }}
-                                        items={typeList}
-                                    />
-                                ) : (<Text>{form.type.name}</Text>)}
-
-                            </View>
-
-                        </View>
-                        <View style={{ paddingBottom: 10 }}>
-                            <Text style={styles.label}>Note</Text>
-                        </View>
-                        <View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Type</Text>
+                        <View style={styles.date}>
                             {!state.readonly ? (
-                                <TextInput
-                                    multiline={true}
-                                    numberOfLines={6}
-                                    value={form.note}
-                                    onChangeText={text => setForm(form => ({
-                                        ...form,
-                                        note: text
-                                    }))}
-                                    style={styles.textInput}
-                                    maxLength={512}
-                                    textAlignVertical='top'
+                                <RNPickerSelect
+                                    value={form.type}
+                                    onValueChange={(value) => {
+                                        if (value) {
+                                            console.log(value);
+                                            setForm(form => ({
+                                                ...form,
+                                                type: value
+                                            }));
+                                        }
+                                    }}
+                                    items={typeList}
                                 />
-                            ) : (<Text>{form.note}</Text>)}
+                            ) : (<Text>{form.type.name}</Text>)}
 
                         </View>
 
-                        {form.status && (
-                            <View style={[styles.row, { paddingTop: 15 }]}>
-                                <Text style={{ paddingLeft: 10, fontSize: 16, fontWeight: '500' }}>{form.status.label}</Text>
-                                <View style={{ paddingLeft: 10 }}>
-                                    <View style={[StyleService.style.circle, { backgroundColor: form.status.color }]}></View>
-                                </View>
-                                {form.status.isCancellable && (
-                                    <View style={{ paddingLeft: 20 }}>
-                                        <Button title='Close' onPress={closeRequest} />
-                                    </View>
-                                )}
+                    </View>
+                    <View style={{ paddingBottom: 10 }}>
+                        <Text style={styles.label}>Note</Text>
+                    </View>
+                    <View>
+                        {!state.readonly ? (
+                            <TextInput
+                                multiline={true}
+                                numberOfLines={6}
+                                value={form.note}
+                                onChangeText={text => setForm(form => ({
+                                    ...form,
+                                    note: text
+                                }))}
+                                style={styles.textInput}
+                                maxLength={512}
+                                textAlignVertical='top'
+                            />
+                        ) : (<Text>{form.note}</Text>)}
+
+                    </View>
+
+                    {form.status && (
+                        <View style={[styles.row, { paddingTop: 15 }]}>
+                            <Text style={{ paddingLeft: 10, fontSize: 16, fontWeight: '500' }}>{form.status.label}</Text>
+                            <View style={{ paddingLeft: 10 }}>
+                                <View style={[StyleService.style.circle, { backgroundColor: form.status.color }]}></View>
                             </View>
-                        )}
-                    </ScrollView>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
-                        <View>
-                            {id > 0 && (
-                                <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
+                            {form.status.isCancellable && (
+                                <View style={{ paddingLeft: 20 }}>
+                                    <Button title='Close' onPress={closeRequest} />
+                                </View>
                             )}
                         </View>
-
-                        <View>
-                            <Button title='Save' onPress={save} disabled={!(id === 0 || (form.status !== null && !form.status.isFinished))} />
-                        </View>
+                    )}
+                </ScrollView>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
+                    <View>
+                        {id > 0 && (
+                            <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
+                        )}
                     </View>
-                </SafeAreaView>
+
+                    <View>
+                        <Button title='Save' onPress={save} disabled={!(id === 0 || (form.status !== null && !form.status.isFinished))} />
+                    </View>
+                </View>
+            </SafeAreaView>
             }
         </LoadingView>
     );

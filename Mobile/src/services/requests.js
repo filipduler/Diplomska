@@ -71,28 +71,23 @@ export default Requests;
 
 
 async function _innerFetch(method, url, body, params) {
-    let res = null;
-    try {
-        let parameters = '';
-        if(params) {
-            parameters = `?${new URLSearchParams(params)}`;
-        }
-        
-        const response = await fetch(Config.API_HOST + url + parameters, {
-            method: method,
-            body: body,
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${await Store.auth.getJWTAsync()}`
-            }
-        });
-        if (response.ok) {
-            res = await response.json();
-        }
+    let parameters = '';
+    if(params) {
+        parameters = `?${new URLSearchParams(params)}`;
     }
-    catch (err) {
-        console.error(err);
+    
+    const response = await fetch(Config.API_HOST + url + parameters, {
+        method: method,
+        body: body,
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await Store.auth.getJWTAsync()}`
+        }
+    });
+    if (response.ok) {
+        return await response.json();
     }
-    return res;
+  
+    return `request failed with status: ${response.status}`;
 }
