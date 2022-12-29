@@ -20,7 +20,7 @@ func NewHTTP(r *echo.Group) {
 	group.GET("", entriesHTTP)
 	group.GET("/status/:status", entriesByStatusHTTP)
 	group.GET("/status-types", typesHTTP)
-	group.PUT("/:id/close-request", closeRequestHTTP)
+	group.PUT("/update-status", updateStatusHTTP)
 	group.POST("/save", saveHTTP)
 	group.GET("/:id", entryHTTP)
 	group.GET("/:id/history", entryHistoryHTTP)
@@ -88,13 +88,7 @@ func entryHTTP(c echo.Context) error {
 
 	//TODO validate if user has access..
 
-	res := timeOffDetailsModel{
-		timeOffModel:  mapTimeOffEntry(entry),
-		IsCancellable: entry.TimeOffStatusTypeId == int64(domain.PendingTimeOffStatus),
-		IsFinished:    entry.TimeOffStatusTypeId != int64(domain.PendingTimeOffStatus),
-	}
-
-	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
+	return c.JSON(http.StatusOK, internal.NewResponse(true, mapTimeOffEntry(entry)))
 }
 
 func typesHTTP(c echo.Context) error {
@@ -114,16 +108,43 @@ func typesHTTP(c echo.Context) error {
 	return c.JSON(http.StatusOK, internal.NewResponse(true, res))
 }
 
-func closeRequestHTTP(c echo.Context) error {
-	timeOffId, err := utils.ParseStrToInt64(c.Param("id"))
-	if err != nil {
+func updateStatusHTTP(c echo.Context) error {
+	request := updateStatusRequest{}
+	if err := c.Bind(&request); err != nil {
 		return err
+	}
+
+	//validate status value is valid
+	status := domain.TimeOffStatus(request.Status)
+	if !status.IsValid() {
+		return internal.NewHTTPError(c, ErrInvalidTimeOffStatus)
 	}
 
 	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	err = timeOffService.SetTimeOffStatus(timeOffId, user.Id, domain.CanceledTimeOffStatus)
+	timeOffEntry, err := timeOffService.GetTimeOffEntry(request.Id)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+	currentStatus := domain.TimeOffStatus(timeOffEntry.TimeOffStatusTypeId)
+
+	//validate the status is in pending
+	if currentStatus != domain.PendingTimeOffStatus {
+		return internal.NewHTTPError(c, ErrStatusAlreadyCompleted)
+	}
+
+	//admin can only change it to accepted OR rejected
+	if user.IsAdmin && !(status == domain.AcceptedTimeOffStatus || status == domain.RejectedTimeOffStatus) {
+		return internal.NewHTTPError(c, ErrStatusInvalidRequestedStatus)
+	}
+
+	//non admin can only change it to cancelled
+	if !user.IsAdmin && status != domain.CanceledTimeOffStatus {
+		return internal.NewHTTPError(c, ErrStatusInvalidRequestedStatus)
+	}
+
+	err = timeOffService.SetTimeOffStatus(request.Id, user.Id, status)
 	if err != nil {
 		c.Logger().Error(err)
 	}

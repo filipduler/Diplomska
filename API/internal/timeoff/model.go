@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+type updateStatusRequest struct {
+	Id     int64 `json:"id"`
+	Status int64 `json:"status"`
+}
+
 type saveRequest struct {
 	Id        *int64    `json:"id"`
 	StartDate time.Time `json:"startDate"`
@@ -39,10 +44,4 @@ func mapTimeOffEntry(entry *domain.TimeOffModel) timeOffModel {
 type typeModel struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`
-}
-
-type timeOffDetailsModel struct {
-	timeOffModel
-	IsCancellable bool `json:"isCancellable"`
-	IsFinished    bool `json:"isFinished"`
 }

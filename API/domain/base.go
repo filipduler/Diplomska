@@ -45,3 +45,10 @@ const (
 	RejectedTimeOffStatus TimeOffStatus = 3
 	CanceledTimeOffStatus TimeOffStatus = 4
 )
+
+func (value TimeOffStatus) IsValid() bool {
+	return value == PendingTimeOffStatus ||
+		value == AcceptedTimeOffStatus ||
+		value == RejectedTimeOffStatus ||
+		value == CanceledTimeOffStatus
+}

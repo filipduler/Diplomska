@@ -6,12 +6,12 @@ import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
 import StyleService from 'mobile/src/services/styles';
 import OpenConfirm from 'mobile/src/helpers/confirm'
-import MiscServices from 'mobile/src/services/misc';
 import DatePicker from './components/DatePicker';
 import LoadingView from '../components/LoadingView';
 import ShowAlert from 'mobile/src/helpers/alert'
 import _ from 'lodash';
-
+import TimeOffStatusBar from './components/TimeOffStatusBar';
+import { TimeOffStatus } from 'mobile/src/services/constants';
 
 const DATE_NEXT_DAY = DateHelper.getDateWithOffset(60 * 24);
 
@@ -110,17 +110,16 @@ const DetailsView = ({ route, navigation }) => {
                 endDate: end,
                 type: item.type.id,
                 note: item.note,
-                status: {
+                status: item.status
+                /*status: {
                     isFinished: item.isFinished,
                     isCancellable: item.isCancellable,
                     label: MiscServices.getTimeOffStatusName(item.status),
                     color: StyleService.getColorFromStatus(item.status)
-                }
+                }*/
             });
 
-            if (item.isFinished) {
-                isReadonly = true;
-            }
+            isReadonly = item.status !== TimeOffStatus.Pending;
         }
 
         setState(state => ({
@@ -152,7 +151,7 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onStartDateChange = (date) => {
-        console.log('changind start date: ', date);
+        console.log('changing start date: ', date);
 
         //we recalculate end date because it might be incorrect after changing start date
         const { start, end } = prepareDateObjects(date, date, DATE_NEXT_DAY, state.daysOff);
@@ -164,28 +163,13 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onEndDateChange = (date) => {
-        console.log('changind end date: ', date);
+        console.log('changing end date: ', date);
         const end = form.endDate;
         end.date = date;
         setForm(form => ({
             ...form,
             endDate: end,
         }));
-    }
-
-    const closeRequest = async () => {
-        OpenConfirm('Close time off request', 'Are you sure?', 'Close', async () => {
-            try {
-                const response = await Requests.putTimeOffCloseRequest(id);
-                if (response.ok) {
-                    await loadEntry();
-                }
-            }
-            catch (err) {
-                console.error(err);
-                ShowAlert("Unknown error occurred while closing the request.");
-            }
-        })
     }
 
     const save = async () => {
@@ -275,29 +259,18 @@ const DetailsView = ({ route, navigation }) => {
 
                     </View>
 
-                    {form.status && (
-                        <View style={[styles.row, { paddingTop: 15 }]}>
-                            <Text style={{ paddingLeft: 10, fontSize: 16, fontWeight: '500' }}>{form.status.label}</Text>
-                            <View style={{ paddingLeft: 10 }}>
-                                <View style={[StyleService.style.circle, { backgroundColor: form.status.color }]}></View>
-                            </View>
-                            {form.status.isCancellable && (
-                                <View style={{ paddingLeft: 20 }}>
-                                    <Button title='Close' onPress={closeRequest} />
-                                </View>
-                            )}
-                        </View>
-                    )}
+                    <TimeOffStatusBar entryId={id} status={form.status} onChange={() => loadEntry(id, state.daysOff)} />
+
                 </ScrollView>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
                     <View>
                         {id > 0 && (
-                            <Button title='History' onPress={() => navigation.navigate('History', { id: id })} />
+                            <Button title='History' onPress={() => navigation.navigate('History', { id })} />
                         )}
                     </View>
 
                     <View>
-                        <Button title='Save' onPress={save} disabled={!(id === 0 || (form.status !== null && !form.status.isFinished))} />
+                        <Button title='Save' onPress={save} disabled={state.readonly} />
                     </View>
                 </View>
             </SafeAreaView>

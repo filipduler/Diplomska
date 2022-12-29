@@ -9,10 +9,9 @@ import {
 import StyleService from 'mobile/src/services/styles';
 import Icon from 'react-native-vector-icons/AntDesign';
 
-const TimeOffItem = (props) => {
-    const { data, handleEntryDetails } = props;
-    const start = DateHelper.formatDate(data.startTime);
-    const end = DateHelper.formatDate(data.endTime);
+const TimeOffItem = ({ data, handleEntryDetails }) => {
+    const start = DateHelper.formatDate(data.startDate);
+    const end = DateHelper.formatDate(data.endDate);
     const color = StyleService.getColorFromStatus(data.status);
 
     return (

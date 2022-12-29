@@ -28,7 +28,11 @@ const Requests =
     getTimeOffEntriesByStatus: async (status) => await _innerFetch('GET', `/time-off/status/${status}`),
     getTimeOffEntry: async (id) => await _innerFetch('GET', `/time-off/${id}`),
     getTimeOffTypes: async () => await _innerFetch('GET', '/time-off/status-types'),
-    putTimeOffCloseRequest: async (id) => await _innerFetch('PUT', `/time-off/${id}/close-request`),
+    putTimeOffUpdateStatus: async (id, status) =>{
+        const request = { id, status };
+
+        return await _innerFetch('PUT', '/time-off/update-status', JSON.stringify(request));
+    },
     postTimeOffSave: async (id, startDate, endDate, note, typeId) => {
         const request = {
             id: id > 0 ? id : null,

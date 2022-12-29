@@ -1,35 +1,24 @@
-import React, { useState } from 'react';
-import { Button, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Button, View } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import DateHelper from 'mobile/src/helpers/date';
-import moment from 'moment';
 
 const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
 const DatePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate }) => {
+    const dateValue = value ?? new Date();
 
-    const [date, setDate] = useState(value ?? new Date());
-    const [pickerType, setPickerType] = useState(null);
+    const [date, setDate] = useState(dateValue);
+    const [text, setText] = useState(DateHelper.formatDate(dateValue));
+
+    useEffect(() => {
+        setText(DateHelper.formatDate(dateValue));
+    }, [value]);
 
     const onDateChange = (event, selectedDate) => {
-        let close = false;
-        try {
-            setDate(selectedDate);
-            if (isIOS && pickerType === 'date') {
-                close = true;
-            }
-
-            if (onChange) {
-                onChange(selectedDate);
-            }
-        }
-        finally {
-            if (isAndroid || close) {
-                setPickerType(null);
-            }
-        }
-
+        setDate(selectedDate);
+        onChange?.call(this, selectedDate);
     }
 
     const openDatePicker = async () => {
@@ -46,16 +35,14 @@ const DatePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate
             } catch ({ code, message }) {
                 console.warn('Cannot open date picker', message);
             }
-        } else if (isIOS) {
-            setPickerType('date');
         }
     }
 
-    const prepareDateModal = (type) => {
+    const prepareDateModal = () => {
         let res = null;
 
         if (isIOS) {
-            res = (<DateTimePicker
+            res = <DateTimePicker
                 value={date}
                 locale={'en_GB'}
                 display="spinner"
@@ -63,7 +50,7 @@ const DatePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate
                 onChange={onDateChange}
                 minimumDate={minimumDate}
                 maximumDate={maximumDate}
-            />);
+            />;
         }
 
         return res;
@@ -71,8 +58,8 @@ const DatePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate
 
     return (
         <View style={style}>
-            <Button title={DateHelper.formatDate(date)} onPress={() => openDatePicker()} disabled={disabled} />
-            {prepareDateModal(pickerType)}
+            <Button title={text} onPress={() => openDatePicker()} disabled={disabled} />
+            {prepareDateModal()}
         </View>
 
     );

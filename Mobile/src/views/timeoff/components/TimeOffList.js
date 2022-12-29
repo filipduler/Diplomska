@@ -37,8 +37,8 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
                 for (const entry of response.payload) {
                     arr.push({
                         id: entry.id,
-                        startTime: DateHelper.convertUTCToLocal(entry.startTimeUtc),
-                        endTime: DateHelper.convertUTCToLocal(entry.endTimeUtc),
+                        startDate: DateHelper.convertUTCToLocal(entry.startDate),
+                        endDate: DateHelper.convertUTCToLocal(entry.endDate),
                         type: entry.type,
                         status: entry.status
                     });
