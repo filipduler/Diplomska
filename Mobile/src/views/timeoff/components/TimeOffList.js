@@ -7,6 +7,7 @@ import {
     FlatList
 } from 'react-native';
 import TimeOffItem from './TimeOffItem';
+import _ from 'lodash';
 
 const TimeOffList = ({ onItemPress, pendingOnly }) => {
 
@@ -34,7 +35,7 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
                 : Requests.getTimeOffEntriesByStatus(TimeOffStatus.Pending));
                 
             if (response && response.ok && response.payload) {
-                for (const entry of response.payload) {
+                for (const entry of _.orderBy(response.payload, [ 'startDate' ], [ 'desc' ])) {
                     arr.push({
                         id: entry.id,
                         startDate: DateHelper.convertUTCToLocal(entry.startDate),
