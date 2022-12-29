@@ -17,7 +17,7 @@ func NewHTTP(r *echo.Group) {
 	group := r.Group("/time-entry")
 
 	group.GET("/stats", statsHTTP)
-	group.POST("/save", entryHTTP)
+	group.POST("/save", saveEntryHTTP)
 	group.GET("/:year/:month", monthlyEntriesHTTP)
 	group.GET("/:id", entryHTTP)
 	group.DELETE("/:id", deleteEntryHTTP)
