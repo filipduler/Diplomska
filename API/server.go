@@ -5,6 +5,7 @@ import (
 	"api/internal/timeentry"
 	"api/internal/timeoff"
 	"api/internal/user"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -31,5 +32,10 @@ func main() {
 	timeoff.NewHTTP(group)
 	user.NewHTTP(group)
 
-	e.Logger.Fatal(e.Start(":1323"))
+	port := "1323"
+	if os.Getenv("ASPNETCORE_PORT") != "" { // get enviroment variable that set by ACNM
+		port = os.Getenv("ASPNETCORE_PORT")
+	}
+
+	e.Logger.Fatal(e.Start(":" + port))
 }
