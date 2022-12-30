@@ -40,5 +40,5 @@ func NewEmptyResponse(ok bool, errs ...string) BaseResponse[interface{}] {
 
 func NewHTTPError(c echo.Context, err error) error {
 	c.Logger().Error(err)
-	return c.JSON(http.StatusOK, NewEmptyResponse(false))
+	return c.JSON(http.StatusOK, NewEmptyResponse(false, err.Error()))
 }

@@ -8,6 +8,8 @@ import LoadingView from 'mobile/src/views/components/LoadingView';
 import _ from 'lodash';
 import ShowAlert from 'mobile/src/helpers/alert'
 
+const MIN_DATE = DateHelper.getDateWithOffset(-(60 * 24 * 3));
+
 const DetailsView = ({ route, navigation }) => {
     const { id } = route.params;
 
@@ -77,15 +79,26 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const save = async () => {
-        const response = await Requests.postSaveEntry(
-            id,
-            form.startTime,
-            form.endTime,
-            form.pauseSeconds,
-            form.note);
+        try {
+            const response = await Requests.postSaveEntry(
+                id,
+                form.startTime,
+                form.endTime,
+                form.pauseSeconds,
+                form.note);
 
-        if (response.ok) {
-            navigation.goBack();
+            if (response.ok) {
+                navigation.goBack();
+            }
+
+            const errs = response.errors;
+            if(errs && errs.length > 0) {
+                alert(errs[0]);
+            }
+        }
+        catch (err) {
+            console.error(err);
+            alert("Unknown error occurred while saving the request.");
         }
     }
 
@@ -97,18 +110,11 @@ const DetailsView = ({ route, navigation }) => {
 
         setState(state => ({
             ...state,
-            startMinDate: DateHelper.getDateWithOffset(-(60 * 24 * 3)),
+            startMinDate: MIN_DATE,
             startMaxDate: now,
             endMinDate: start,
-            endMaxDate:  endMin
+            endMaxDate: endMin
         }))
-        console.log({
-            ...state,
-            startMinDate: DateHelper.getDateWithOffset(-(60 * 24 * 3)),
-            startMaxDate: now,
-            endMinDate: start,
-            endMaxDate:  endMin
-        });
     }
 
     const onStartDateChange = (date) => {

@@ -47,12 +47,6 @@ const TimeItem = ({ data, handleDetails, handleDelete }) => {
                             <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.endText}</Text>
                             <Text style={[styles.itemColumn, { textAlign: 'right', paddingRight: 10 }]}>{data.timeText}</Text>
                     </View>
-                    {data.notePreview ? (
-                        <View style={styles.itemRow}>
-                            <Text style={[styles.itemColumn, { textAlign: 'center' } ]}>{data.notePreview}</Text>
-                        </View>
-                    ) : null}
-                    
                 </Pressable>
             </Swipeable>
         </GestureHandlerRootView>

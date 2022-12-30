@@ -44,7 +44,7 @@ func (*TimeEntryService) GetEntriesFrom(from time.Time, userId int64) ([]domain.
 
 	var timeEntries []domain.TimeEntryModel
 	tx := db.
-		Where("UserId = ? AND StartTimeUtc > ?", userId, from).
+		Where("IsDeleted = false AND UserId = ? AND StartTimeUtc > ?", userId, from).
 		Find(&timeEntries)
 
 	return timeEntries, tx.Error
@@ -54,7 +54,7 @@ func (*TimeEntryService) GetEntriesBetween(from time.Time, to time.Time, userId 
 	db := utils.GetConnection()
 
 	var entries []domain.TimeEntryModel
-	tx := db.Where(`UserId = ? AND StartTimeUtc BETWEEN ? AND ?`, userId, from, to).
+	tx := db.Where(`IsDeleted = false AND UserId = ? AND StartTimeUtc BETWEEN ? AND ?`, userId, from, to).
 		Find(&entries)
 
 	return entries, tx.Error
@@ -170,7 +170,8 @@ func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64) erro
 		logModel := mapToTimeEntryLog(userId, entry, domain.DeleteLogType)
 
 		//delete time entry
-		if entryTx := tx.Delete(&entry); entryTx.Error != nil {
+		entry.IsDeleted = true
+		if entryTx := tx.Save(&entry); entryTx.Error != nil {
 			return entryTx.Error
 		}
 		//insert log

@@ -46,15 +46,13 @@ const toTimeEntry = (entry, day) => {
         day: day,
         startText: DateHelper.formatTime(start),
         endText: DateHelper.formatTime(end),
-        timeText: DateHelper.secondsToTimeDisplay(entry.timeDiffSeconds),
-        notePreview: entry.note,
+        timeText: DateHelper.secondsToTimeDisplay(entry.timeDiffSeconds)
     };
 }
 
 const MonthListView = ({ navigation }) => {
     let dayClickActionSheet;
 
-    const [isManualEnabled, setIsManualEnabled] = useState(true);
     const [days, setDays] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -74,7 +72,9 @@ const MonthListView = ({ navigation }) => {
 
     const deleteItem = async (timeEntryId) => {
         const response = await Requests.deleteTimeEntry(timeEntryId);
-        if (response && response.ok) {
+
+        console.log(response);
+        if (response.ok) {
             const arr = [...days];
 
             for (const day of arr) {

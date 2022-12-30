@@ -12,6 +12,8 @@ import Requests from 'mobile/src/services/requests';
 import Auth from 'mobile/src/services/auth';
 import AuthLoadingView from './src/views/auth/AuthLoadingView';
 import AdminStack from './src/views/admin/AdminStack';
+import { Button } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 export const AuthContext = React.createContext();
 
@@ -56,7 +58,9 @@ export const App = () => {
 		const Tab = createBottomTabNavigator();
 
 		return <Tab.Navigator initialRouteName='Dashboard'>
-			<Tab.Screen name="Dashboard" component={DashboardView} />
+			<Tab.Screen name="Dashboard" component={DashboardView} options={{ headerRight: () => (
+				<Icon name="sign-out" size={25} onPress={() => authContext.onLogOut()} style={{paddingRight: 20}} />
+			)}}/>
 			<Tab.Screen name="Time Tracker" component={TrackerStack} options={{ headerShown: false }} />
 			<Tab.Screen name="Time Off" component={TimeOffStack} options={{ headerShown: false }} />
 			<Tab.Screen name="History" component={HistoryStack} options={{ headerShown: false }} />

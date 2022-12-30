@@ -46,9 +46,7 @@ func statsHTTP(c echo.Context) error {
 			return entry.StartTimeUtc.After(from) && entry.StartTimeUtc.Before(to)
 		})
 
-		return lo.SumBy(filteredEntries, func(entry domain.TimeEntryModel) int64 {
-			return int64(entry.EndTimeUtc.Sub(entry.StartTimeUtc).Minutes())
-		})
+		return int64(aggregateEffectiveDuration(filteredEntries).Minutes())
 	}
 
 	//this month
@@ -118,10 +116,24 @@ func saveEntryHTTP(c echo.Context) error {
 	if err := c.Bind(&request); err != nil {
 		return err
 	}
-
 	user, _ := internal.GetUser(c)
-
 	timeEntryService := timeentry.TimeEntryService{}
+
+	//get daily hours across all entries
+	nowUtc := time.Now().UTC()
+	dayStart := utils.DayStart(nowUtc)
+	dayEnd := utils.DayEnd(nowUtc)
+	dailyEntries, err := timeEntryService.GetEntriesBetween(dayStart, dayEnd, user.Id)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+	dailyHours := aggregateEffectiveDuration(dailyEntries).Hours()
+
+	//validate model
+	if err := request.validate(dailyHours); err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
 	id, err := timeEntryService.SaveTimeEntry(
 		request.Id,
 		request.StartTimeUtc,
