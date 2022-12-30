@@ -10,18 +10,6 @@ const TrackerView = ({ route, navigation }) => {
    
     const [note, setNote] = useState('');
 
-    useFocusEffect(
-        React.useCallback(() => {
-            //on focus
-            console.log('focus TrackerView');
-          
-            return () => {
-                //on unfocus
-                console.log('unfocus TrackerView');
-            };
-        }, [])
-    )
-
     
     return (
         <SafeAreaView style={styles.container}>

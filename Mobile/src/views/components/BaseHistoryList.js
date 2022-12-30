@@ -100,14 +100,7 @@ const BaseHistoryList = ({ id, type }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus BaseHistoryView');
             loadHistory();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus BaseHistoryView');
-            };
         }, [])
     )
 
@@ -125,7 +118,7 @@ const BaseHistoryList = ({ id, type }) => {
                 response = await Requests.getTimeOffHistory(id);
                 prepDataFunction = prepareTimeOffHistory;
             }
-            console.log(response);
+            
             if (response && response.ok &&  response.payload) {
                 const items = response.payload;
     

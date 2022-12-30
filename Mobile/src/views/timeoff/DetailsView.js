@@ -32,14 +32,7 @@ const DetailsView = ({ route, navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus DetailsView');
             loadState();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus DetailsView');
-            };
         }, [])
     )
 
@@ -151,8 +144,6 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onStartDateChange = (date) => {
-        console.log('changing start date: ', date);
-
         //we recalculate end date because it might be incorrect after changing start date
         const { start, end } = prepareDateObjects(date, date, DATE_NEXT_DAY, state.daysOff);
         setForm(form => ({
@@ -163,7 +154,6 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onEndDateChange = (date) => {
-        console.log('changing end date: ', date);
         const end = form.endDate;
         end.date = date;
         setForm(form => ({
@@ -224,7 +214,6 @@ const DetailsView = ({ route, navigation }) => {
                                     value={form.type}
                                     onValueChange={(value) => {
                                         if (value) {
-                                            console.log(value);
                                             setForm(form => ({
                                                 ...form,
                                                 type: value

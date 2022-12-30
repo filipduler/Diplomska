@@ -112,12 +112,10 @@ const DashboardView = () => {
         parseRange(markedDates, incompletedRanges, 'yellow', year, month);
         parseRange(markedDates, completedRanges, 'green', year, month);
         
-        //console.log(markedDates);
         setMarkedDates(markedDates);
     }
 
     const parseRange = (markedDates, rangeArray, color, year, month) => {
-        console.log(rangeArray);
         for (const range of rangeArray) {
             for (let i = 0; i < range.length; i++) {
                 const day = range[i];
@@ -151,7 +149,7 @@ const DashboardView = () => {
                     disabledDaysIndexes={[0, 1]}
                     // Handler which gets executed on day press. Default = undefined
                     onDayPress={day => {
-                        console.log('selected day', day);
+                        
                     }}
                     // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
                     monthFormat={'yyyy MMMM'}

@@ -21,14 +21,7 @@ const ListView = ({ navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus ListView');
             getDaysOff();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus ListView');
-            };
         }, [])
     )
 

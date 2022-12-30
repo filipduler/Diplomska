@@ -60,20 +60,12 @@ const MonthListView = ({ navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus MonthList');
             refreshMonthlyEntries();
-
-            return () => {
-                //on unfocus
-                console.log('unfocus MonthList');
-            };
         }, [])
     )
 
     const refreshMonthlyEntries = async () => {
         const response = await Requests.getTimeEntries(Store.currentDate.month + 1, Store.currentDate.year);
-        console.log(response)
         if (response && response.ok) {
             setDays(getDaysList(response.payload.entries));
         }
@@ -82,7 +74,6 @@ const MonthListView = ({ navigation }) => {
 
     const deleteItem = async (timeEntryId) => {
         const response = await Requests.deleteTimeEntry(timeEntryId);
-        console.log(response);
         if (response && response.ok) {
             const arr = [...days];
 

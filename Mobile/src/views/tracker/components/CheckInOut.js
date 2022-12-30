@@ -36,7 +36,6 @@ const CheckInOut = () => {
             new Date(Date.now()),
             timer.pauseSecs,
             timer.note);
-console.log(response);
         if (response && response.ok) {
             await onCancel();
         }

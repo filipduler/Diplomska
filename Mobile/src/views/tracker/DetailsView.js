@@ -21,22 +21,14 @@ const DetailsView = ({ route, navigation }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus DetailsView');
             if (id > 0) {
                 loadEntry();
             }
-
-            return () => {
-                //on unfocus
-                console.log('unfocus DetailsView');
-            };
         }, [])
     )
 
     const loadEntry = async () => {
         const response = await Requests.getTimeEntry(id);
-        console.log(response);
         if (response && response.ok) {
             const item = response.payload;
 
@@ -57,7 +49,6 @@ const DetailsView = ({ route, navigation }) => {
             endTime, 
             pauseModal.pauseSeconds, 
             note);
-        console.log(response);
 
         if (response && response.ok) {
             navigation.goBack();

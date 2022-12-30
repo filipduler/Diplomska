@@ -14,20 +14,11 @@ const ImpersonateUser = () => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus AdminView');
             loadState();
-
-
-            return () => {
-                //on unfocus
-                console.log('unfocus AdminView');
-            };
         }, [])
     )
 
     const loadState = async () => {
-        console.log(Auth);
         if (Auth.userInfo.isImpersonating) {
             loadImpersonatedView();
         } else {
@@ -53,14 +44,12 @@ const ImpersonateUser = () => {
     const loadNormalView = async () => {
         const response = await Requests.getUsers();
         if (response && response.ok) {
-            console.log(response);
             const items = response.payload.map(x => {
                 return {
                     id: x.userId,
                     name: `${x.name} (${x.email})`
                 }
             });
-            console.log(items);
             setUserOptions(items);
 
             setState(state => ({

@@ -16,14 +16,7 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
 
     useFocusEffect(
         React.useCallback(() => {
-            //on focus
-            console.log('focus TimeOffList');
             getEntries()
-
-            return () => {
-                //on unfocus
-                console.log('unfocus TimeOffList');
-            };
         }, [])
     )
 

@@ -8,14 +8,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import LoadingView from '../components/LoadingView';
 
 const AuthLoadingView = () => {
-    const { onLogIn } = React.useContext(AuthContext);
+    const { onLogIn, onLogOut } = React.useContext(AuthContext);
 
     useFocusEffect(
         React.useCallback(() => {
+            
             const loadAuthData = async () => {
                 const jwt = await Store.auth.getJWTAsync();
                 if(jwt && jwt.length > 0) {
                     await onLogIn(jwt);
+                } else {
+                    onLogOut();
                 }
             }
 

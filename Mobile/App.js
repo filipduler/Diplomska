@@ -22,9 +22,10 @@ export const App = () => {
 	const authContext = React.useMemo(
 		() => ({
 			onLogIn: async (jwtToken) => {
+				await Store.auth.setJWTAsync(jwtToken);
+
 				const response = await Requests.getUserInfo();
 				if (response && response.ok) {
-					await Store.auth.setJWTAsync(jwtToken);
 					Auth.loggedIn = true;
 					await Auth.refreshUserInfo();
 
@@ -36,7 +37,7 @@ export const App = () => {
 			onLogOut: async () => {
 				Auth.loggedIn = false;
 				Auth.userInfo = null;
-				await Store.auth.removeJWTAsync(jwtToken);
+				await Store.auth.removeJWTAsync();
 				setLoggedIn(false);
 			}
 		}),
