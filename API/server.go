@@ -33,8 +33,11 @@ func main() {
 	user.NewHTTP(group)
 
 	port := "1323"
-	if os.Getenv("ASPNETCORE_PORT") != "" { // get enviroment variable that set by ACNM
-		port = os.Getenv("ASPNETCORE_PORT")
+
+	//for hosting on IIS
+	aspNetCorePort := os.Getenv("ASPNETCORE_PORT")
+	if len(aspNetCorePort) > 0 {
+		port = aspNetCorePort
 	}
 
 	e.Logger.Fatal(e.Start(":" + port))

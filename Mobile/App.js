@@ -25,7 +25,7 @@ export const App = () => {
 				await Store.auth.setJWTAsync(jwtToken);
 
 				const response = await Requests.getUserInfo();
-				if (response && response.ok) {
+				if (response.ok) {
 					Auth.loggedIn = true;
 					await Auth.refreshUserInfo();
 

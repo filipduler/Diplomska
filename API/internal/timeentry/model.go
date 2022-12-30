@@ -33,6 +33,7 @@ type entryModel struct {
 	Id              int64     `json:"id"`
 	StartTimeUtc    time.Time `json:"startTimeUtc"`
 	EndTimeUtc      time.Time `json:"endTimeUtc"`
+	PauseSeconds    int       `json:"pauseSeconds"`
 	TimeDiffSeconds int       `json:"timeDiffSeconds"`
 	Note            string    `json:"note"`
 	Day             int       `json:"day"`
@@ -43,6 +44,7 @@ func mapToEntryModel(model *domain.TimeEntryModel) entryModel {
 		Id:              model.Id,
 		StartTimeUtc:    model.StartTimeUtc,
 		EndTimeUtc:      model.EndTimeUtc,
+		PauseSeconds:    model.PauseSeconds,
 		TimeDiffSeconds: int(model.EndTimeUtc.Sub(model.StartTimeUtc).Seconds()) - model.PauseSeconds,
 		Note:            model.Note,
 		Day:             model.StartTimeUtc.Day(),

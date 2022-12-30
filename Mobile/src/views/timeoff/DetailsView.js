@@ -4,8 +4,6 @@ import { Button, Text, SafeAreaView, StyleSheet, View, TextInput, ScrollView } f
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
-import StyleService from 'mobile/src/services/styles';
-import OpenConfirm from 'mobile/src/helpers/confirm'
 import DatePicker from './components/DatePicker';
 import LoadingView from '../components/LoadingView';
 import ShowAlert from 'mobile/src/helpers/alert'
@@ -93,7 +91,7 @@ const DetailsView = ({ route, navigation }) => {
         let isReadonly = false;
 
         const response = await Requests.getTimeOffEntry(entryId);
-        if (response && response.ok) {
+        if (response.ok) {
             const item = response.payload;
 
             const { start, end } = prepareDateObjects(item.startDate, item.endDate, DATE_NEXT_DAY, daysOff);
@@ -104,15 +102,11 @@ const DetailsView = ({ route, navigation }) => {
                 type: item.type.id,
                 note: item.note,
                 status: item.status
-                /*status: {
-                    isFinished: item.isFinished,
-                    isCancellable: item.isCancellable,
-                    label: MiscServices.getTimeOffStatusName(item.status),
-                    color: StyleService.getColorFromStatus(item.status)
-                }*/
             });
 
             isReadonly = item.status !== TimeOffStatus.Pending;
+        } else {
+            throw `entry with id: ${entryId} not found`;
         }
 
         setState(state => ({
