@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Button, View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import RNDateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import DateHelper from 'mobile/src/helpers/date';
+import { Button } from 'react-native-paper';
 
 const isAndroid = Platform.OS === 'android';
 const isIOS = Platform.OS === 'ios';
 
-const DateTimePicker = ({ style, value, disabled, onChange, minimumDate, maximumDate }) => {
+const DateTimePicker = ({ value, disabled, onChange, minimumDate, maximumDate }) => {
     const dateValue = value ?? new Date();
 
     const [date, setDate] = useState(dateValue);
@@ -43,7 +44,7 @@ const DateTimePicker = ({ style, value, disabled, onChange, minimumDate, maximum
             }
         }
     }
-    
+
     const openTimePicker = async () => {
         if (isAndroid) {
             try {
@@ -80,15 +81,44 @@ const DateTimePicker = ({ style, value, disabled, onChange, minimumDate, maximum
     }
 
     return (
-        <View style={style}>
-            <Button title={text.date} onPress={() => openDatePicker()} disabled={disabled} />
-            <Button title={text.time} onPress={() => openTimePicker()} disabled={disabled} />
+        <View style={styles.row}>
+            <View style={styles.dateCol}>
+                <Button mode='outlined'
+                    onPress={() => openDatePicker()}
+                    disabled={disabled}
+                >
+                    {text.date}
+                </Button>
+            </View>
+
+            <View style={styles.timeCol}>
+                <Button mode='outlined'
+                    onPress={() => openTimePicker()}
+                    disabled={disabled}
+                >
+                    {text.time}
+                </Button>
+            </View>
+
             {prepareDateModal()}
         </View>
 
     );
 };
 
+const styles = StyleSheet.create({
+    row: {
+        flexDirection: 'row',
+    },
+    dateCol: {
+        flex: 2,
+        alignItems: 'center'
+    },
+    timeCol: {
+        flex: 1,
+        alignItems: 'center'
+    },
+});
 
 export default DateTimePicker;
 

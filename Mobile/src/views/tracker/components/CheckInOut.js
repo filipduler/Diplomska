@@ -4,21 +4,26 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
     View,
     StyleSheet,
-    Button,
-    Text,
-    TextInput
+    Text
 } from 'react-native';
 import Requests from 'mobile/src/services/requests';
 import Counter from 'mobile/src/views/tracker/components/Counter.js';
 import Store from '../../../services/store';
+import { Button, TextInput } from 'react-native-paper';
 
 const CheckInOut = () => {
     const [timer, setTimer] = useState(null);
-    
+
     //save the timer
     useEffect(() => {
         Store.timer.setTimerAsync(timer);
     }, [timer]);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            checkActiveTimer();
+        }, [])
+    )
 
     const onCheckIn = async () => {
         setTimer({
@@ -88,12 +93,6 @@ const CheckInOut = () => {
         }));
     }
 
-    useFocusEffect(
-        React.useCallback(() => {
-            checkActiveTimer();
-        }, [])
-    )
-
     const checkActiveTimer = async () => {
         const storedTimer = await Store.timer.getTimerAsync(timer);
         setTimer(storedTimer);
@@ -103,61 +102,113 @@ const CheckInOut = () => {
         let res;
         if (timer) {
             if (timer.pauseStart) {
-                res = <>
-                    <Counter start={timer.pauseStart} onCancel={onCancelPause} />
-                    <Button onPress={onResume} title="Resume" />
-                </>;
+                res = <View style={styles.row}>
+                    <View style={styles.pauseColumn}>
+                        <Button mode='outlined'
+                            uppercase={true}
+                            onPress={onResume}
+                        >
+                            Resume
+                        </Button>
+                    </View>
+                    <View style={styles.pauseColumn}>
+                        <Counter start={timer.pauseStart}
+                            onCancel={onCancelPause}
+                            iconSize={23}
+                            textStyle={styles.pauseCounterText} />
+                    </View>
+                </View>;
             } else {
-                res = <>
-                    {timer.pauseSecs > 0 ? <Text style={{ fontSize: 21, fontWeight: "500" }}>{DateHelper.hmsFormat(timer.pauseSecs)}</Text> : null}
-                    <Button onPress={onPause} title="Pause" />
-                </>;
+                res = <View style={styles.row}>
+                    <View style={styles.pauseColumn}>
+                        <Button mode='outlined'
+                            uppercase={true}
+                            onPress={onPause}
+                        >
+                            Pause
+                        </Button>
+                    </View>
+
+
+                    {timer.pauseSecs > 0 &&
+                        <View style={styles.pauseColumn}>
+                            <Text style={styles.pauseCounterText}>{DateHelper.hmsFormat(timer.pauseSecs)}</Text>
+                        </View>}
+                </View >;
             }
         }
         return res;
     }
 
     return (
-        <View style={styles.row}>
+        <>
             {!timer
-                ? (<Button onPress={onCheckIn} title="Check-in" />)
+                ? (
+                    <Button mode='outlined'
+                        uppercase={true}
+                        onPress={onCheckIn}
+                    >
+                        Check-in
+                    </Button>
+                )
                 : (
                     <>
+                        <View style={styles.row}>
+                            <Counter start={timer.timerStart}
+                                onCancel={onCancel}
+                                iconSize={28}
+                                textStyle={styles.mainCounterText} />
+                        </View>
 
-                        <Counter start={timer.timerStart} onCancel={onCancel} />
                         {pauseComponent()}
 
-                        <TextInput
-                            multiline={true}
-                            numberOfLines={3}
-                            value={timer?.note}
-                            onChangeText={(text) => setTimer(timer => ({
-                                ...timer,
-                                note: text
-                            }))}
-                            style={styles.textInput}
-                            maxLength={512}
-                            textAlignVertical='top'
-                        />
-                        <Button onPress={onCheckOut} title="Check-out" />
+
+                        <View style={[styles.row]}>
+                            <TextInput style={styles.noteTextInput}
+                                label='Note'
+                                mode='outlined'
+                                value={timer?.note}
+                                multiline={true}
+                                numberOfLines={2}
+                                maxLength={512}
+                                onChangeText={(text) => setTimer(timer => ({
+                                    ...timer,
+                                    note: text
+                                }))}
+                            />
+                        </View>
+                        <Button mode='outlined'
+                            uppercase={true}
+                            onPress={onCheckOut}
+                        >
+                            Check-out
+                        </Button>
                     </>
                 )}
-        </View>
+        </>
     )
 };
 
-
-
 const styles = StyleSheet.create({
     row: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: 'space-around',
-        alignItems: 'center'
+        flexDirection: 'row',
+        paddingBottom: 20
     },
-    text: {
-        fontSize: 21,
-        fontWeight: "500"
+    noteTextInput: {
+        width: '80%'
+    },
+    pauseCounterText: {
+        fontSize: 25,
+        fontWeight: 'bold'
+    },
+    mainCounterText: {
+        fontSize: 30,
+        fontWeight: 'bold'
+    },
+    pauseColumn: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 });
 

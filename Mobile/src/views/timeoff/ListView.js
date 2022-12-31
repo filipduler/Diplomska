@@ -12,12 +12,12 @@ import {
     Text
 } from 'react-native';
 import TimeOffList from './components/TimeOffList';
+import LoadingView from 'mobile/src/views/components/LoadingView';
 
 const ListView = ({ navigation }) => {
 
     const [daysOffLeft, setDaysOffLeft] = useState(0);
-    const [entries, setEntries] = useState([]);
-    const [refreshing, setRefreshing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -27,7 +27,7 @@ const ListView = ({ navigation }) => {
 
     const getDaysOff = async () => {
         const response = await Requests.getDaysOffLeft();
-        if(response && response.ok) {
+        if (response && response.ok) {
             setDaysOffLeft(response.payload);
         }
     }
@@ -35,13 +35,15 @@ const ListView = ({ navigation }) => {
     const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.innerContainer}>
-                <Text>Days left {daysOffLeft}</Text>
-                <TimeOffList onItemPress={navigateToDetails} pendingOnly={false}/>
-                <Button title='New Request' onPress={() => navigateToDetails(0)} />
-            </View>
-        </SafeAreaView>
+        <LoadingView loading={isLoading}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.innerContainer}>
+                    <Text>Days left {daysOffLeft}</Text>
+                    <TimeOffList onItemPress={navigateToDetails} pendingOnly={false} onInitialLoad={() => setIsLoading(false)} />
+                    <Button title='New Request' onPress={() => navigateToDetails(0)} />
+                </View>
+            </SafeAreaView>
+        </LoadingView>
     );
 };
 

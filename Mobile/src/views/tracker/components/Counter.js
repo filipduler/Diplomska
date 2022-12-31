@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 
-const Counter = ({ start, onCancel }) => {
+const Counter = ({ start, onCancel, textStyle, iconSize }) => {
     const [counter, setCounter] = useState(null);
 
     React.useEffect(() => {
@@ -47,12 +47,10 @@ const Counter = ({ start, onCancel }) => {
 
     return (
         <View style={styles.row}>
-            {counter?.time
-                ? (<>
-                    <Text style={styles.text}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>
-                    <Icon style={styles.icon} name="close" size={21} onPress={() => onCancel?.call()} />
-                </>)
-                : null}
+            {counter?.time && <>
+                <Text style={textStyle}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>
+                <Icon style={styles.icon} name="close" size={iconSize} onPress={() => onCancel?.call()} />
+            </>}
         </View>
     )
 };
@@ -65,10 +63,6 @@ const styles = StyleSheet.create({
     },
     icon: {
         alignSelf: 'center'
-    },
-    text: {
-        fontSize: 21,
-        fontWeight: "500"
     }
 });
 

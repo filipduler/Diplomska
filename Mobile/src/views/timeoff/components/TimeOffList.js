@@ -9,7 +9,7 @@ import {
 import TimeOffItem from './TimeOffItem';
 import _ from 'lodash';
 
-const TimeOffList = ({ onItemPress, pendingOnly }) => {
+const TimeOffList = ({ onItemPress, pendingOnly, onInitialLoad }) => {
 
     const [entries, setEntries] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
@@ -20,7 +20,7 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
         }, [])
     )
 
-    const getEntries = async () => {
+    const getEntries = async (first) => {
         let arr = [];
         try {
             const response = await (!pendingOnly
@@ -38,6 +38,10 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
                     });
                 }
             }
+
+            if(first) {
+                onInitialLoad?.call(this, true);
+            }
         } finally {
             setEntries(arr);
             setRefreshing(false);
@@ -45,12 +49,10 @@ const TimeOffList = ({ onItemPress, pendingOnly }) => {
 
     }
 
-    const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
-
     return (
         <FlatList
             refreshing={refreshing}
-            onRefresh={getEntries}
+            onRefresh={() => getEntries(false)}
             data={entries}
             renderItem={({ item }) => <TimeOffItem data={item} handleEntryDetails={onItemPress} />}
         />

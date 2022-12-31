@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button, Text, SafeAreaView, View, StyleSheet, TextInput, ScrollView, Modal, Pressable } from 'react-native';
+import { SafeAreaView, View, StyleSheet, ScrollView, Modal } from 'react-native';
 import DateHelper from 'mobile/src/helpers/date';
 import Requests from 'mobile/src/services/requests';
 import DateTimePicker from './components/DateTimePicker';
 import LoadingView from 'mobile/src/views/components/LoadingView';
 import _ from 'lodash';
 import ShowAlert from 'mobile/src/helpers/alert'
+import { Text, Button, TextInput } from 'react-native-paper';
+import PauseModal from './components/PauseModal';
 
 const MIN_DATE = DateHelper.getDateWithOffset(-(60 * 24 * 3));
 
@@ -16,10 +18,7 @@ const DetailsView = ({ route, navigation }) => {
     const [state, setState] = useState({
         loading: true,
         readonly: false,
-        pause: {
-            visible: false,
-            text: '',
-        },
+        pauseModalVisible: false,
         startMinDate: null,
         startMaxDate: null,
         endMinDate: null,
@@ -92,7 +91,7 @@ const DetailsView = ({ route, navigation }) => {
             }
 
             const errs = response.errors;
-            if(errs && errs.length > 0) {
+            if (errs && errs.length > 0) {
                 alert(errs[0]);
             }
         }
@@ -136,110 +135,91 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onOpenBreakModal = () => {
-        const pause = {
-            visible: true,
-            text: DateHelper.hmsFormat(form.pauseSeconds, true, true, false)
-        };
-
-        setState(state => ({ ...state, pause: pause }));
+        setState(state => ({ ...state, pauseModalVisible: true }));
     }
 
     const onPauseModalClose = () => {
-        const pause = {
-            visible: false,
-            text: ''
-        };
-
-        setState(state => ({ ...state, pause: pause }));
+        setState(state => ({ ...state, pauseModalVisible: false }));
     }
 
-    const onPauseModalConfirm = () => {
-        const hmsObject = DateHelper.parseHMSFormat(state.pause.text);
-        const seconds = DateHelper.hmsObjectToSeconds(hmsObject);
-
-        //close modal
-        onPauseModalClose();
-
-        //save seconds
+    const onPauseModalConfirm = (seconds) => {
         setForm(form => ({ ...form, pauseSeconds: seconds }));
+        onPauseModalClose();
     }
 
     return (
         <LoadingView loading={state.loading}>
-            {form && <SafeAreaView style={styles.container}>
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={state.pause.visible}
-                    onRequestClose={onPauseModalClose}
-                >
-                    <View style={styles.centeredView}>
-                        <View style={styles.modalView}>
-                            <Text style={styles.modalText}>Break time</Text>
-                            <TextInput
-                                value={state.pause.text}
-                                onChangeText={x => {
-                                    const pauseClone = _.cloneDeep(state.pause);
-                                    pauseClone.text = x;
-                                    setState(state => ({ ...state, pause: pauseClone }))
-                                }} />
-                            <Button
-                                title='Cancel'
-                                onPress={onPauseModalClose}
-                            />
-                            <Button
-                                title='Confirm'
-                                onPress={onPauseModalConfirm}
-                            />
-                        </View>
-                    </View>
-                </Modal>
+            {form && <SafeAreaView style={styles.app}>
+                <PauseModal visible={state.pauseModalVisible}
+                    seconds={form.pauseSeconds}
+                    onClose={onPauseModalClose}
+                    onConfirm={onPauseModalConfirm} />
                 <ScrollView
                     style={{ padding: 20, flex: 1 }}
                     scrollEnabled={false}
                     keyboardShouldPersistTaps='handled'>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Start</Text>
-                        <DateTimePicker style={styles.date}
-                            value={form.startTime}
-                            minimumDate={state.startMinDate}
-                            maximumDate={state.startMaxDate}
-                            onChange={onStartDateChange} />
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>Start</Text>
+                        </View>
+                        <View style={styles.controlCol}>
+                            <DateTimePicker
+                                value={form.startTime}
+                                minimumDate={state.startMinDate}
+                                maximumDate={state.startMaxDate}
+                                onChange={onStartDateChange} />
+                        </View>
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>End</Text>
-                        <DateTimePicker style={styles.date}
-                            value={form.endTime}
-                            minimumDate={state.endMinDate}
-                            maximumDate={state.endMaxDate}
-                            onChange={onEndDateChange} />
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>End</Text>
+                        </View>
+                        <View style={styles.controlCol}>
+                            <DateTimePicker
+                                value={form.endTime}
+                                minimumDate={state.endMinDate}
+                                maximumDate={state.endMaxDate}
+                                onChange={onEndDateChange} />
+                        </View>
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Break</Text>
-                        <Button
-                            style={styles.date}
-                            title={DateHelper.hmsFormat(form.pauseSeconds, true, true, false)}
-                            onPress={onOpenBreakModal} />
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>Break</Text>
+                        </View>
+                        <View style={styles.controlCol}>
+                            <Button mode='outlined'
+                                style={styles.breakButton}
+                                onPress={onOpenBreakModal}>
+                                {DateHelper.hmsFormat(form.pauseSeconds, true, true, false)}
+                            </Button>
+                        </View>
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Note</Text>
-                    </View>
-                    <View>
-                        <TextInput
-                            multiline={true}
-                            numberOfLines={3}
-                            value={form.note}
-                            onChangeText={(text) => setForm(form => ({ ...form, note: text }))}
-                            style={styles.textInput}
-                            maxLength={512}
-                            textAlignVertical='top'
-                        />
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                label='Note'
+                                mode='outlined'
+                                value={form.note}
+                                multiline={true}
+                                numberOfLines={2}
+                                maxLength={512}
+                                onChangeText={(text) => setForm(form => ({ ...form, note: text }))}
+                            />
+                        </View>
                     </View>
                 </ScrollView>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
-                    <Button title='History'
-                        onPress={() => navigation.navigate('History', { id: id })} />
-                    <Button title='Save' onPress={save} />
+
+                <View style={styles.rowFooter}>
+                    <View style={styles.controlButtonCol}>
+                        {id > 0 && <Button mode='outlined' onPress={() => navigation.navigate('History', { id })} >
+                            History
+                        </Button>}
+                    </View>
+                    <View style={styles.controlButtonCol}>
+                        <Button mode='outlined' onPress={save} >
+                            Save
+                        </Button>
+                    </View>
                 </View>
             </SafeAreaView>}
         </LoadingView>
@@ -247,68 +227,34 @@ const DetailsView = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    centeredView: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 22
-    },
-    modalView: {
-        margin: 20,
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 35,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5
-    },
-    button: {
-        borderRadius: 20,
-        padding: 10,
-        elevation: 2
-    },
-    buttonOpen: {
-        backgroundColor: "#F194FF",
-    },
-    buttonClose: {
-        backgroundColor: "#2196F3",
-    },
-    textStyle: {
-        color: "white",
-        fontWeight: "bold",
-        textAlign: "center"
-    },
-    modalText: {
-        marginBottom: 15,
-        textAlign: "center"
-    },
-    container: {
+    app: {
         flex: 1,
     },
     row: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        paddingTop: 20,
+        paddingBottom: 20,
+    },
+    labelCol: {
+        flex: 1
+    },
+    controlCol: {
+        flex: 4,
+        alignItems: 'center'
+    },
+    rowFooter: {
+        flexDirection: 'row',
         paddingBottom: 30
     },
-    label: {
+    controlButtonCol: {
         flex: 1,
-        fontSize: 20,
-        fontWeight: '500'
+        alignItems: 'center'
     },
-    date: {
-        flex: 6,
+    breakButton: {
+        width: '50%'
     },
-    textInput: {
-        borderColor: '#000000',
-        borderWidth: 1
-    }
 });
 
 export default DetailsView;
