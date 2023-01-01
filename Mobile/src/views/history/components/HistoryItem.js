@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Pressable, Text, View, StyleSheet } from 'react-native'
 import BaseBold from 'mobile/src/views/components/BaseBold'
 import DateHelper from 'mobile/src/helpers/date'
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const logTypeVerb = (logTypeId) => {
     switch(logTypeId) {

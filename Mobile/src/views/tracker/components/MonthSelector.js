@@ -4,11 +4,9 @@ import DateHelper from 'mobile/src/helpers/date';
 import {
     View,
     Text,
-    Button,
     StyleSheet
 } from 'react-native';
-import Icon from 'react-native-vector-icons/AntDesign'
-import { reduce } from 'lodash';
+import Icon from 'react-native-vector-icons/FontAwesome'
 
 const MonthSelector = ({ onUpdate }) => {
     const [cursor, setCursor] = useState({
@@ -18,12 +16,14 @@ const MonthSelector = ({ onUpdate }) => {
     });
 
     const moveMonth = (inc) => {
-        const newCursor = Object.assign({}, cursor);
         Store.currentDate.moveCursor(inc);
-        newCursor.year = Store.currentDate.year;
-        newCursor.month = Store.currentDate.month;
-        newCursor.monthText = DateHelper.getMonth(Store.currentDate.month);
-        setCursor(newCursor);
+
+        setCursor(cursor => ({
+            ...cursor,
+            year: Store.currentDate.year,
+            month: Store.currentDate.month,
+            monthText: DateHelper.getMonth(Store.currentDate.month)
+        }));
 
         //update list of items
         onUpdate();
@@ -31,10 +31,10 @@ const MonthSelector = ({ onUpdate }) => {
 
     return (
         <View style={styles.row}>
-            <Icon name="left" size={30} color="#900"
+            <Icon name="angle-left" size={30}
                 onPress={() => moveMonth(-1)} />
             <Text style={styles.text}>{cursor.monthText}, {cursor.year}</Text>
-            <Icon name="right" size={30} color="#900"
+            <Icon name="angle-right" size={30}
                 onPress={() => moveMonth(1)} />
         </View>
     );

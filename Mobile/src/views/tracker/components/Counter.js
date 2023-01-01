@@ -7,7 +7,7 @@ import {
     StyleSheet,
     Button,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const Counter = ({ start, onCancel, textStyle, iconSize }) => {
     const [counter, setCounter] = useState(null);
@@ -49,7 +49,7 @@ const Counter = ({ start, onCancel, textStyle, iconSize }) => {
         <View style={styles.row}>
             {counter?.time && <>
                 <Text style={textStyle}>{counter.time.h}:{counter.time.m}:{counter.time.s}</Text>
-                <Icon style={styles.icon} name="close" size={iconSize} onPress={() => onCancel?.call()} />
+                <Icon style={styles.icon} name="times-circle" size={iconSize} onPress={() => onCancel?.call()} />
             </>}
         </View>
     )

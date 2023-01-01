@@ -56,6 +56,7 @@ func (*UserService) SetImpersonatedUser(user *domain.UserModel, impersonatedUser
 		return ErrImpersonationInvalidPermission
 	}
 
+	user.ImpersonatedUser = nil
 	user.ImpersonatedUserId = impersonatedUserId
 	tx := db.Save(user)
 	return tx.Error

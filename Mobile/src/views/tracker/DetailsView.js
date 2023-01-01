@@ -9,6 +9,7 @@ import _ from 'lodash';
 import ShowAlert from 'mobile/src/helpers/alert'
 import { Text, Button, TextInput } from 'react-native-paper';
 import PauseModal from './components/PauseModal';
+import { CardStyleInterpolators } from '@react-navigation/stack';
 
 const MIN_DATE = DateHelper.getDateWithOffset(-(60 * 24 * 3));
 
@@ -155,7 +156,7 @@ const DetailsView = ({ route, navigation }) => {
                     onClose={onPauseModalClose}
                     onConfirm={onPauseModalConfirm} />
                 <ScrollView
-                    style={{ padding: 20, flex: 1 }}
+                    style={styles.scrollView}
                     scrollEnabled={false}
                     keyboardShouldPersistTaps='handled'>
                     <View style={styles.row}>
@@ -230,6 +231,10 @@ const styles = StyleSheet.create({
     app: {
         flex: 1,
     },
+    scrollView: {
+        padding: 20, 
+        flex: 1
+    },
     row: {
         flex: 1,
         flexDirection: 'row',
@@ -256,6 +261,7 @@ const styles = StyleSheet.create({
         width: '50%'
     },
 });
+
 
 export default DetailsView;
 

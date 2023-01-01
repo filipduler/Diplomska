@@ -12,7 +12,6 @@ import Requests from 'mobile/src/services/requests';
 import Auth from 'mobile/src/services/auth';
 import AuthLoadingView from './src/views/auth/AuthLoadingView';
 import AdminStack from './src/views/admin/AdminStack';
-import { Button } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 export const AuthContext = React.createContext();

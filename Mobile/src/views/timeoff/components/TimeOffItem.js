@@ -7,7 +7,7 @@ import {
     Pressable
 } from 'react-native';
 import StyleService from 'mobile/src/services/styles';
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const TimeOffItem = ({ data, handleEntryDetails }) => {
     const start = DateHelper.formatDate(data.startDate);
@@ -16,11 +16,20 @@ const TimeOffItem = ({ data, handleEntryDetails }) => {
 
     return (
         <Pressable onPress={() => handleEntryDetails(data.id)} style={styles.itemContainer}>
-            <View style={styles.itemRow}>
-                <Text style={styles.itemColumn}>{start}</Text>
-                <Icon name="minus" size={18} color="#000" />
-                <Text style={styles.itemColumn}>{end}</Text>
-                <Text style={styles.itemColumn}>{data.type.name}</Text>
+            <View style={styles.leftColumn}>
+                <View style={styles.leftColumnPart}>
+                    <Text>{start}</Text>
+                </View>
+
+                <View style={styles.leftColumnPart}>
+                    <Icon name="minus" size={13} color="#000" />
+                </View>
+
+                <View style={styles.leftColumnPart}>
+                    <Text>{end}</Text>
+                </View>
+            </View>
+            <View style={styles.rightColumn}>
                 <View style={[StyleService.style.circle, { backgroundColor: color }]}></View>
             </View>
         </Pressable>
@@ -29,19 +38,32 @@ const TimeOffItem = ({ data, handleEntryDetails }) => {
 
 const styles = StyleSheet.create({
     itemContainer: {
-        height: 65
-    },
-    itemRow: { 
         flex: 1,
+        height: 50,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        marginBottom: 5,
         flexDirection: 'row',
-        justifyContent: 'center',
         alignItems: 'center',
     },
-    itemColumn: {
+    leftColumnPart: {
+       flex: 1,
+       justifyContent: 'space-evenly',
+       flexDirection: 'row',
+       alignItems: 'center'
+    },
+    leftColumn: {
+        flex: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingLeft: 10,
+        //backgroundColor: 'red',
+    },
+    rightColumn: {
         flex: 1,
-        textAlign: 'center',
-        fontWeight: '600'
-    }
+        alignItems: 'center',
+        //backgroundColor: 'green',
+    },
 });
 
 export default TimeOffItem;

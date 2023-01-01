@@ -8,7 +8,9 @@ const Auth = {
         const jwt = await Store.auth.getJWTAsync();
         if(jwt){
             const response = await Requests.getUserInfo();
-            if (response && response.ok) {
+            
+        console.log(response);
+            if (response.ok) {
                 Auth.userInfo = response.payload;
             }
         }

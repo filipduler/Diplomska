@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button, Text, SafeAreaView, StyleSheet, View, TextInput, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, View, ScrollView } from 'react-native';
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
@@ -10,6 +10,7 @@ import ShowAlert from 'mobile/src/helpers/alert'
 import _ from 'lodash';
 import TimeOffStatusBar from './components/TimeOffStatusBar';
 import { TimeOffStatus } from 'mobile/src/services/constants';
+import { Text, Button, TextInput } from 'react-native-paper';
 
 const DATE_NEXT_DAY = DateHelper.getDateWithOffset(60 * 24);
 
@@ -33,7 +34,6 @@ const DetailsView = ({ route, navigation }) => {
             loadState();
         }, [])
     )
-
 
     const loadState = async () => {
         try {
@@ -84,8 +84,6 @@ const DetailsView = ({ route, navigation }) => {
             loading: false
         }));
     }
-
-
 
     const loadEntry = async (entryId, daysOff) => {
         let isReadonly = false;
@@ -176,84 +174,91 @@ const DetailsView = ({ route, navigation }) => {
 
     return (
         <LoadingView loading={state.loading}>
-            {form && <SafeAreaView style={styles.container}>
+            {form && <SafeAreaView style={styles.app}>
                 <ScrollView
-                    style={{ padding: 20, flex: 1 }}
+                    style={styles.scrollView}
                     scrollEnabled={false}
                     keyboardShouldPersistTaps='handled'>
                     <View style={styles.row}>
-                        <Text style={styles.label}>Start</Text>
-                        <DatePicker style={styles.date}
-                            value={form.startDate.date}
-                            onChange={onStartDateChange}
-                            disabled={state.readonly}
-                            minimumDate={form.startDate.min}
-                            maximumDate={form.startDate.max} />
-                    </View>
-                    <View style={styles.row}>
-                        <Text style={styles.label}>End</Text>
-                        <DatePicker style={styles.date}
-                            value={form.endDate.date}
-                            onChange={onEndDateChange}
-                            disabled={state.readonly}
-                            minimumDate={form.endDate.min}
-                            maximumDate={form.endDate.max} />
-                    </View>
-
-                    <View style={styles.row}>
-                        <Text style={styles.label}>Type</Text>
-                        <View style={styles.date}>
-                            {!state.readonly ? (
-                                <RNPickerSelect
-                                    value={form.type}
-                                    onValueChange={(value) => {
-                                        if (value) {
-                                            setForm(form => ({
-                                                ...form,
-                                                type: value
-                                            }));
-                                        }
-                                    }}
-                                    items={typeList}
-                                />
-                            ) : (<Text>{form.type.name}</Text>)}
-
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>Start</Text>
                         </View>
+                        <View style={styles.controlCol}>
+                            <DatePicker style={styles.date}
+                                value={form.startDate.date}
+                                onChange={onStartDateChange}
+                                disabled={state.readonly}
+                                minimumDate={form.startDate.min}
+                                maximumDate={form.startDate.max} />
+                        </View>
+                    </View>
+                    <View style={styles.row}>
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>End</Text>
+                        </View>
+                        <View style={styles.controlCol}>
+                            <DatePicker style={styles.date}
+                                value={form.endDate.date}
+                                onChange={onEndDateChange}
+                                disabled={state.readonly}
+                                minimumDate={form.endDate.min}
+                                maximumDate={form.endDate.max} />
+                        </View>
+                    </View>
 
-                    </View>
-                    <View style={{ paddingBottom: 10 }}>
-                        <Text style={styles.label}>Note</Text>
-                    </View>
-                    <View>
-                        {!state.readonly ? (
-                            <TextInput
-                                multiline={true}
-                                numberOfLines={6}
-                                value={form.note}
-                                onChangeText={text => setForm(form => ({
-                                    ...form,
-                                    note: text
-                                }))}
-                                style={styles.textInput}
-                                maxLength={512}
-                                textAlignVertical='top'
+                    <View style={styles.row}>
+                        <View style={styles.labelCol}>
+                            <Text variant='titleLarge'>Type</Text>
+                        </View>
+                        <View style={styles.controlCol}>
+                            <RNPickerSelect
+                                value={form.type}
+                                disabled={state.readonly}
+                                onValueChange={(value) => {
+                                    if (value) {
+                                        setForm(form => ({
+                                            ...form,
+                                            type: value
+                                        }));
+                                    }
+                                }}
+                                items={typeList}
                             />
-                        ) : (<Text>{form.note}</Text>)}
-
+                        </View>
+                    </View>
+                    <View style={styles.row}>
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                disabled={state.readonly}
+                                label='Note'
+                                mode='outlined'
+                                value={form.note}
+                                multiline={true}
+                                numberOfLines={2}
+                                maxLength={512}
+                                onChangeText={(text) => setForm(form => ({ ...form, note: text }))}
+                            />
+                        </View>
                     </View>
 
-                    <TimeOffStatusBar entryId={id} status={form.status} onChange={() => loadEntry(id, state.daysOff)} />
-
+                    <View style={styles.row}>
+                        <TimeOffStatusBar 
+                            entryId={id} 
+                            status={form.status} 
+                            onChange={() => loadEntry(id, state.daysOff)} />
+                    </View>
                 </ScrollView>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', padding: 10, paddingBottom: 30 }}>
-                    <View>
-                        {id > 0 && (
-                            <Button title='History' onPress={() => navigation.navigate('History', { id })} />
-                        )}
-                    </View>
 
-                    <View>
-                        <Button title='Save' onPress={save} disabled={state.readonly} />
+                <View style={styles.rowFooter}>
+                    <View style={styles.controlButtonCol}>
+                        {id > 0 && <Button mode='outlined' onPress={() => navigation.navigate('History', { id })} >
+                            History
+                        </Button>}
+                    </View>
+                    <View style={styles.controlButtonCol}>
+                        <Button mode='outlined' onPress={save} disabled={state.readonly}>
+                            Save
+                        </Button>
                     </View>
                 </View>
             </SafeAreaView>
@@ -263,34 +268,39 @@ const DetailsView = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
+    app: {
         flex: 1,
     },
-    textInput: {
-        borderColor: '#000000',
-        borderWidth: 1
+    scrollView: {
+        padding: 20,
+        flex: 1
     },
     row: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        paddingTop: 20,
+        paddingBottom: 20,
+    },
+    labelCol: {
+        flex: 1
+    },
+    controlCol: {
+        flex: 4,
+        alignItems: 'center'
+    },
+    rowFooter: {
+        flexDirection: 'row',
         paddingBottom: 30
     },
-    label: {
+    controlButtonCol: {
         flex: 1,
-        fontSize: 20,
-        fontWeight: '500'
+        alignItems: 'center'
     },
-    date: {
-        flex: 6,
+    breakButton: {
+        width: '50%'
     },
-    textInput: {
-        borderColor: '#000000',
-        borderWidth: 1
-    }
 });
-
-
 
 
 export default DetailsView;

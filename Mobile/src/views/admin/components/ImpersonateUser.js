@@ -4,7 +4,7 @@ import SearchableDropDown from 'react-native-searchable-dropdown';
 import { useFocusEffect } from '@react-navigation/native';
 import Requests from 'mobile/src/services/requests';
 import Auth from 'mobile/src/services/auth';
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const ImpersonateUser = () => {
     const [userOptions, setUserOptions] = useState([]);
@@ -19,6 +19,7 @@ const ImpersonateUser = () => {
     )
 
     const loadState = async () => {
+        console.log(Auth.userInfo)
         if (Auth.userInfo.isImpersonating) {
             loadImpersonatedView();
         } else {
@@ -62,7 +63,7 @@ const ImpersonateUser = () => {
 
     const impersonateUser = async (user) => {
         const response = await Requests.postImpersonate(user.id);
-        if(response && response.ok) {
+        if(response.ok) {
             await Auth.refreshUserInfo();
             loadImpersonatedView();
         }
@@ -70,7 +71,7 @@ const ImpersonateUser = () => {
 
     const stopImpersonating = async () => {
         const response = await Requests.postClearImpersonation();
-        if(response && response.ok) {
+        if(response.ok) {
             await Auth.refreshUserInfo();
             loadNormalView();
         }
@@ -83,7 +84,7 @@ const ImpersonateUser = () => {
                 : (state.isImpersonating
                     ? (<>
                     <Text>{state.name}</Text>
-                    <Icon name="close" size={21} onPress={stopImpersonating} />
+                    <Icon name="times-circle" size={21} onPress={stopImpersonating} />
                     </>)
                     : <SearchableDropDown
                         onItemSelect={impersonateUser}

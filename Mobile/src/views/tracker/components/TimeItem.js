@@ -1,23 +1,18 @@
-import React, {useRef} from 'react';
+import React from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    Dimensions,
-    Button,
-    TouchableOpacity,
     Pressable
 } from 'react-native';
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler';
 import OpenConfirm from 'mobile/src/helpers/confirm'
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-let rowDict = {};
+const rowDict = {};
 let prevOpenedRow;
 
-const TimeItem = ({ data, handleDetails, handleDelete }) => {
-    const hasDescription = !!data.notePreview;
-    const rowHeight = hasDescription ? 60 : 60;
-
+const TimeItem = ({ data, onPress, onDelete }) => {
     const closeRow = (id) => {
         if (prevOpenedRow && prevOpenedRow !== rowDict[id]) {
             prevOpenedRow.close();
@@ -27,10 +22,10 @@ const TimeItem = ({ data, handleDetails, handleDelete }) => {
 
     const leftSwipe = () => {
         return (
-            <Pressable onPress={() => OpenConfirm('Delete time entry', 'Are you sure?', 'Delete', handleDelete)} 
+            <Pressable onPress={() => OpenConfirm('Delete time entry', 'Are you sure?', 'Delete', onDelete)} 
                 activeOpacity={0.6}>
                 <View style={styles.deleteBox}>
-                    <Text style={styles.deleteButton}>Delete</Text>
+                    <Icon name="trash-o" color='#FFFFFF' size={28}/>
                 </View>
             </Pressable>
         );
@@ -41,7 +36,7 @@ const TimeItem = ({ data, handleDetails, handleDelete }) => {
                 ref={ref => rowDict[data.id] = ref} 
                 key={data.id}
                 onBegan={() => closeRow(data.id)}>
-                <Pressable onPress={handleDetails} style={styles.itemContainer}>
+                <Pressable onPress={onPress} style={styles.itemContainer}>
                     <View style={styles.itemRow}>
                             <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.startText}</Text>
                             <Text style={[styles.itemColumn, { textAlign: 'center' }]}>{data.endText}</Text>
@@ -54,10 +49,6 @@ const TimeItem = ({ data, handleDetails, handleDelete }) => {
 };
 
 const styles = StyleSheet.create({
-    deleteButton: { 
-        color: '#FFFFFF', 
-        fontSize: 17 
-    },
     deleteBox: {
         backgroundColor: '#FF0000',
         justifyContent: 'center',
@@ -66,7 +57,8 @@ const styles = StyleSheet.create({
         height: 65
     },
     itemContainer: {
-        height: 65
+        height: 65,
+        backgroundColor: 'white'
     },
     itemRow: { 
         flex: 1,
