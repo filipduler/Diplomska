@@ -118,7 +118,6 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onStartDateChange = (date) => {
-        console.log('onStartDateChange ', date);
         setForm(form => ({
             ...form,
             startTime: date,
@@ -128,7 +127,6 @@ const DetailsView = ({ route, navigation }) => {
     }
 
     const onEndDateChange = (date) => {
-        console.log('onEndDateChange ', date);
         setForm(form => ({
             ...form,
             endTime: date,

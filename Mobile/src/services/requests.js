@@ -18,7 +18,6 @@ const Requests =
             pauseSeconds: pauseSeconds,
             note: note
         };
-        console.log(request);
         return await _innerFetch('POST', '/time-entry/save', JSON.stringify(request));
     },
     getDaysCompleted: async (month, year) => await _innerFetch('GET', `/time-entry/days-completed/${year}/${month}`),

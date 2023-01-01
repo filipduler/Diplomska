@@ -40,6 +40,8 @@ export const App = () => {
 				Auth.userInfo = null;
 				await Store.auth.removeJWTAsync();
 				setLoggedIn(false);
+
+				console.log('successful log out');
 			}
 		}),
 		[]
