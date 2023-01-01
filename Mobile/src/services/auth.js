@@ -9,7 +9,6 @@ const Auth = {
         if(jwt){
             const response = await Requests.getUserInfo();
             
-        console.log(response);
             if (response.ok) {
                 Auth.userInfo = response.payload;
             }

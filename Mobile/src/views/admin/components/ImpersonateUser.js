@@ -19,7 +19,6 @@ const ImpersonateUser = () => {
     )
 
     const loadState = async () => {
-        console.log(Auth.userInfo)
         if (Auth.userInfo.isImpersonating) {
             loadImpersonatedView();
         } else {
