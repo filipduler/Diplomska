@@ -8,10 +8,9 @@ import HistoryItem from './components/HistoryItem'
 import HistoryHeader from './components/HistoryHeader'
 import DateTimePicker from 'mobile/src/views/components/DateTimePicker'
 import LoadingView from 'mobile/src/views/components/LoadingView';
+import { EntryType } from 'mobile/src/services/constants';
 import _ from 'lodash';
 
-const TIME_ENTRY_TYPE = 'TE';
-const TIME_OFF_TYPE = 'TF';
 const NOW = new Date();
 
 const HistoryList = ({ navigation }) => {
@@ -86,16 +85,16 @@ const HistoryList = ({ navigation }) => {
                 }
             }
         }
-        await appendItems(teResponse, TIME_ENTRY_TYPE)
-        await appendItems(tfResponse, TIME_OFF_TYPE)
+        await appendItems(teResponse, EntryType.TimeEntry)
+        await appendItems(tfResponse, EntryType.TimeOff)
 
         return _.orderBy(items, item => new Date(item.lastUpdateOnUtc), ['desc']);
     }
 
     const navigateToHistoryView = (id, type) => {
-        if (type === TIME_ENTRY_TYPE) {
+        if (type === EntryType.TimeEntry) {
             navigation.navigate('Tracker History', { id })
-        } else if (type === TIME_OFF_TYPE) {
+        } else if (type === EntryType.TimeOff) {
             navigation.navigate('Time Off History', { id })
         }
     }
@@ -161,7 +160,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     footerRow: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+        marginBottom: 10
     },
     footerColumn: {
         flex: 1

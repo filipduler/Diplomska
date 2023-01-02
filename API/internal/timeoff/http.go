@@ -5,6 +5,7 @@ import (
 	"api/internal"
 	"api/service/daysoff"
 	"api/service/timeoff"
+	userService "api/service/user"
 	"api/utils"
 	"net/http"
 	"strconv"
@@ -209,13 +210,26 @@ func entryChangesHTTP(c echo.Context) error {
 		return internal.NewHTTPError(c, err)
 	}
 
-	var res []internal.ChangeModel
+	//get all users who changed the logs
+	userIds := lo.Uniq(lo.Map(timeEntryLogs, func(log domain.TimeOffLogModel, _ int) int64 { return log.UserId }))
 
+	userService := userService.UserService{}
+	userMap, err := userService.GetUserMap(userIds)
+	if err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
+	var res []internal.ChangeModel
 	for _, log := range timeEntryLogs {
+		modifiedByOwner := log.UserId == user.Id
+
+		//load modifier user
+		curUser := userMap[log.UserId]
+
 		res = append(res, internal.ChangeModel{
 			Id:              log.TimeOffId,
-			StartTimeUtc:    log.StartDate,
-			EndTimeUtc:      log.EndDate,
+			ModifierName:    curUser.DisplayName,
+			ModifiedByOwner: modifiedByOwner,
 			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		})

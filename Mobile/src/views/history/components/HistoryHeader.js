@@ -7,8 +7,9 @@ const HistoryHeader = ({ section }) => {
 
 const styles = StyleSheet.create({
     header: {
-        fontSize: 19,
-        fontWeight: '500'
+        fontSize:21,
+        fontWeight: 'bold',
+        marginBottom: 5
     },
 });
 

@@ -9,8 +9,8 @@ type ChangeRequest struct {
 
 type ChangeModel struct {
 	Id              int64     `json:"id"`
-	StartTimeUtc    time.Time `json:"startTimeUtc"`
-	EndTimeUtc      time.Time `json:"endTimeUtc"`
+	ModifiedByOwner bool      `json:"modifiedByOwner"`
+	ModifierName    string    `json:"modifierName"`
 	LogType         int64     `json:"logType"`
 	LastUpdateOnUtc time.Time `json:"lastUpdateOnUtc"`
 }

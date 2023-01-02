@@ -117,9 +117,9 @@ const DashboardView = () => {
 
 
         parseRange(markedDates, freeDaysranges, 'yellow', year, month);
-        parseRange(markedDates, daysOffRanges, 'red', year, month);
         parseRange(markedDates, incompletedRanges, 'yellow', year, month);
         parseRange(markedDates, completedRanges, 'green', year, month);
+        parseRange(markedDates, daysOffRanges, 'red', year, month);
 
         setMarkedDates(markedDates);
     }
