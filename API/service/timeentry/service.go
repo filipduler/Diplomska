@@ -5,7 +5,6 @@ import (
 	userService "api/service/user"
 	"api/utils"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/samber/lo"
@@ -60,32 +59,17 @@ func (*TimeEntryService) GetEntriesBetween(from time.Time, to time.Time, userId 
 	return entries, tx.Error
 }
 
-func (s *TimeEntryService) GetTimeEntryLogs(userId int64, from *time.Time, to *time.Time) ([]domain.TimeEntryLogModel, error) {
+func (s *TimeEntryService) GetTimeEntryLogs(userId int64, from time.Time, to time.Time) ([]domain.TimeEntryLogModel, error) {
 	db := utils.GetConnection()
 
-	var dateQuery string
-	var args []interface{}
-	args = append(args, userId)
-
-	if from != nil && to != nil {
-		dateQuery = "AND InsertedOnUtc > ? AND InsertedOnUtc < ?"
-		args = append(args, from, to)
-	} else if from != nil {
-		dateQuery = "AND InsertedOnUtc > ?"
-		args = append(args, from)
-	} else if to != nil {
-		dateQuery = "AND InsertedOnUtc < ?"
-		args = append(args, to)
-	}
-
 	var logs []domain.TimeEntryLogModel
-	tx := db.Raw(fmt.Sprintf(`WITH last_log_entries AS (
+	tx := db.Raw(`WITH last_log_entries AS (
 			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeEntryId ORDER BY InsertedOnUtc DESC) AS rn
 			FROM timeentrylog AS m
-			WHERE m.UserId = ? %s
+			WHERE m.UserId = ? AND InsertedOnUtc BETWEEN ? AND ?
 		)
 		SELECT *
-		FROM last_log_entries WHERE rn = 1`, dateQuery), args...).
+		FROM last_log_entries WHERE rn = 1`, userId, from, to).
 		Find(&logs)
 
 	return logs, tx.Error

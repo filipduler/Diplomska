@@ -5,7 +5,6 @@ import (
 	"api/service"
 	userService "api/service/user"
 	"api/utils"
-	"fmt"
 	"time"
 
 	"github.com/samber/lo"
@@ -61,32 +60,17 @@ func (*TimeOffService) GetTimeOffEntriesBetween(from time.Time, to time.Time, us
 	return entries, tx.Error
 }
 
-func (s *TimeOffService) GetTimeOffLogs(userId int64, from *time.Time, to *time.Time) ([]domain.TimeOffLogModel, error) {
+func (s *TimeOffService) GetTimeOffLogs(userId int64, from time.Time, to time.Time) ([]domain.TimeOffLogModel, error) {
 	db := utils.GetConnection()
 
-	var dateQuery string
-	var args []interface{}
-	args = append(args, userId)
-
-	if from != nil && to != nil {
-		dateQuery = "AND InsertedOnUtc > ? AND InsertedOnUtc < ?"
-		args = append(args, from, to)
-	} else if from != nil {
-		dateQuery = "AND InsertedOnUtc > ?"
-		args = append(args, from)
-	} else if to != nil {
-		dateQuery = "AND InsertedOnUtc < ?"
-		args = append(args, to)
-	}
-
 	var logs []domain.TimeOffLogModel
-	tx := db.Raw(fmt.Sprintf(`WITH last_log_entries AS (
+	tx := db.Raw(`WITH last_log_entries AS (
 			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeOffId ORDER BY InsertedOnUtc DESC) AS rn
 			FROM timeofflog AS m
-			WHERE m.UserId = ? %s
+			WHERE m.UserId = ? AND InsertedOnUtc BETWEEN ? AND ?
 		)
 		SELECT *
-		FROM last_log_entries WHERE rn = 1`, dateQuery), args...).
+		FROM last_log_entries WHERE rn = 1`, userId, from, to).
 		Preload("TimeOffType").
 		Find(&logs)
 

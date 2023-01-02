@@ -4,13 +4,13 @@ import { SafeAreaView, StyleSheet, View, ScrollView } from 'react-native';
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import RNPickerSelect from 'react-native-picker-select';
-import DatePicker from './components/DatePicker';
 import LoadingView from '../components/LoadingView';
 import ShowAlert from 'mobile/src/helpers/alert'
 import _ from 'lodash';
 import TimeOffStatusBar from './components/TimeOffStatusBar';
 import { TimeOffStatus } from 'mobile/src/services/constants';
 import { Text, Button, TextInput } from 'react-native-paper';
+import DateTimePicker from 'mobile/src/views/components/DateTimePicker';
 
 const DATE_NEXT_DAY = DateHelper.getDateWithOffset(60 * 24);
 
@@ -184,7 +184,8 @@ const DetailsView = ({ route, navigation }) => {
                             <Text variant='titleLarge'>Start</Text>
                         </View>
                         <View style={styles.controlCol}>
-                            <DatePicker style={styles.date}
+                            <DateTimePicker style={styles.date}
+                                type='date'
                                 value={form.startDate.date}
                                 onChange={onStartDateChange}
                                 disabled={state.readonly}
@@ -197,7 +198,8 @@ const DetailsView = ({ route, navigation }) => {
                             <Text variant='titleLarge'>End</Text>
                         </View>
                         <View style={styles.controlCol}>
-                            <DatePicker style={styles.date}
+                            <DateTimePicker style={styles.date}
+                                type='date'
                                 value={form.endDate.date}
                                 onChange={onEndDateChange}
                                 disabled={state.readonly}

@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { SectionList, Text, View, StyleSheet, SafeAreaView } from 'react-native';
-import BaseBold from 'mobile/src/views/components/BaseBold'
+import { SectionList, View, StyleSheet, SafeAreaView } from 'react-native';
 import Requests from 'mobile/src/services/requests';
 import DateHelper from 'mobile/src/helpers/date';
 import moment from 'moment';
 import HistoryItem from './components/HistoryItem'
 import HistoryHeader from './components/HistoryHeader'
+import DateTimePicker from 'mobile/src/views/components/DateTimePicker'
+import LoadingView from 'mobile/src/views/components/LoadingView';
 import _ from 'lodash';
 
 const TIME_ENTRY_TYPE = 'TE';
 const TIME_OFF_TYPE = 'TF';
+const NOW = new Date();
 
 const HistoryList = ({ navigation }) => {
     const [keys, setKeys] = useState([]);
+    const [ filter, setFilter ] = useState({
+        start: DateHelper.getDateWithOffset(-60 * 24 * 3),
+        end: NOW,
+    })
+    const [state, setState] = useState({
+        isLoading: true,
+        startMaxDate: null,
+        endMinDate: null,
+        endMaxDate: null,
+    });
 
     useFocusEffect(
         React.useCallback(() => {
@@ -21,35 +33,54 @@ const HistoryList = ({ navigation }) => {
         }, [])
     )
 
+    useEffect(() => {
+        updateDateConstraints();
+        loadHistory();
+    }, [ filter ]);
+
     const loadHistory = async () => {
         const arr = [];
         try {
             const items = await fetchHistory();
             const groupedResults = _.groupBy(items, x => DateHelper.roundToDayAsUnix(x.lastUpdateOnUtc));
 
-            for (const unix of Object.keys(groupedResults)) {
+            const sortedKeys = _(groupedResults)
+                .toPairs()
+                .orderBy(0, ['desc'])
+                .map(x => parseInt(x[0]));
+
+            for (const unix of sortedKeys) {
                 arr.push({
                     text: DateHelper.formatDate(moment.unix(unix)),
                     data: _.sortBy(groupedResults[unix], item => new Date(item.lastUpdateOnUtc))
                 })
             }
         }
+        catch(err) {
+            console.error(err);
+        }
         finally {
             setKeys(arr);
+            setState(state => ({
+                ...state,
+                isLoading: false
+            }))
         }
     }
 
     const fetchHistory = async () => {
-        const teResponse = Requests.getTimeEntryChanges(null, null);
-        const tfResponse = Requests.getTimeOffChanges(null, null);
+        console.log(filter.start, filter.end);
+        const teResponse = Requests.getTimeEntryChanges(filter.start, filter.end);
+        const tfResponse = Requests.getTimeOffChanges(filter.start, filter.end);
         await Promise.allSettled([teResponse, tfResponse]);
 
         const items = [];
 
         const appendItems = async (responsePromise, type) => {
             const res = await responsePromise;
-            if(res && res.ok && res.payload) {
-                for(const entry of res.payload) {
+            if (res.ok) {
+                console.log('type ', type, ' count: ', (res.payload || []).length);
+                for (const entry of res.payload || []) {
                     entry.type = type;
                     items.push(entry);
                 }
@@ -58,34 +89,82 @@ const HistoryList = ({ navigation }) => {
         await appendItems(teResponse, TIME_ENTRY_TYPE)
         await appendItems(tfResponse, TIME_OFF_TYPE)
 
-        return items;
+        return _.orderBy(items, item => new Date(item.lastUpdateOnUtc), ['desc']);
     }
-    
+
     const navigateToHistoryView = (id, type) => {
         if (type === TIME_ENTRY_TYPE) {
-            navigation.navigate('Tracker History', { id: id })
+            navigation.navigate('Tracker History', { id })
         } else if (type === TIME_OFF_TYPE) {
-            navigation.navigate('Time Off History', { id: id })
+            navigation.navigate('Time Off History', { id })
         }
     }
 
+    const updateDateConstraints = () => {
+        setState(state => ({
+            ...state,
+            startMaxDate: filter.end,
+            endMinDate: filter.start,
+            endMaxDate: NOW
+        }))
+    }
+
+    const onStartDateChange = (date) => {
+        setFilter(filter => ({
+            ...filter,
+            start: date
+        }));
+    }
+
+    const onEndDateChange = (date) => {
+        setFilter(filter => ({
+            ...filter,
+            end: date
+        }));
+    }
+
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.innerContainer}>
-                <SectionList
-                    sections={keys}
-                    keyExtractor={(item, index) => item + index}
-                    renderItem={({ item }) => <HistoryItem item={item} onNavigate={navigateToHistoryView}/>}
-                    renderSectionHeader={({ section }) => <HistoryHeader section={section} />}
-                />
-            </View>
-        </SafeAreaView>
+        <LoadingView loading={state.isLoading} >
+            <SafeAreaView style={styles.app}>
+                <View style={styles.innerContainer}>
+                    <SectionList
+                        sections={keys}
+                        keyExtractor={(item, index) => item + index}
+                        renderItem={({ item }) => <HistoryItem item={item} onPress={navigateToHistoryView} />}
+                        renderSectionHeader={({ section }) => <HistoryHeader section={section} />}
+                    />
+                </View>
+
+                <View style={styles.footerRow}>
+                    <View style={styles.footerColumn}>
+                        <DateTimePicker type='date'
+                            value={filter.start}
+                            maximumDate={state.startMaxDate}
+                            onChange={onStartDateChange} />
+                    </View>
+
+                    <View style={styles.footerColumn}>
+                        <DateTimePicker type='date'
+                            value={filter.end}
+                            minimumDate={state.endMinDate}
+                            maximumDate={state.endMaxDate}
+                            onChange={onEndDateChange} />
+                    </View>
+                </View>
+            </SafeAreaView>
+        </LoadingView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    app: {
         flex: 1,
+    },
+    footerRow: {
+        flexDirection: 'row'
+    },
+    footerColumn: {
+        flex: 1
     },
     innerContainer: {
         flex: 1,

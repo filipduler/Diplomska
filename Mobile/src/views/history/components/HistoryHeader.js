@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, Text, View, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, StyleSheet } from 'react-native';
 
 const HistoryHeader = ({ section }) => {
     return (<Text style={styles.header}>{section.text}</Text>);

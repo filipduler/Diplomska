@@ -14,12 +14,12 @@ const logTypeVerb = (logTypeId) => {
 }
 
 
-const HistoryItem = ({ item, onNavigate }) => {
+const HistoryItem = ({ item, onPress }) => {
     const start = DateHelper.formatDate(item.startTimeUtc) + '\n' + DateHelper.formatTime(item.startTimeUtc);
     const end = DateHelper.formatDate(item.endTimeUtc) + '\n' + DateHelper.formatTime(item.endTimeUtc);
 
     return (
-        <Pressable onPress={() => onNavigate(item.id, item.type)}>
+        <Pressable onPress={() => onPress(item.id, item.type)}>
             <View style={styles.container}>
                 <Text style={[styles.column, { fontWeight: '600', flex: 2 } ]}>
                     {`${(item.type === 'TE' ? 'Time entry' : 'Time off')} ${logTypeVerb(item.logType)}`}

@@ -3,13 +3,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, View, StyleSheet, ScrollView, Modal } from 'react-native';
 import DateHelper from 'mobile/src/helpers/date';
 import Requests from 'mobile/src/services/requests';
-import DateTimePicker from './components/DateTimePicker';
+import DateTimePicker from 'mobile/src/views/components/DateTimePicker';
 import LoadingView from 'mobile/src/views/components/LoadingView';
 import _ from 'lodash';
 import ShowAlert from 'mobile/src/helpers/alert'
 import { Text, Button, TextInput } from 'react-native-paper';
 import PauseModal from './components/PauseModal';
-import { CardStyleInterpolators } from '@react-navigation/stack';
 
 const MIN_DATE = DateHelper.getDateWithOffset(-(60 * 24 * 3));
 
@@ -163,6 +162,7 @@ const DetailsView = ({ route, navigation }) => {
                         </View>
                         <View style={styles.controlCol}>
                             <DateTimePicker
+                                type='datetime'
                                 value={form.startTime}
                                 minimumDate={state.startMinDate}
                                 maximumDate={state.startMaxDate}
@@ -175,6 +175,7 @@ const DetailsView = ({ route, navigation }) => {
                         </View>
                         <View style={styles.controlCol}>
                             <DateTimePicker
+                                type='datetime'
                                 value={form.endTime}
                                 minimumDate={state.endMinDate}
                                 maximumDate={state.endMaxDate}

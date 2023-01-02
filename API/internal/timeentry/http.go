@@ -22,7 +22,7 @@ func NewHTTP(r *echo.Group) {
 	group.GET("/:id", entryHTTP)
 	group.DELETE("/:id", deleteEntryHTTP)
 	group.GET("/:id/history", entryHistoryHTTP)
-	group.GET("/changes", entryChangesHTTP)
+	group.POST("/changes", entryChangesHTTP)
 	group.GET("/days-completed/:year/:month", daysCompletedHTTP)
 }
 
@@ -194,7 +194,10 @@ func entryChangesHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeEntryService := timeentry.TimeEntryService{}
 
-	timeEntryLogs, err := timeEntryService.GetTimeEntryLogs(user.EffectiveUserId(), request.From, request.To)
+	timeEntryLogs, err := timeEntryService.GetTimeEntryLogs(
+		user.EffectiveUserId(),
+		utils.DayStart(request.From),
+		utils.DayEnd(request.To))
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}

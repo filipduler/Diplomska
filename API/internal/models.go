@@ -3,8 +3,8 @@ package internal
 import "time"
 
 type ChangeRequest struct {
-	From *time.Time `json:"from"`
-	To   *time.Time `json:"to"`
+	From time.Time `json:"from"`
+	To   time.Time `json:"to"`
 }
 
 type ChangeModel struct {
