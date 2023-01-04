@@ -109,7 +109,7 @@ const BaseHistoryList = ({ id, type }) => {
             } else {
                 throw 'invalid entry type'
             }
-            console.log(response);
+            
             if (response.ok) {
                 const groupedResults = _.groupBy(response.payload || [], x => DateHelper.roundToDayAsUnix(x.insertedOnUtc));
 
@@ -141,10 +141,10 @@ const BaseHistoryList = ({ id, type }) => {
                 </View>
                 <View style={styles.contentColumn}>
                     <Text style={styles.typeText}>{item.header}</Text>
-                    <View style={styles.contentText}>
+                    {item.content && <View style={styles.contentText}>
                         {item.content}
-                    </View>
-                    <Text>At {DateHelper.formatTime(item.insertedOnUtc)}</Text>
+                    </View>}
+                    <Text>At {DateHelper.formatTime(item.time)}</Text>
                 </View>
             </View >}
             renderSectionHeader={({ section }) => <Text style={styles.header}>{section.text}</Text>}
