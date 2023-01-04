@@ -1,14 +1,14 @@
+import { TimeOffStatus } from 'mobile/src/services/constants';
+
 const MiscServices = {
     getTimeOffStatusName: (timeOffStatusId) => {
-        let name = null;
         switch(timeOffStatusId) {
-            case 1: name = 'Pending'; break;
-            case 2: name = 'Accepted'; break;
-            case 3: name = 'Rejected'; break;
-            case 4: name = 'Canceled'; break;
+            case TimeOffStatus.Pending: return 'Pending'; 
+            case TimeOffStatus.Accepted: return 'Accepted'; 
+            case TimeOffStatus.Rejected: return 'Rejected'; 
+            case TimeOffStatus.Canceled: return 'Canceled'; 
+            default: return '';
         }
-        return name;
     }
 }
-
 export default MiscServices;

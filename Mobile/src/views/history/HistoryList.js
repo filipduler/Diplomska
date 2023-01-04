@@ -51,7 +51,7 @@ const HistoryList = ({ navigation }) => {
             for (const unix of sortedKeys) {
                 arr.push({
                     text: DateHelper.formatDate(moment.unix(unix)),
-                    data: _.sortBy(groupedResults[unix], item => new Date(item.lastUpdateOnUtc))
+                    data: _.orderBy(groupedResults[unix], item => new Date(item.lastUpdateOnUtc), [ 'desc' ])
                 })
             }
         }

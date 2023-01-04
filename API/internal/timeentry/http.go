@@ -70,7 +70,7 @@ func entryHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeEntryService := timeentry.TimeEntryService{}
 
-	entry, err := timeEntryService.GetTimeEntry(timeEntryId, user.EffectiveUserId())
+	entry, err := timeEntryService.GetValidTimeEntry(timeEntryId, user.EffectiveUserId())
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}

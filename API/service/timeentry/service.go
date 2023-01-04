@@ -22,6 +22,15 @@ func (*TimeEntryService) GetTimeEntry(timeEntryId int64, userId int64) (*domain.
 	db := utils.GetConnection()
 
 	var timeEntry domain.TimeEntryModel
+	tx := db.Where("Id = ? AND UserId = ?", timeEntryId, userId).First(&timeEntry)
+
+	return &timeEntry, tx.Error
+}
+
+func (*TimeEntryService) GetValidTimeEntry(timeEntryId int64, userId int64) (*domain.TimeEntryModel, error) {
+	db := utils.GetConnection()
+
+	var timeEntry domain.TimeEntryModel
 	tx := db.Where("Id = ? AND UserId = ? AND IsDeleted = false", timeEntryId, userId).First(&timeEntry)
 
 	return &timeEntry, tx.Error
@@ -80,7 +89,7 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 
 	//update time entry
 	if id != nil {
-		updateModel, err := s.GetTimeEntry(*id, userId)
+		updateModel, err := s.GetValidTimeEntry(*id, userId)
 		if err != nil {
 			return 0, err
 		}
@@ -145,7 +154,7 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64) error {
 	db := utils.GetConnection()
 
-	entry, err := s.GetTimeEntry(timeEntryId, userId)
+	entry, err := s.GetValidTimeEntry(timeEntryId, userId)
 	if err != nil {
 		return err
 	}
@@ -167,9 +176,10 @@ func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64) erro
 	})
 }
 
-func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) (map[time.Time][]HistoryModel, error) {
+func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]HistoryModel, error) {
 	db := utils.GetConnection()
 
+	//we dont need a valid time entry for history
 	timeEntry, err := s.GetTimeEntry(timeEntryId, userId)
 	if err != nil {
 		return nil, err
@@ -189,11 +199,9 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) (ma
 		return nil, err
 	}
 
-	historyMap := map[time.Time][]HistoryModel{}
+	historyChanges := []HistoryModel{}
 
 	for i, logEntry := range logs {
-		logMessages := []HistoryModel{}
-
 		modifiedByOwner := logEntry.UserId == timeEntry.UserId
 
 		//load modifier user
@@ -205,33 +213,36 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) (ma
 
 		switch domain.LogType(logEntry.LogTypeId) {
 		case domain.InsertLogType:
-			logMessages = append(logMessages, HistoryModel{
+			historyChanges = append(historyChanges, HistoryModel{
 				Action:          EntryCreated,
 				ModifiedByOwner: modifiedByOwner,
 				ModifierName:    curUser.DisplayName,
 				StartTimeUtc:    &start,
 				EndTimeUtc:      &end,
+				InsertedOnUtc:   logEntry.InsertedOnUtc,
 			})
 			break
 		case domain.UpdateLogType:
 			if len(logs)-1 >= 0 && i > 0 {
 				prevLog := logs[i-1]
 				if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
-					logMessages = append(logMessages, HistoryModel{
+					historyChanges = append(historyChanges, HistoryModel{
 						Action:          TimeChange,
 						ModifiedByOwner: modifiedByOwner,
 						ModifierName:    curUser.DisplayName,
 						StartTimeUtc:    &start,
 						EndTimeUtc:      &end,
+						InsertedOnUtc:   logEntry.InsertedOnUtc,
 					})
 				}
 
 				if prevLog.PauseSeconds != logEntry.PauseSeconds {
-					logMessages = append(logMessages, HistoryModel{
+					historyChanges = append(historyChanges, HistoryModel{
 						Action:          PauseChange,
 						ModifiedByOwner: modifiedByOwner,
 						ModifierName:    curUser.DisplayName,
 						PauseSeconds:    &logEntry.PauseSeconds,
+						InsertedOnUtc:   logEntry.InsertedOnUtc,
 					})
 				}
 
@@ -239,26 +250,16 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) (ma
 
 			break
 		case domain.DeleteLogType:
-			logMessages = append(logMessages, HistoryModel{
+			historyChanges = append(historyChanges, HistoryModel{
 				Action:          EntryDeleted,
 				ModifiedByOwner: modifiedByOwner,
 				ModifierName:    curUser.DisplayName,
+				InsertedOnUtc:   logEntry.InsertedOnUtc,
 			})
 			break
 		}
-
-		if len(logMessages) > 0 {
-			inserted := logEntry.InsertedOnUtc
-			inserted = inserted.Truncate(60 * time.Second)
-
-			if messages, ok := historyMap[inserted]; ok {
-				historyMap[inserted] = append(messages, logMessages...)
-			} else {
-				historyMap[inserted] = logMessages
-			}
-		}
 	}
-	return historyMap, nil
+	return historyChanges, nil
 }
 
 func mapToTimeEntryLog(userId int64, entry *domain.TimeEntryModel, logType domain.LogType) domain.TimeEntryLogModel {

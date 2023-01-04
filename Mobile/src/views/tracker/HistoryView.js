@@ -1,13 +1,14 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import BaseHistoryList from '../components/BaseHistoryList'
+import { EntryType } from 'mobile/src/services/constants';
 
-const HistoryView = ({ route, navigation }) => {
+const HistoryView = ({ route }) => {
     const { id } = route.params;
 
     return (
         <SafeAreaView style={styles.container}>
-            <BaseHistoryList id={id} type="timeentry"/>
+            <BaseHistoryList id={id} type={EntryType.TimeEntry}/>
         </SafeAreaView>
     );
 };

@@ -18,4 +18,5 @@ type HistoryModel struct {
 	StartTimeUtc    *time.Time    `json:"startTimeUtc,omitempty"`
 	EndTimeUtc      *time.Time    `json:"endTimeUtc,omitempty"`
 	PauseSeconds    *int          `json:"pauseSeconds,omitempty"`
+	InsertedOnUtc   time.Time     `json:"insertedOnUtc"`
 }

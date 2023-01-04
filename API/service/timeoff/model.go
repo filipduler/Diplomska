@@ -19,4 +19,5 @@ type HistoryModel struct {
 	EndDate         *time.Time    `json:"endDate,omitempty"`
 	Type            *string       `json:"type,omitempty"`
 	Status          *int64        `json:"status,omitempty"`
+	InsertedOnUtc   time.Time     `json:"insertedOnUtc"`
 }

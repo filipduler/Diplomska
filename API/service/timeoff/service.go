@@ -184,7 +184,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, status 
 	})
 }
 
-func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time.Time][]HistoryModel, error) {
+func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]HistoryModel, error) {
 	db := utils.GetConnection()
 
 	timeOff, err := s.GetTimeOffEntry(timeOffId)
@@ -209,11 +209,9 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time
 		return nil, err
 	}
 
-	historyMap := map[time.Time][]HistoryModel{}
+	historyChanges := []HistoryModel{}
 
 	for i, logEntry := range logs {
-		logMessages := []HistoryModel{}
-
 		modifiedByOwner := logEntry.UserId == timeOff.UserId
 
 		//load modifier user
@@ -226,13 +224,14 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time
 		switch domain.LogType(logEntry.LogTypeId) {
 		case domain.InsertLogType:
 			//on insert
-			logMessages = append(logMessages, HistoryModel{
+			historyChanges = append(historyChanges, HistoryModel{
 				Action:          RequestOpen,
 				ModifiedByOwner: modifiedByOwner,
 				ModifierName:    curUser.DisplayName,
 				StartDate:       &start,
 				EndDate:         &end,
 				Type:            &logEntry.TimeOffType.Name,
+				InsertedOnUtc:   logEntry.InsertedOnUtc,
 			})
 			break
 		case domain.UpdateLogType:
@@ -241,22 +240,24 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time
 
 				//time change
 				if prevLog.StartDate != start || prevLog.EndDate != end {
-					logMessages = append(logMessages, HistoryModel{
+					historyChanges = append(historyChanges, HistoryModel{
 						Action:          TimeChange,
 						ModifiedByOwner: modifiedByOwner,
 						ModifierName:    curUser.DisplayName,
 						StartDate:       &start,
 						EndDate:         &end,
+						InsertedOnUtc:   logEntry.InsertedOnUtc,
 					})
 				}
 
 				//type change
 				if prevLog.TimeOffTypeId != logEntry.TimeOffTypeId {
-					logMessages = append(logMessages, HistoryModel{
+					historyChanges = append(historyChanges, HistoryModel{
 						Action:          TypeChange,
 						ModifiedByOwner: modifiedByOwner,
 						ModifierName:    curUser.DisplayName,
 						Type:            &logEntry.TimeOffType.Name,
+						InsertedOnUtc:   logEntry.InsertedOnUtc,
 					})
 				}
 
@@ -266,23 +267,20 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) (map[time
 						logEntry.TimeOffStatusTypeId == int64(domain.RejectedTimeOffStatus) ||
 						logEntry.TimeOffStatusTypeId == int64(domain.CanceledTimeOffStatus)) {
 					status := logEntry.TimeOffStatusTypeId
-					logMessages = append(logMessages, HistoryModel{
+					historyChanges = append(historyChanges, HistoryModel{
 						Action:          RequestClosed,
 						ModifiedByOwner: modifiedByOwner,
 						ModifierName:    curUser.DisplayName,
 						Status:          &status,
+						InsertedOnUtc:   logEntry.InsertedOnUtc,
 					})
 				}
 			}
 
 			break
 		}
-
-		if len(logMessages) > 0 {
-			historyMap[logEntry.InsertedOnUtc] = logMessages
-		}
 	}
-	return historyMap, nil
+	return historyChanges, nil
 }
 
 func mapToTimeOffEntryLog(userId int64, entry *domain.TimeOffModel, logType domain.LogType) domain.TimeOffLogModel {
