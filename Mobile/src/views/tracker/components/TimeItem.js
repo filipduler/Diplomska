@@ -12,14 +12,14 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 const rowDict = {};
 let prevOpenedRow;
 
-const TimeItem = ({ data, onPress, onDelete }) => {
-    const closeRow = (id) => {
-        if (prevOpenedRow && prevOpenedRow !== rowDict[id]) {
-            prevOpenedRow.close();
-        }
-        prevOpenedRow = rowDict[id];
+const closeRow = (id) => {
+    if (prevOpenedRow && prevOpenedRow !== rowDict[id]) {
+        prevOpenedRow.close();
     }
+    prevOpenedRow = rowDict[id];
+}
 
+const TimeItem = ({ data, onPress, onDelete }) => {
     const leftSwipe = () => {
         return (
             <Pressable onPress={() => OpenConfirm('Delete time entry', 'Are you sure?', 'Delete', onDelete)} 

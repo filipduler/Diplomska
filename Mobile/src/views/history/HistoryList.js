@@ -68,7 +68,6 @@ const HistoryList = ({ navigation }) => {
     }
 
     const fetchHistory = async () => {
-        console.log(filter.start, filter.end);
         const teResponse = Requests.getTimeEntryChanges(filter.start, filter.end);
         const tfResponse = Requests.getTimeOffChanges(filter.start, filter.end);
         await Promise.allSettled([teResponse, tfResponse]);
@@ -78,7 +77,6 @@ const HistoryList = ({ navigation }) => {
         const appendItems = async (responsePromise, type) => {
             const res = await responsePromise;
             if (res.ok) {
-                console.log('type ', type, ' count: ', (res.payload || []).length);
                 for (const entry of res.payload || []) {
                     entry.type = type;
                     items.push(entry);
