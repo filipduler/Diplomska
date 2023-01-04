@@ -8,12 +8,14 @@ const AdminView = ({ navigation }) => {
     const navigateToDetails = (timeOffId) => navigation.navigate('Details', { id: timeOffId });
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.innerContainer}>
-                <Text>View user</Text>
+        <SafeAreaView style={styles.app}>
+            <View style={styles.topSection}>
+                <Text style={styles.header}>View user</Text>
                 <ImpersonateUser />
+            </View>
 
-                <Text>Time off requests</Text>
+            <View style={styles.bottomSection}>
+                <Text style={styles.header}>Time off requests</Text>
                 <TimeOffList onItemPress={navigateToDetails} pendingOnly={true} />
             </View>
         </SafeAreaView>
@@ -21,12 +23,20 @@ const AdminView = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    innerContainer: {
+    app: {
         flex: 1,
         padding: 20
+    },
+    topSection: {
+        flex: 1,
+    },
+    bottomSection: {
+        flex: 2,
+    },
+    header: {
+        fontSize: 21,
+        fontWeight: 'bold',
+        marginBottom: 5
     },
 });
 
