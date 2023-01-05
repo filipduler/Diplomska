@@ -9,7 +9,7 @@ type ChangeRequest struct {
 
 type ChangeModel struct {
 	Id              int64     `json:"id"`
-	ModifiedByOwner bool      `json:"modifiedByOwner"`
+	ModifierUserId  int64     `json:"modifierUserId"`
 	ModifierName    string    `json:"modifierName"`
 	LogType         int64     `json:"logType"`
 	LastUpdateOnUtc time.Time `json:"lastUpdateOnUtc"`

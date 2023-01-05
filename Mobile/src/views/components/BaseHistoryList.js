@@ -10,12 +10,10 @@ import _ from 'lodash';
 import moment from 'moment';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-const getWho = (log) => log.modifiedByOwner ? 'You' : log.ModifierName;
-
 const prepareItem = (icon, header, time, content) => { return { icon, header, time, content } };
 
 const prepareTimeOffHistory = (log) => {
-    const who = getWho(log);
+    const who = MiscServices.getWho(log.modifierUserId, log.modifierName);
     switch (log.action) {
         case 'RequestOpen':
             return prepareItem(
@@ -54,7 +52,7 @@ const prepareTimeOffHistory = (log) => {
 }
 
 const prepareTimeEntryHistory = (log) => {
-    const who = getWho(log);
+    const who = MiscServices.getWho(log.modifierUserId, log.modifierName);
     switch (log.action) {
         case 'EntryCreated':
             return prepareItem(

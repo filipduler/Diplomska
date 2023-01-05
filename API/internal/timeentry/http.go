@@ -4,7 +4,6 @@ import (
 	"api/domain"
 	"api/internal"
 	"api/service/timeentry"
-	userService "api/service/user"
 	"api/utils"
 	"net/http"
 	"strconv"
@@ -142,6 +141,7 @@ func saveEntryHTTP(c echo.Context) error {
 		request.PauseSeconds,
 		request.Note,
 		user.DailyWorkHours,
+		user.EffectiveUserId(),
 		user.Id)
 	if err != nil {
 		c.Logger().Error(err)
@@ -160,7 +160,7 @@ func deleteEntryHTTP(c echo.Context) error {
 
 	timeEntryService := timeentry.TimeEntryService{}
 
-	err = timeEntryService.DeleteTimeEntry(timeEntryId, user.Id)
+	err = timeEntryService.DeleteTimeEntry(timeEntryId, user.EffectiveUserId(), user.Id)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -203,26 +203,12 @@ func entryChangesHTTP(c echo.Context) error {
 		return internal.NewHTTPError(c, err)
 	}
 
-	//get all users who changed the logs
-	userIds := lo.Uniq(lo.Map(timeEntryLogs, func(log domain.TimeEntryLogModel, _ int) int64 { return log.UserId }))
-
-	userService := userService.UserService{}
-	userMap, err := userService.GetUserMap(userIds)
-	if err != nil {
-		return internal.NewHTTPError(c, err)
-	}
-
 	var res []internal.ChangeModel
 	for _, log := range timeEntryLogs {
-		modifiedByOwner := log.UserId == user.Id
-
-		//load modifier user
-		curUser := userMap[log.UserId]
-
 		res = append(res, internal.ChangeModel{
 			Id:              log.TimeEntryId,
-			ModifierName:    curUser.DisplayName,
-			ModifiedByOwner: modifiedByOwner,
+			ModifierName:    log.ModifierUser.DisplayName,
+			ModifierUserId:  log.ModifierUserId,
 			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		})

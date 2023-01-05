@@ -9,10 +9,11 @@ type TimeOffLogModel struct {
 	TimeOffTypeId       int64     `gorm:"column:TimeOffTypeId"`
 	TimeOffStatusTypeId int64     `gorm:"column:TimeOffStatusTypeId"`
 	TimeOffId           int64     `gorm:"column:TimeOffId"`
-	UserId              int64     `gorm:"column:UserId"`
+	ModifierUserId      int64     `gorm:"column:ModifierUserId"`
 	LogTypeId           int64     `gorm:"column:LogTypeId"`
 
-	TimeOffType *TimeOffTypeModel `gorm:"foreignKey:TimeOffTypeId"`
+	ModifierUser UserModel        `gorm:"foreignKey:ModifierUserId"`
+	TimeOffType  TimeOffTypeModel `gorm:"foreignKey:TimeOffTypeId"`
 }
 
 func (TimeOffLogModel) TableName() string {

@@ -29,7 +29,7 @@ func (m *UserModel) EffectiveUserId() int64 {
 
 func (m *UserModel) EffectiveVacationHours() int {
 	if m.IsImpersonating() {
-		return m.ImpersonatedUser.ImpersonatedUser.VacationDays
+		return m.ImpersonatedUser.VacationDays
 	}
 	return m.VacationDays
 }

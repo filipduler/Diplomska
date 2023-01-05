@@ -20,16 +20,16 @@ const ImpersonateUser = () => {
 
     const loadState = async () => {
         if (Auth.userInfo.isImpersonating) {
-            loadImpersonatedView();
+            await loadImpersonatedView();
         } else {
-            loadNormalView();
+            await loadNormalView();
         }
     }
 
     const loadImpersonatedView = async () => {
         const response = await Requests.getUsers();
-        if (response && response.ok) {
-            const user = response.payload.find(x => x.userId === Auth.userInfo.userId)
+        if (response.ok) {
+            const user = response.payload.find(x => x.userId === Auth.userInfo.impersonatedUserId)
             if (user) {
                 setState(state => ({
                     ...state,
@@ -37,19 +37,22 @@ const ImpersonateUser = () => {
                     isImpersonating: true,
                     name: `${user.name} (${user.email})`
                 }));
+            } else {
+                throw 'failed finding impersonated user'
             }
         }
     }
 
     const loadNormalView = async () => {
         const response = await Requests.getUsers();
-        if (response && response.ok) {
+        if (response.ok) {
             const items = response.payload.map(x => {
                 return {
                     id: x.userId,
                     name: `${x.name} (${x.email})`
                 }
             });
+            console.log(items)
             setUserOptions(items);
 
             setState(state => ({

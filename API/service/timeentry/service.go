@@ -2,12 +2,10 @@ package timeentry
 
 import (
 	"api/domain"
-	userService "api/service/user"
 	"api/utils"
 	"errors"
 	"time"
 
-	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -73,18 +71,27 @@ func (s *TimeEntryService) GetTimeEntryLogs(userId int64, from time.Time, to tim
 
 	var logs []domain.TimeEntryLogModel
 	tx := db.Raw(`WITH last_log_entries AS (
-			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeEntryId ORDER BY InsertedOnUtc DESC) AS rn
-			FROM timeentrylog AS m
-			WHERE m.UserId = ? AND InsertedOnUtc BETWEEN ? AND ?
+			SELECT timeentrylog.*, ROW_NUMBER() OVER (PARTITION BY TimeEntryId ORDER BY InsertedOnUtc DESC) AS rn
+			FROM timeentrylog
+			INNER JOIN timeentry ON timeentry.Id = timeentrylog.TimeEntryId
+			WHERE timeentry.UserId = ? AND timeentrylog.InsertedOnUtc BETWEEN ? AND ?
 		)
 		SELECT *
 		FROM last_log_entries WHERE rn = 1`, userId, from, to).
+		Preload("ModifierUser").
 		Find(&logs)
 
 	return logs, tx.Error
 }
 
-func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endTimeUtc time.Time, pauseSeconds int, note string, dailyWorkHours float64, userId int64) (int64, error) {
+func (s *TimeEntryService) SaveTimeEntry(id *int64,
+	startTimeUtc time.Time,
+	endTimeUtc time.Time,
+	pauseSeconds int,
+	note string,
+	dailyWorkHours float64,
+	userId int64,
+	modifierUserId int64) (int64, error) {
 	db := utils.GetConnection()
 
 	//update time entry
@@ -107,7 +114,7 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 			}
 
 			//insert log
-			logModel := mapToTimeEntryLog(userId, updateModel, domain.UpdateLogType)
+			logModel := mapToTimeEntryLog(modifierUserId, updateModel, domain.UpdateLogType)
 
 			if logTx := tx.Create(&logModel); logTx.Error != nil {
 				return logTx.Error
@@ -138,7 +145,7 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 			return entryTx.Error
 		}
 
-		logModel := mapToTimeEntryLog(userId, &insertModel, domain.InsertLogType)
+		logModel := mapToTimeEntryLog(modifierUserId, &insertModel, domain.InsertLogType)
 
 		//insert log
 		if logTx := tx.Create(&logModel); logTx.Error != nil {
@@ -151,7 +158,7 @@ func (s *TimeEntryService) SaveTimeEntry(id *int64, startTimeUtc time.Time, endT
 	return insertModel.Id, txErr
 }
 
-func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64) error {
+func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64, modifierUserId int64) error {
 	db := utils.GetConnection()
 
 	entry, err := s.GetValidTimeEntry(timeEntryId, userId)
@@ -160,7 +167,7 @@ func (s *TimeEntryService) DeleteTimeEntry(timeEntryId int64, userId int64) erro
 	}
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		logModel := mapToTimeEntryLog(userId, entry, domain.DeleteLogType)
+		logModel := mapToTimeEntryLog(modifierUserId, entry, domain.DeleteLogType)
 
 		//delete time entry
 		entry.IsDeleted = true
@@ -180,33 +187,22 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]
 	db := utils.GetConnection()
 
 	//we dont need a valid time entry for history
-	timeEntry, err := s.GetTimeEntry(timeEntryId, userId)
+	_, err := s.GetTimeEntry(timeEntryId, userId)
 	if err != nil {
 		return nil, err
 	}
 
 	var logs []domain.TimeEntryLogModel
-	tx := db.Where("TimeEntryId = ?", timeEntryId).Find(&logs)
+	tx := db.Where("TimeEntryId = ?", timeEntryId).
+		Preload("ModifierUser").
+		Find(&logs)
 	if tx.Error != nil {
 		return nil, tx.Error
-	}
-
-	userIds := lo.Uniq(lo.Map(logs, func(log domain.TimeEntryLogModel, _ int) int64 { return log.UserId }))
-
-	userService := userService.UserService{}
-	userMap, err := userService.GetUserMap(userIds)
-	if err != nil {
-		return nil, err
 	}
 
 	historyChanges := []HistoryModel{}
 
 	for i, logEntry := range logs {
-		modifiedByOwner := logEntry.UserId == timeEntry.UserId
-
-		//load modifier user
-		curUser := userMap[logEntry.UserId]
-
 		//copy time objects
 		start := logEntry.StartTimeUtc
 		end := logEntry.EndTimeUtc
@@ -214,12 +210,12 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]
 		switch domain.LogType(logEntry.LogTypeId) {
 		case domain.InsertLogType:
 			historyChanges = append(historyChanges, HistoryModel{
-				Action:          EntryCreated,
-				ModifiedByOwner: modifiedByOwner,
-				ModifierName:    curUser.DisplayName,
-				StartTimeUtc:    &start,
-				EndTimeUtc:      &end,
-				InsertedOnUtc:   logEntry.InsertedOnUtc,
+				Action:         EntryCreated,
+				ModifierUserId: logEntry.ModifierUserId,
+				ModifierName:   logEntry.ModifierUser.DisplayName,
+				StartTimeUtc:   &start,
+				EndTimeUtc:     &end,
+				InsertedOnUtc:  logEntry.InsertedOnUtc,
 			})
 			break
 		case domain.UpdateLogType:
@@ -227,22 +223,22 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]
 				prevLog := logs[i-1]
 				if prevLog.StartTimeUtc != start || prevLog.EndTimeUtc != end {
 					historyChanges = append(historyChanges, HistoryModel{
-						Action:          TimeChange,
-						ModifiedByOwner: modifiedByOwner,
-						ModifierName:    curUser.DisplayName,
-						StartTimeUtc:    &start,
-						EndTimeUtc:      &end,
-						InsertedOnUtc:   logEntry.InsertedOnUtc,
+						Action:         TimeChange,
+						ModifierUserId: logEntry.ModifierUserId,
+						ModifierName:   logEntry.ModifierUser.DisplayName,
+						StartTimeUtc:   &start,
+						EndTimeUtc:     &end,
+						InsertedOnUtc:  logEntry.InsertedOnUtc,
 					})
 				}
 
 				if prevLog.PauseSeconds != logEntry.PauseSeconds {
 					historyChanges = append(historyChanges, HistoryModel{
-						Action:          PauseChange,
-						ModifiedByOwner: modifiedByOwner,
-						ModifierName:    curUser.DisplayName,
-						PauseSeconds:    &logEntry.PauseSeconds,
-						InsertedOnUtc:   logEntry.InsertedOnUtc,
+						Action:         PauseChange,
+						ModifierUserId: logEntry.ModifierUserId,
+						ModifierName:   logEntry.ModifierUser.DisplayName,
+						PauseSeconds:   &logEntry.PauseSeconds,
+						InsertedOnUtc:  logEntry.InsertedOnUtc,
 					})
 				}
 
@@ -251,10 +247,10 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]
 			break
 		case domain.DeleteLogType:
 			historyChanges = append(historyChanges, HistoryModel{
-				Action:          EntryDeleted,
-				ModifiedByOwner: modifiedByOwner,
-				ModifierName:    curUser.DisplayName,
-				InsertedOnUtc:   logEntry.InsertedOnUtc,
+				Action:         EntryDeleted,
+				ModifierUserId: logEntry.ModifierUserId,
+				ModifierName:   logEntry.ModifierUser.DisplayName,
+				InsertedOnUtc:  logEntry.InsertedOnUtc,
 			})
 			break
 		}
@@ -262,14 +258,14 @@ func (s *TimeEntryService) TimeEntryHistory(timeEntryId int64, userId int64) ([]
 	return historyChanges, nil
 }
 
-func mapToTimeEntryLog(userId int64, entry *domain.TimeEntryModel, logType domain.LogType) domain.TimeEntryLogModel {
+func mapToTimeEntryLog(modifierUserId int64, entry *domain.TimeEntryModel, logType domain.LogType) domain.TimeEntryLogModel {
 	model := domain.TimeEntryLogModel{
-		StartTimeUtc: entry.StartTimeUtc,
-		EndTimeUtc:   entry.EndTimeUtc,
-		PauseSeconds: entry.PauseSeconds,
-		TimeEntryId:  entry.Id,
-		UserId:       userId,
-		LogTypeId:    int64(logType),
+		StartTimeUtc:   entry.StartTimeUtc,
+		EndTimeUtc:     entry.EndTimeUtc,
+		PauseSeconds:   entry.PauseSeconds,
+		TimeEntryId:    entry.Id,
+		ModifierUserId: modifierUserId,
+		LogTypeId:      int64(logType),
 	}
 	model.OnInsert()
 	return model

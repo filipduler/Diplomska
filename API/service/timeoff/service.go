@@ -3,22 +3,20 @@ package timeoff
 import (
 	"api/domain"
 	"api/service"
-	userService "api/service/user"
 	"api/utils"
 	"time"
 
-	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
 type TimeOffService struct{}
 
-func (*TimeOffService) GetTimeOffEntry(timeOffId int64) (*domain.TimeOffModel, error) {
+func (*TimeOffService) GetTimeOffEntry(timeOffId int64, userId int64) (*domain.TimeOffModel, error) {
 	db := utils.GetConnection()
 
 	var timeOffEntry domain.TimeOffModel
 	tx := db.
-		Where("Id = ?", timeOffId).
+		Where("Id = ? AND UserId = ?", timeOffId, userId).
 		Preload("TimeOffType").
 		First(&timeOffEntry)
 
@@ -65,13 +63,15 @@ func (s *TimeOffService) GetTimeOffLogs(userId int64, from time.Time, to time.Ti
 
 	var logs []domain.TimeOffLogModel
 	tx := db.Raw(`WITH last_log_entries AS (
-			SELECT m.*, ROW_NUMBER() OVER (PARTITION BY TimeOffId ORDER BY InsertedOnUtc DESC) AS rn
-			FROM timeofflog AS m
-			WHERE m.UserId = ? AND InsertedOnUtc BETWEEN ? AND ?
+			SELECT timeofflog.*, ROW_NUMBER() OVER (PARTITION BY TimeOffId ORDER BY InsertedOnUtc DESC) AS rn
+			FROM timeofflog
+			INNER JOIN timeoff ON timeoff.Id = timeofflog.TimeOffId
+			WHERE timeoff.UserId = ? AND timeofflog.InsertedOnUtc BETWEEN ? AND ?
 		)
 		SELECT *
 		FROM last_log_entries WHERE rn = 1`, userId, from, to).
 		Preload("TimeOffType").
+		Preload("ModifierUser").
 		Find(&logs)
 
 	return logs, tx.Error
@@ -86,12 +86,19 @@ func (*TimeOffService) GetStatusTypes() ([]domain.TimeOffTypeModel, error) {
 	return types, tx.Error
 }
 
-func (s *TimeOffService) SaveTimeOffEntry(id *int64, startDate time.Time, endDate time.Time, note string, offTypeId int64, userId int64) (int64, error) {
+func (s *TimeOffService) SaveTimeOffEntry(id *int64,
+	startDate time.Time,
+	endDate time.Time,
+	note string,
+	offTypeId int64,
+	userId int64,
+	modifierUserId int64) (int64, error) {
+
 	db := utils.GetConnection()
 
 	//update time entry
 	if id != nil {
-		updateModel, err := s.GetTimeOffEntry(*id)
+		updateModel, err := s.GetTimeOffEntry(*id, userId)
 		if err != nil {
 			return 0, err
 		}
@@ -116,7 +123,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startDate time.Time, endDat
 			}
 
 			//insert log
-			logModel := mapToTimeOffEntryLog(userId, updateModel, domain.UpdateLogType)
+			logModel := mapToTimeOffEntryLog(modifierUserId, updateModel, domain.UpdateLogType)
 
 			if logTx := tx.Create(&logModel); logTx.Error != nil {
 				return logTx.Error
@@ -146,7 +153,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startDate time.Time, endDat
 			return entryTx.Error
 		}
 
-		logModel := mapToTimeOffEntryLog(userId, &insertModel, domain.InsertLogType)
+		logModel := mapToTimeOffEntryLog(modifierUserId, &insertModel, domain.InsertLogType)
 
 		//insert log
 		if logTx := tx.Create(&logModel); logTx.Error != nil {
@@ -159,10 +166,10 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64, startDate time.Time, endDat
 	return insertModel.Id, txErr
 }
 
-func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, status domain.TimeOffStatus) error {
+func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, modifierUserId int64, status domain.TimeOffStatus) error {
 	db := utils.GetConnection()
 
-	timeOffEntry, err := s.GetTimeOffEntry(timeOffId)
+	timeOffEntry, err := s.GetTimeOffEntry(timeOffId, userId)
 	if err != nil {
 		return err
 	}
@@ -174,7 +181,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, status 
 			return tx.Error
 		}
 
-		logModel := mapToTimeOffEntryLog(userId, timeOffEntry, domain.UpdateLogType)
+		logModel := mapToTimeOffEntryLog(modifierUserId, timeOffEntry, domain.UpdateLogType)
 
 		if logTx := tx.Create(&logModel); logTx.Error != nil {
 			return logTx.Error
@@ -187,7 +194,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, status 
 func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]HistoryModel, error) {
 	db := utils.GetConnection()
 
-	timeOff, err := s.GetTimeOffEntry(timeOffId)
+	_, err := s.GetTimeOffEntry(timeOffId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -196,27 +203,15 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]Histor
 	tx := db.
 		Where("TimeOffId = ?", timeOffId).
 		Preload("TimeOffType").
+		Preload("ModifierUser").
 		Find(&logs)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 
-	userIds := lo.Uniq(lo.Map(logs, func(log domain.TimeOffLogModel, _ int) int64 { return log.UserId }))
-
-	userService := userService.UserService{}
-	userMap, err := userService.GetUserMap(userIds)
-	if err != nil {
-		return nil, err
-	}
-
 	historyChanges := []HistoryModel{}
 
 	for i, logEntry := range logs {
-		modifiedByOwner := logEntry.UserId == timeOff.UserId
-
-		//load modifier user
-		curUser := userMap[logEntry.UserId]
-
 		//copy time objects
 		start := logEntry.StartDate
 		end := logEntry.EndDate
@@ -225,13 +220,13 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]Histor
 		case domain.InsertLogType:
 			//on insert
 			historyChanges = append(historyChanges, HistoryModel{
-				Action:          RequestOpen,
-				ModifiedByOwner: modifiedByOwner,
-				ModifierName:    curUser.DisplayName,
-				StartDate:       &start,
-				EndDate:         &end,
-				Type:            &logEntry.TimeOffType.Name,
-				InsertedOnUtc:   logEntry.InsertedOnUtc,
+				Action:         RequestOpen,
+				ModifierUserId: logEntry.ModifierUserId,
+				ModifierName:   logEntry.ModifierUser.DisplayName,
+				StartDate:      &start,
+				EndDate:        &end,
+				Type:           &logEntry.TimeOffType.Name,
+				InsertedOnUtc:  logEntry.InsertedOnUtc,
 			})
 			break
 		case domain.UpdateLogType:
@@ -241,23 +236,23 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]Histor
 				//time change
 				if prevLog.StartDate != start || prevLog.EndDate != end {
 					historyChanges = append(historyChanges, HistoryModel{
-						Action:          TimeChange,
-						ModifiedByOwner: modifiedByOwner,
-						ModifierName:    curUser.DisplayName,
-						StartDate:       &start,
-						EndDate:         &end,
-						InsertedOnUtc:   logEntry.InsertedOnUtc,
+						Action:         TimeChange,
+						ModifierUserId: logEntry.ModifierUserId,
+						ModifierName:   logEntry.ModifierUser.DisplayName,
+						StartDate:      &start,
+						EndDate:        &end,
+						InsertedOnUtc:  logEntry.InsertedOnUtc,
 					})
 				}
 
 				//type change
 				if prevLog.TimeOffTypeId != logEntry.TimeOffTypeId {
 					historyChanges = append(historyChanges, HistoryModel{
-						Action:          TypeChange,
-						ModifiedByOwner: modifiedByOwner,
-						ModifierName:    curUser.DisplayName,
-						Type:            &logEntry.TimeOffType.Name,
-						InsertedOnUtc:   logEntry.InsertedOnUtc,
+						Action:         TypeChange,
+						ModifierUserId: logEntry.ModifierUserId,
+						ModifierName:   logEntry.ModifierUser.DisplayName,
+						Type:           &logEntry.TimeOffType.Name,
+						InsertedOnUtc:  logEntry.InsertedOnUtc,
 					})
 				}
 
@@ -268,11 +263,11 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]Histor
 						logEntry.TimeOffStatusTypeId == int64(domain.CanceledTimeOffStatus)) {
 					status := logEntry.TimeOffStatusTypeId
 					historyChanges = append(historyChanges, HistoryModel{
-						Action:          RequestClosed,
-						ModifiedByOwner: modifiedByOwner,
-						ModifierName:    curUser.DisplayName,
-						Status:          &status,
-						InsertedOnUtc:   logEntry.InsertedOnUtc,
+						Action:         RequestClosed,
+						ModifierUserId: logEntry.ModifierUserId,
+						ModifierName:   logEntry.ModifierUser.DisplayName,
+						Status:         &status,
+						InsertedOnUtc:  logEntry.InsertedOnUtc,
 					})
 				}
 			}
@@ -283,14 +278,14 @@ func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]Histor
 	return historyChanges, nil
 }
 
-func mapToTimeOffEntryLog(userId int64, entry *domain.TimeOffModel, logType domain.LogType) domain.TimeOffLogModel {
+func mapToTimeOffEntryLog(modifierUserId int64, entry *domain.TimeOffModel, logType domain.LogType) domain.TimeOffLogModel {
 	model := domain.TimeOffLogModel{
 		StartDate:           entry.StartDate,
 		EndDate:             entry.EndDate,
 		TimeOffTypeId:       entry.TimeOffTypeId,
 		TimeOffStatusTypeId: entry.TimeOffStatusTypeId,
 		TimeOffId:           entry.Id,
-		UserId:              userId,
+		ModifierUserId:      modifierUserId,
 		LogTypeId:           int64(logType),
 	}
 	model.OnInsert()

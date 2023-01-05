@@ -3,6 +3,7 @@ import { Pressable, Text, View, StyleSheet } from 'react-native'
 import DateHelper from 'mobile/src/helpers/date'
 import { EntryType, LogType } from 'mobile/src/services/constants';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MiscServices from 'mobile/src/services/misc';
 
 const logTypeVerb = (logTypeId) => {
     switch (logTypeId) {
@@ -31,7 +32,7 @@ const logTypeName = (type) => {
 }
 
 const HistoryItem = ({ item, onPress }) => {
-    const who = item.modifiedByOwner ? 'You' : item.ModifierName;
+    const who = MiscServices.getWho(item.modifierUserId, item.modifierName);
 
     return (
         <Pressable onPress={() => onPress(item.id, item.type)}>

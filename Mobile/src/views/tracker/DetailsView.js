@@ -72,6 +72,14 @@ const DetailsView = ({ route, navigation }) => {
                 note: item.note
             })
             updateDateConstraints(start);
+
+            //set readonly
+            if(start < MIN_DATE) {
+                setState(state => ({
+                    ...state,
+                    readonly: true
+                }));
+            }
         } else {
             throw `entry with id: ${entryId} not found`;
         }
@@ -166,6 +174,7 @@ const DetailsView = ({ route, navigation }) => {
                                 value={form.startTime}
                                 minimumDate={state.startMinDate}
                                 maximumDate={state.startMaxDate}
+                                disabled={state.readonly}
                                 onChange={onStartDateChange} />
                         </View>
                     </View>
@@ -179,6 +188,7 @@ const DetailsView = ({ route, navigation }) => {
                                 value={form.endTime}
                                 minimumDate={state.endMinDate}
                                 maximumDate={state.endMaxDate}
+                                disabled={state.readonly}
                                 onChange={onEndDateChange} />
                         </View>
                     </View>
@@ -188,6 +198,7 @@ const DetailsView = ({ route, navigation }) => {
                         </View>
                         <View style={styles.controlCol}>
                             <Button mode='outlined'
+                                disabled={state.readonly}
                                 style={styles.breakButton}
                                 onPress={onOpenBreakModal}>
                                 {DateHelper.hmsFormat(form.pauseSeconds, true, true, false)}
@@ -203,6 +214,7 @@ const DetailsView = ({ route, navigation }) => {
                                 multiline={true}
                                 numberOfLines={2}
                                 maxLength={512}
+                                disabled={state.readonly}
                                 onChangeText={(text) => setForm(form => ({ ...form, note: text }))}
                             />
                         </View>
@@ -216,7 +228,10 @@ const DetailsView = ({ route, navigation }) => {
                         </Button>}
                     </View>
                     <View style={styles.controlButtonCol}>
-                        <Button mode='outlined' onPress={save} >
+                        <Button mode='outlined' 
+                            disabled={state.readonly} 
+                            onPress={save}
+                        >
                             Save
                         </Button>
                     </View>

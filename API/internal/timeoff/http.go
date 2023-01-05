@@ -5,7 +5,6 @@ import (
 	"api/internal"
 	"api/service/daysoff"
 	"api/service/timeoff"
-	userService "api/service/user"
 	"api/utils"
 	"net/http"
 	"strconv"
@@ -79,10 +78,10 @@ func entryHTTP(c echo.Context) error {
 		return err
 	}
 
-	//user, _ := internal.GetUser(c)
+	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	entry, err := timeOffService.GetTimeOffEntry(timeOffId)
+	entry, err := timeOffService.GetTimeOffEntry(timeOffId, user.EffectiveUserId())
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}
@@ -124,7 +123,7 @@ func updateStatusHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	timeOffEntry, err := timeOffService.GetTimeOffEntry(request.Id)
+	timeOffEntry, err := timeOffService.GetTimeOffEntry(request.Id, user.EffectiveUserId())
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}
@@ -145,7 +144,7 @@ func updateStatusHTTP(c echo.Context) error {
 		return internal.NewHTTPError(c, ErrStatusInvalidRequestedStatus)
 	}
 
-	err = timeOffService.SetTimeOffStatus(request.Id, user.Id, status)
+	err = timeOffService.SetTimeOffStatus(request.Id, user.EffectiveUserId(), user.Id, status)
 	if err != nil {
 		c.Logger().Error(err)
 	}
@@ -168,6 +167,7 @@ func saveHTTP(c echo.Context) error {
 		request.EndDate,
 		request.Note,
 		request.TypeId,
+		user.EffectiveUserId(),
 		user.Id)
 
 	if err != nil {
@@ -210,26 +210,12 @@ func entryChangesHTTP(c echo.Context) error {
 		return internal.NewHTTPError(c, err)
 	}
 
-	//get all users who changed the logs
-	userIds := lo.Uniq(lo.Map(timeEntryLogs, func(log domain.TimeOffLogModel, _ int) int64 { return log.UserId }))
-
-	userService := userService.UserService{}
-	userMap, err := userService.GetUserMap(userIds)
-	if err != nil {
-		return internal.NewHTTPError(c, err)
-	}
-
 	var res []internal.ChangeModel
 	for _, log := range timeEntryLogs {
-		modifiedByOwner := log.UserId == user.Id
-
-		//load modifier user
-		curUser := userMap[log.UserId]
-
 		res = append(res, internal.ChangeModel{
 			Id:              log.TimeOffId,
-			ModifierName:    curUser.DisplayName,
-			ModifiedByOwner: modifiedByOwner,
+			ModifierName:    log.ModifierUser.DisplayName,
+			ModifierUserId:  log.ModifierUserId,
 			LogType:         log.LogTypeId,
 			LastUpdateOnUtc: log.InsertedOnUtc,
 		})
