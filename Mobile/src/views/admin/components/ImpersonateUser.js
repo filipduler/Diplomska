@@ -52,7 +52,7 @@ const ImpersonateUser = () => {
                     name: `${x.name} (${x.email})`
                 }
             });
-            console.log(items)
+            
             setUserOptions(items);
 
             setState(state => ({
