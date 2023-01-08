@@ -79,14 +79,10 @@ func entryHTTP(c echo.Context) error {
 	}
 
 	user, _ := internal.GetUser(c)
-	timeOffService := timeoff.TimeOffService{}
-
-	entry, err := timeOffService.GetTimeOffEntry(timeOffId, user.EffectiveUserId())
+	entry, err := getTimeOffEntry(timeOffId, user)
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}
-
-	//TODO validate if user has access..
 
 	return c.JSON(http.StatusOK, internal.NewResponse(true, mapTimeOffEntry(entry)))
 }
@@ -123,7 +119,7 @@ func updateStatusHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
-	timeOffEntry, err := timeOffService.GetTimeOffEntry(request.Id, user.EffectiveUserId())
+	timeOffEntry, err := getTimeOffEntry(request.Id, user)
 	if err != nil {
 		return internal.NewHTTPError(c, err)
 	}
@@ -161,6 +157,13 @@ func saveHTTP(c echo.Context) error {
 	user, _ := internal.GetUser(c)
 	timeOffService := timeoff.TimeOffService{}
 
+	//if entry exists, validate entry
+	if request.Id != nil {
+		if _, err := getTimeOffEntry(*request.Id, user); err != nil {
+			return internal.NewHTTPError(c, err)
+		}
+	}
+
 	timeOffId, err := timeOffService.SaveTimeOffEntry(
 		request.Id,
 		request.StartDate,
@@ -183,7 +186,12 @@ func entryHistoryHTTP(c echo.Context) error {
 		return err
 	}
 
+	//validate access
 	user, _ := internal.GetUser(c)
+	if _, err := getTimeOffEntry(timeOffId, user); err != nil {
+		return internal.NewHTTPError(c, err)
+	}
+
 	timeOffService := timeoff.TimeOffService{}
 	res, err := timeOffService.TimeOffHistory(timeOffId, user.EffectiveUserId())
 	if err != nil {

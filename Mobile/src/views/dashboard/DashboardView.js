@@ -7,6 +7,7 @@ import { Calendar } from 'react-native-calendars';
 import moment from 'moment/moment';
 import _ from 'lodash';
 import LoadingView from 'mobile/src/views/components/LoadingView';
+import { StatusColors } from 'mobile/src/services/styles';
 
 const NOW = moment(Date.now()).format('YYYY-MM-DD');
 
@@ -115,11 +116,10 @@ const DashboardView = () => {
                 : freeDaysranges.push([freeDay]);
         }
 
-
-        parseRange(markedDates, freeDaysranges, 'yellow', year, month);
-        parseRange(markedDates, incompletedRanges, 'yellow', year, month);
-        parseRange(markedDates, completedRanges, 'green', year, month);
-        parseRange(markedDates, daysOffRanges, 'red', year, month);
+        parseRange(markedDates, freeDaysranges, StatusColors.Orange, year, month);
+        parseRange(markedDates, incompletedRanges, StatusColors.Orange, year, month);
+        parseRange(markedDates, completedRanges, StatusColors.Green, year, month);
+        parseRange(markedDates, daysOffRanges, StatusColors.Red, year, month);
 
         setMarkedDates(markedDates);
     }

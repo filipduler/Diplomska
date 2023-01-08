@@ -11,12 +11,12 @@ import (
 
 type TimeOffService struct{}
 
-func (*TimeOffService) GetTimeOffEntry(timeOffId int64, userId int64) (*domain.TimeOffModel, error) {
+func (*TimeOffService) GetTimeOffEntry(timeOffId int64) (*domain.TimeOffModel, error) {
 	db := utils.GetConnection()
 
 	var timeOffEntry domain.TimeOffModel
 	tx := db.
-		Where("Id = ? AND UserId = ?", timeOffId, userId).
+		Where("Id = ?", timeOffId).
 		Preload("TimeOffType").
 		First(&timeOffEntry)
 
@@ -98,7 +98,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64,
 
 	//update time entry
 	if id != nil {
-		updateModel, err := s.GetTimeOffEntry(*id, userId)
+		updateModel, err := s.GetTimeOffEntry(*id)
 		if err != nil {
 			return 0, err
 		}
@@ -169,7 +169,7 @@ func (s *TimeOffService) SaveTimeOffEntry(id *int64,
 func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, modifierUserId int64, status domain.TimeOffStatus) error {
 	db := utils.GetConnection()
 
-	timeOffEntry, err := s.GetTimeOffEntry(timeOffId, userId)
+	timeOffEntry, err := s.GetTimeOffEntry(timeOffId)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (s *TimeOffService) SetTimeOffStatus(timeOffId int64, userId int64, modifie
 func (s *TimeOffService) TimeOffHistory(timeOffId int64, userId int64) ([]HistoryModel, error) {
 	db := utils.GetConnection()
 
-	_, err := s.GetTimeOffEntry(timeOffId, userId)
+	_, err := s.GetTimeOffEntry(timeOffId)
 	if err != nil {
 		return nil, err
 	}

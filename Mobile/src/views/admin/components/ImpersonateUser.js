@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View, StyleSheet } from 'react-native';
 import SearchableDropDown from 'react-native-searchable-dropdown';
 import { useFocusEffect } from '@react-navigation/native';
 import Requests from 'mobile/src/services/requests';
 import Auth from 'mobile/src/services/auth';
 import Icon from 'react-native-vector-icons/FontAwesome';
+
+const getName = user => `${user.name} (${user.email})`;
 
 const ImpersonateUser = () => {
     const [userOptions, setUserOptions] = useState([]);
@@ -35,7 +37,7 @@ const ImpersonateUser = () => {
                     ...state,
                     loading: false,
                     isImpersonating: true,
-                    name: `${user.name} (${user.email})`
+                    name: getName(user)
                 }));
             } else {
                 throw 'failed finding impersonated user'
@@ -46,13 +48,13 @@ const ImpersonateUser = () => {
     const loadNormalView = async () => {
         const response = await Requests.getUsers();
         if (response.ok) {
-            const items = response.payload.map(x => {
+            const items = response.payload.map(user => {
                 return {
-                    id: x.userId,
-                    name: `${x.name} (${x.email})`
+                    id: user.userId,
+                    name: getName(user)
                 }
             });
-            
+
             setUserOptions(items);
 
             setState(state => ({
@@ -65,7 +67,7 @@ const ImpersonateUser = () => {
 
     const impersonateUser = async (user) => {
         const response = await Requests.postImpersonate(user.id);
-        if(response.ok) {
+        if (response.ok) {
             await Auth.refreshUserInfo();
             loadImpersonatedView();
         }
@@ -73,7 +75,7 @@ const ImpersonateUser = () => {
 
     const stopImpersonating = async () => {
         const response = await Requests.postClearImpersonation();
-        if(response.ok) {
+        if (response.ok) {
             await Auth.refreshUserInfo();
             loadNormalView();
         }
@@ -84,50 +86,64 @@ const ImpersonateUser = () => {
             {state.loading
                 ? <ActivityIndicator />
                 : (state.isImpersonating
-                    ? (<>
-                    <Text>{state.name}</Text>
-                    <Icon name="times-circle" size={21} onPress={stopImpersonating} />
-                    </>)
+                    ? (<View style={styles.statusRow}>
+                        <Text style={styles.statusText}>{state.name}</Text>
+                        <Icon style={styles.statusCancelIcon} name="times-circle" size={21} onPress={stopImpersonating} />
+                    </View>)
                     : <SearchableDropDown
                         onItemSelect={impersonateUser}
-                        //onItemSelect called after the selection from the dropdown
-                        containerStyle={{ padding: 5 }}
-                        //suggestion container style
-                        textInputStyle={{
-                            //inserted text style
-                            padding: 12,
-                            borderWidth: 1,
-                            borderColor: '#ccc',
-                            backgroundColor: '#FAF7F6',
-                        }}
-                        itemStyle={{
-                            //single dropdown item style
-                            padding: 10,
-                            marginTop: 2,
-                            backgroundColor: '#FAF9F8',
-                            borderColor: '#bbb',
-                            borderWidth: 1,
-                        }}
-                        itemTextStyle={{
-                            //text style of a single dropdown item
-                            color: '#222',
-                        }}
-                        itemsContainerStyle={{
-                            //items container style you can pass maxHeight
-                            //to restrict the items dropdown hieght
-                            maxHeight: '60%',
-                        }}
+                        containerStyle={styles.containerStyle}
+                        textInputStyle={styles.textInputStyle}
+                        itemStyle={styles.itemStyle}
+                        itemTextStyle={styles.itemTextStyle}
+                        itemsContainerStyle={styles.itemsContainerStyle}
                         items={userOptions}
                         placeholder="Search for name or email.."
-                        //place holder for the search input
                         resetValue={false}
-                        //reset textInput Value with true and false state
                         underlineColorAndroid="transparent"
-                    //To remove the underline from the android input
+                        //there seems to be a bug, this fixes it
+                        textInputProps={{ onTextChange: _ => { } }}
                     />
                 )}
         </View>
     );
 };
+
+var styles = StyleSheet.create({
+    statusRow: {
+        flexDirection:'row',
+        padding: 20
+    },
+    statusText:{
+        fontSize: 18, 
+        fontWeight: '500'
+    },
+    statusCancelIcon: {
+        marginLeft: 10, 
+        alignSelf: 'center'
+    },
+    containerStyle: {
+        padding: 5
+    },
+    textInputStyle: {
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        backgroundColor: '#FAF7F6',
+    },
+    itemStyle: {
+        padding: 10,
+        marginTop: 2,
+        backgroundColor: '#FFFFFF',
+        borderColor: '#bbb',
+        borderWidth: 1,
+    },
+    itemTextStyle: {
+        color: '#222',
+    },
+    itemsContainerStyle: {
+        maxHeight: '60%',
+    }
+})
 
 export default ImpersonateUser;

@@ -6,7 +6,7 @@ import {
     StyleSheet,
     Pressable
 } from 'react-native';
-import StyleService from 'mobile/src/services/styles';
+import { StyleService } from 'mobile/src/services/styles';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const TimeOffItem = ({ data, handleEntryDetails }) => {

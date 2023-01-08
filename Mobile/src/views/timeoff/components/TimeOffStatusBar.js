@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import Requests from 'mobile/src/services/requests';
-import StyleService from 'mobile/src/services/styles';
+import { StyleService } from 'mobile/src/services/styles';
 import OpenConfirm from 'mobile/src/helpers/confirm'
 import ShowAlert from 'mobile/src/helpers/alert'
 import MiscServices from 'mobile/src/services/misc';

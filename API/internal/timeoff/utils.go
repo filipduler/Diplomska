@@ -28,3 +28,18 @@ func getTimeOffDaysBetween(from time.Time, to time.Time, userId int64) ([]int, e
 
 	return days, nil
 }
+
+func getTimeOffEntry(timeOffId int64, user *domain.UserModel) (*domain.TimeOffModel, error) {
+	timeOffService := timeoff.TimeOffService{}
+
+	entry, err := timeOffService.GetTimeOffEntry(timeOffId)
+	if err != nil {
+		return nil, err
+	}
+
+	//validate permissions
+	if entry.UserId != user.EffectiveUserId() && !user.IsAdmin {
+		return nil, ErrInvalidPermission
+	}
+	return entry, nil
+}

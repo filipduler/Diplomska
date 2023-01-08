@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { TimeOffStatus } from 'mobile/src/services/constants';
 
 const styles = StyleSheet.create({
     circle: {
@@ -9,21 +10,24 @@ const styles = StyleSheet.create({
     },
 })
 
-const StyleService = 
+export const StyleService = 
 {
     getColorFromStatus: (statusId) => {
-        let color;
         switch(statusId) {
-            case 2: color = '#7cfc00'; break;
-            case 3: 
-            case 4: color = '#dc143c'; break;
-            default: color = '#ffff00'; break;
+            case TimeOffStatus.Accepted: return StatusColors.Green;
+            case TimeOffStatus.Pending: return StatusColors.Orange;
+            case TimeOffStatus.Canceled: 
+            case TimeOffStatus.Rejected: 
+            default: return StatusColors.Red;
         }
-        return color;
     },
     get style() {
         return styles;
     } 
 };
 
-export default StyleService; 
+export const StatusColors = {
+    Red: '#dc3545',
+    Orange: '#ffcc00',
+    Green: '#99cc33'
+}

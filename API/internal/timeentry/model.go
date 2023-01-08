@@ -39,6 +39,7 @@ func (m *saveTimeEntryRequest) validate(dailyHours float64) error {
 	diffHours := m.EndTimeUtc.Sub(m.StartTimeUtc).Hours()
 	pauseHours := time.Duration(float64(m.PauseSeconds) * float64(time.Second)).Hours()
 
+	//pause cannot be larger than time delta
 	if pauseHours >= diffHours {
 		return errors.New("pause cannot be larger than work hours")
 	}
