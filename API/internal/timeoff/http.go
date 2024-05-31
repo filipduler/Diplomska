@@ -262,7 +262,7 @@ func daysOffHTTP(c echo.Context) error {
 	}
 
 	for _, dayOff := range daysOff {
-		if dayOff.Date.After(startOfMonth) && dayOff.Date.Before(endOfMonth) {
+		if (dayOff.Date.Equal(startOfMonth) || dayOff.Date.After(startOfMonth)) && (dayOff.Date.Equal(endOfMonth) || dayOff.Date.Before(endOfMonth)) {
 			days = append(days, dayOff.Date.Day())
 		}
 	}
